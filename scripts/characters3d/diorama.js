@@ -202,6 +202,35 @@ function lamp(scene, x, y, lit) {
   scene.add(g);
 }
 
+/** 강경구락부(江景俱樂部) 광장: 돌바닥 + 원형 분수 + 파라솔 테이블 + 아치 정문 */
+function clubSquare(scene, night) {
+  const c = P(1085, 765);
+  const cob = canvasTex("clubcob", 256, 256, (cx, w, h) => { cx.fillStyle = "#BDBAB2"; cx.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 12) for (let x = ((y / 12) % 2) * 6; x < w; x += 12) { cx.fillStyle = ["#CBC8C0", "#AFACA4", "#C2BFB7"][(x * 7 + y) % 3]; cx.fillRect(x + 1, y + 1, 10, 10); } });
+  const ct = cob.clone(); ct.wrapS = ct.wrapT = THREE.RepeatWrapping; ct.repeat.set(10, 10); ct.needsUpdate = true;
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(150, 48), new THREE.MeshStandardMaterial({ map: ct, roughness: 0.95 })); plaza.rotation.x = -Math.PI / 2; plaza.position.copy(c).setY(0.6); plaza.receiveShadow = true; scene.add(plaza);
+  const lawn = new THREE.Mesh(new THREE.CircleGeometry(34, 8), flock("#9FB46A")); lawn.rotation.x = -Math.PI / 2; lawn.position.copy(c).setY(0.8); scene.add(lawn);
+  const stone = flock("#C9BFA8");
+  const f = new THREE.Group(); f.position.copy(c); scene.add(f);
+  mesh(new THREE.CylinderGeometry(16, 17, 5, 8), stone, [0, 2.5, 0], [0, Math.PI / 8, 0], f);
+  mesh(new THREE.CylinderGeometry(14.5, 14.5, 0.8, 8), new THREE.MeshPhysicalMaterial({ color: "#7FB2BC", roughness: 0.1, clearcoat: 1 }), [0, 4.6, 0], [0, Math.PI / 8, 0], f);
+  mesh(new THREE.CylinderGeometry(1.6, 2.6, 12, 12), stone, [0, 9, 0], [0, 0, 0], f);
+  mesh(new THREE.CylinderGeometry(7, 3, 2.5, 20), stone, [0, 15, 0], [0, 0, 0], f);
+  mesh(new THREE.ConeGeometry(2.2, 6, 10), new THREE.MeshPhysicalMaterial({ color: "#DDF0F4", roughness: 0.05, transmission: 0.5, emissive: night ? "#9FD0E0" : "#000", emissiveIntensity: night ? 0.5 : 0 }), [0, 19, 0], [0, 0, 0], f);
+  for (const [dx, dz, col] of [[-50, 30, "#5E6E86"], [-28, 44, "#5E6E86"], [-6, 52, "#2E5E4E"], [40, -38, "#5E6E86"]]) {
+    const u = new THREE.Group(); u.position.copy(c).add(new THREE.Vector3(dx, 0, dz)); scene.add(u);
+    mesh(new THREE.CylinderGeometry(0.5, 0.5, 18, 6), flock("#E6E6E2"), [0, 9, 0], [0, 0, 0], u);
+    mesh(new THREE.ConeGeometry(11, 4, 8), flock(col), [0, 18, 0], [0, 0, 0], u);
+    mesh(new THREE.CylinderGeometry(4, 4, 0.8, 16), flock("#4A4F52"), [0, 6, 0], [0, 0, 0], u);
+    for (let k = 0; k < 3; k++) { const a0 = (k / 3) * Math.PI * 2; mesh(new THREE.BoxGeometry(3.4, 6, 3.4), flock("#8FA8A0"), [Math.cos(a0) * 6.5, 3, Math.sin(a0) * 6.5], [0, -a0, 0], u); }
+  }
+  // 아치 정문 '강경구락부': 붉은 벽돌 기둥 + 철제 아치 + 마름모 글자판
+  const gt = new THREE.Group(); gt.position.copy(P(965, 905)); gt.rotation.y = 0.5; scene.add(gt);
+  for (const sx of [-1, 1]) { mesh(new THREE.BoxGeometry(6, 26, 6), flock("#8E4A3A"), [sx * 22, 13, 0], [0, 0, 0], gt); mesh(new THREE.BoxGeometry(7.5, 2, 7.5), flock("#BFBAB0"), [sx * 22, 27, 0], [0, 0, 0], gt); }
+  mesh(new THREE.TorusGeometry(19, 0.8, 8, 32, Math.PI), flock("#3E4448"), [0, 26, 0], [0, 0, 0], gt);
+  mesh(new THREE.BoxGeometry(46, 0.8, 0.8), flock("#3E4448"), [0, 44, 0], [0, 0, 0], gt);
+  ["강", "경", "구", "락", "부"].forEach((ch, i) => { const t = canvasTex(`club-${ch}`, 64, 64, (cx, w, h) => { cx.fillStyle = "#4A5054"; cx.fillRect(0, 0, w, h); cx.fillStyle = "#F2F2F2"; cx.font = "bold 40px sans-serif"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(ch, w / 2, h / 2 + 2); }); const d = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ map: t, side: THREE.DoubleSide })); d.rotation.z = Math.PI / 4; d.position.set(-14 + i * 7, 37 + Math.sin((i / 4) * Math.PI) * 4, 0.6); gt.add(d); });
+}
+
 /** 디오라마 전체 */
 export function buildDiorama(scene, locs, { night = false, only = null } = {}) {
   ground(scene); river(scene);
@@ -214,6 +243,7 @@ export function buildDiorama(scene, locs, { night = false, only = null } = {}) {
   for (let i = 0; i < 260; i++) { const x = 250 + r() * 1090, y = 110 + r() * 1020; if (free(x, y)) tree(scene, x, y, 0.7 + r() * 0.5, r() < 0.3 ? "pine" : "round"); }
   // 감성산책로: 옛 포구 장터의 고양이 이야기 — 산책로 곳곳의 고양이 가족 조형물
   if (!only) for (const [v, y, ry] of [["kangi", 330, 0.9], ["kaengi", 640, 0.6], ["kongi", 905, 1.1]]) { const c = makeCat(v, "idle"); c.scale.setScalar(7); c.position.copy(P(332, y)); c.rotation.y = ry; scene.add(c); }
+  if (!only || ["coffee-interview", "hotel-west", "hotel-east", "hotel-family", "hana-donkatsu"].includes(only)) clubSquare(scene, night);
   // 길가 가로등
   for (let y = 120; y < 1100; y += 95) lamp(scene, 530 - (y - 40) * 0.0236, y, night);
 }

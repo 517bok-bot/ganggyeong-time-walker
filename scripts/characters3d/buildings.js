@@ -124,6 +124,16 @@ function plate(text, w, h, { bg = "#F1D66A", fg = "#1F3C88", border = "#7A5A2A",
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 1.2), [side, side, side, side, face, side]); m.castShadow = true; return m;
 }
 
+
+/** 회녹색 금속 판 지붕(모임지붕) — 강경구락부 건물들 */
+function metalHip(Wr, Dr, Hr, color = "#7D8C86") {
+  const t = canvasTex(`seam-${color}`, 256, 64, (c, w, h) => { c.fillStyle = color; c.fillRect(0, 0, w, h); c.fillStyle = "rgba(255,255,255,.25)"; for (let x = 0; x < w; x += 16) c.fillRect(x, 0, 2, h); c.fillStyle = "rgba(0,0,0,.15)"; for (let x = 8; x < w; x += 16) c.fillRect(x, 0, 1, h); });
+  const tt = t.clone(); tt.wrapS = THREE.RepeatWrapping; tt.repeat.set(Wr / 30, 1); tt.needsUpdate = true;
+  const r = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 4, 1), new THREE.MeshStandardMaterial({ map: tt, roughness: 0.45, metalness: 0.35 }));
+  r.rotation.y = Math.PI / 4; r.scale.set(Wr * 0.72, Hr, Dr * 0.72); r.castShadow = r.receiveShadow = true; return r;
+}
+function brickMat(key, cols, rows, { frame = "#2E3B3A", arch = false, night = false } = {}) { return wallMat(facade(key, { wall: "#8E4A3A", cols, rows, kind: "brick", frame, arch }), night); }
+
 /** 클래식카 (강경모던상회 포토존) */
 function classicCar() {
   const g = new THREE.Group();
@@ -141,7 +151,7 @@ function classicCar() {
 }
 
 // 현장 사진으로 확인한 건물은 전용 모양으로
-const REAL = { "welcome-center": "welcome", "music-library": "musichall", "ganggyeong-gwan": "theater", cinema: "cinema", gallery: "gallerygg", "dance-hall": "dancehall", tailor: "tailor", gwangshin: "gasoil", daecheong: "daeseong", "photo-studio": "photo" };
+const REAL = { "welcome-center": "welcome", "music-library": "musichall", "ganggyeong-gwan": "theater", cinema: "cinema", gallery: "gallerygg", "dance-hall": "dancehall", "coffee-interview": "coffeehouse", "hotel-west": "hotel", "hotel-east": "clubround", "hotel-family": "clubpavilion", "hana-donkatsu": "hana", "modern-store": "modernstore", milmyeon: "taechang", tailor: "tailor", gwangshin: "gasoil", daecheong: "daeseong", "photo-studio": "photo" };
 
 export function building(a, rand, { night = false } = {}) {
   const g = new THREE.Group();
@@ -150,6 +160,83 @@ export function building(a, rand, { night = false } = {}) {
   const name = a.name ?? "";
   const stone = flock("#CFC6B5"), wood = flock("#6B4530");
   switch (REAL[a.id] ?? a.style) {
+    case "coffeehouse": { // 커-피하우스(江景俱樂部): 크림 석재 + 붉은 벽돌 기둥, 회녹색 금속 모임지붕, 팔각 현관, 검은 격자 문, 오래된 나무 간판
+      box(g, flock("#E6DFCF"), [W * 1.3, H * 0.55, D], [0, H * 0.275, 0]);
+      for (const sx of [-0.5, -0.25, 0, 0.25, 0.5]) box(g, brickMat(`ch-${sx}`, 1, 1), [5, H * 0.55, 5], [sx * W * 1.2, H * 0.275, D / 2 + 2]);
+      for (const sx of [-0.37, -0.12, 0.12, 0.37]) box(g, flock("#1E2422"), [W * 0.12, H * 0.42, 1], [sx * W * 1.2, H * 0.21, D / 2 + 1]);
+      box(g, flock("#EDE7DA"), [W * 1.36, 3, D + 6], [0, H * 0.55 + 1.5, 0]);
+      const r = metalHip(W * 1.4, D * 1.2, H * 0.36); r.position.y = H * 0.55 + 3 + H * 0.18; g.add(r);
+      box(g, flock("#C9C6BE"), [W * 1.4, 2, 10], [0, 1, D / 2 + 6]);
+      const sg = plate("커-피하우스", W * 0.42, 6, { bg: "#E8E1D0", fg: "#2B2220", border: "#6B5A48", font: "'Song Myung', serif" }); sg.position.set(-W * 0.3, H * 0.5, D / 2 + 3.2); g.add(sg);
+      ["江", "景", "俱", "樂", "部"].forEach((ch, i) => { const d = plate(ch, 4, 4, { bg: "#F4F1EA", fg: "#6B2A26", border: "#6B2A26", font: "'Song Myung', serif" }); d.position.set(W * 0.05 + i * 6, H * 0.5, D / 2 + 1); g.add(d); });
+      break;
+    }
+    case "hotel": { // 강경호텔: 붉은 벽돌 + 크림 석재 2층, 아치 창, 화려한 전구 마퀴 간판, 회색 금속 지붕
+      const Wh = W * 1.25;
+      box(g, brickMat(`hot-${a.id}`, 5, 2, { frame: "#E6DFCF", arch: true, night }), [Wh, H, D], [0, H / 2, 0]);
+      for (const sx of [-0.35, -0.05, 0.25]) box(g, flock("#E6DFCF"), [Wh * 0.16, H, 1], [sx * Wh, H / 2, D / 2 + 0.6]);
+      box(g, flock("#E6DFCF"), [Wh + 3, 4, D + 3], [0, H + 2, 0]);
+      const r = metalHip(Wh + 4, D + 4, H * 0.22, "#6E7A80"); r.position.y = H + 4 + H * 0.11; g.add(r);
+      const mq = plate("강경호텔", W * 0.42, 6, { bg: "#3A2E68", fg: "#F6E7A8", border: "#D9B25E", bulbs: true, night, font: "'Song Myung', serif" }); mq.position.set(0, H * 0.5, D / 2 + 4); g.add(mq);
+      const top = plate("HOTEL", W * 0.24, 5, { bg: "#C8322B", fg: "#F6E7A8", border: "#3A2E68", font: "serif" }); top.position.set(0, H * 0.58, D / 2 + 4); g.add(top);
+      for (const sx of [-1, 1]) box(g, flock("#E6DFCF"), [3, H * 0.48, 3], [sx * W * 0.2, H * 0.24, D / 2 + 4]);
+      box(g, flock("#6B4530"), [W * 0.2, H * 0.36, 1.5], [0, H * 0.18, D / 2 + 1]);
+      break;
+    }
+    case "clubround": { // 둥근 창이 있는 크림 석재 건물 + 기둥 포치 (강경구락부)
+      box(g, flock("#E9E3D4"), [W, H * 1.05, D], [0, H * 0.525, 0]);
+      for (const y of [H * 0.75, H * 0.3]) { mesh(new THREE.TorusGeometry(5, 1.2, 10, 24), flock("#CFC6B2"), [-W * 0.25, y, D / 2 + 0.6], [0, 0, 0], g); mesh(new THREE.CircleGeometry(4.5, 24), new THREE.MeshStandardMaterial({ color: "#2F4A50", emissive: night ? "#FFC873" : "#000", emissiveIntensity: night ? 0.8 : 0 }), [-W * 0.25, y, D / 2 + 0.7], [0, 0, 0], g); }
+      box(g, brickMat(`cr-${a.id}`, 3, 1, { arch: true, night }), [W * 0.5, H * 0.45, 1], [W * 0.2, H * 0.25, D / 2 + 0.6]);
+      box(g, flock("#E9E3D4"), [W * 0.8, 3, 18], [W * 0.05, H * 0.55, D / 2 + 9]);
+      for (const sx of [-0.25, 0.35]) mesh(new THREE.CylinderGeometry(2.4, 2.6, H * 0.55, 16), flock("#D9D4C6"), [sx * W, H * 0.275, D / 2 + 16], [0, 0, 0], g);
+      box(g, flock("#D9D4C6"), [W + 3, 3, D + 3], [0, H * 1.05 + 1.5, 0]);
+      break;
+    }
+    case "clubpavilion": { // 검은 돔 지붕의 유리 정자 + 맞은편 벽돌 건물 (강경구락부)
+      mesh(new THREE.CylinderGeometry(W * 0.36, W * 0.38, H * 0.5, 8), new THREE.MeshPhysicalMaterial({ color: "#2E4A4A", roughness: 0.15, transmission: 0.2, emissive: night ? "#FFC873" : "#000", emissiveIntensity: night ? 0.5 : 0 }), [0, H * 0.25, 0], [0, Math.PI / 8, 0], g);
+      for (let i = 0; i < 8; i++) { const t0 = (i / 8) * Math.PI * 2; box(g, flock("#E9E3D4"), [2.4, H * 0.5, 2.4], [Math.cos(t0) * W * 0.37, H * 0.25, Math.sin(t0) * W * 0.37]); }
+      mesh(new THREE.CylinderGeometry(W * 0.42, W * 0.42, 3, 8), flock("#E9E3D4"), [0, H * 0.52, 0], [0, Math.PI / 8, 0], g);
+      mesh(new THREE.SphereGeometry(W * 0.38, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshPhysicalMaterial({ color: "#26302E", roughness: 0.35, metalness: 0.4 }), [0, H * 0.54, 0], [0, 0, 0], g);
+      break;
+    }
+    case "hana": { // 하나네 수제 돈-가스: 붉은 벽돌 + 회색 석재 처마, 회녹 금속 지붕과 높은 채광창, 청록 격자 문, 흰 간판
+      box(g, brickMat(`hana-${a.id}`, 3, 1, { frame: "#2E4A50", night }), [W * 1.1, H * 0.6, D], [0, H * 0.3, 0]);
+      box(g, flock("#CFCBC2"), [W * 1.14, 4, D + 3], [0, H * 0.6 + 2, 0]);
+      const r = metalHip(W * 1.16, D * 1.05, H * 0.28); r.position.y = H * 0.6 + 4 + H * 0.14; g.add(r);
+      box(g, flock("#2B2E30"), [W * 0.7, H * 0.16, D * 0.4], [0, H * 0.6 + 4 + H * 0.26, 0]);
+      const sg = plate("하나네 돈-가스", W * 0.6, 8, { bg: "#F7F5F0", fg: "#1E1E20", border: "#2B2220", sub: "江景俱樂部 · 수제", subColor: "#7A2A26", font: "'Song Myung', serif" }); sg.position.set(0, H * 0.6 + 7, D / 2 + 2); g.add(sg);
+      box(g, flock("#2E4A50"), [W * 0.32, H * 0.42, 1.5], [0, H * 0.21, D / 2 + 1]);
+      break;
+    }
+    case "taechang": { // 太昌商會: 기와 맞배 단층 목조, 박공에 큰 현판, 흰 회벽 + 아래 나무 판벽, 園道食·元冷祖面 간판
+      const Wt = W * 1.45;
+      box(g, flock("#5A3A26"), [Wt, H * 0.28, D], [0, H * 0.14, 0]);
+      const f = facade(`tc-${a.id}`, { wall: "#EEE8DA", cols: 5, rows: 1, kind: "hanok", frame: "#7A4A30" });
+      box(g, wallMat(f, night), [Wt, H * 0.32, D], [0, H * 0.28 + H * 0.16, 0]);
+      const eave = gableRoof(Wt + 12, D + 16, H * 0.14, "#5E6A66"); eave.position.y = H * 0.6; g.add(eave);
+      // 정면 가운데 박공(맞배 지붕창) + 큰 현판
+      const r = gableRoof(D * 0.7, Wt * 0.36, H * 0.3, "#5E6A66"); r.rotation.y = Math.PI / 2; r.position.set(0, H * 0.66, D * 0.18); g.add(r);
+      const tri = new THREE.Shape(); tri.moveTo(-Wt * 0.17, 0); tri.lineTo(Wt * 0.17, 0); tri.lineTo(0, H * 0.27); tri.closePath();
+      const tm = new THREE.Mesh(new THREE.ShapeGeometry(tri), flock("#EEE8DA")); tm.position.set(0, H * 0.66, D * 0.18 + D * 0.35 - 1); g.add(tm);
+      const sg = plate("太昌商會", Wt * 0.26, 8, { bg: "#F4F1EA", fg: "#1E1E20", border: "#5A3A26", sub: "태창상회", subColor: "#5A3A26", font: "'Song Myung', serif" }); sg.position.set(0, H * 0.72, D * 0.53); g.add(sg);
+      const s2 = plate("園道食", Wt * 0.3, 5, { bg: "#F4F1EA", fg: "#1E1E20", border: "#5A3A26", font: "'Song Myung', serif" }); s2.position.set(Wt * 0.25, H * 0.54, D / 2 + 1); g.add(s2);
+      break;
+    }
+    case "modernstore": { // 강경모던상회(江景商會): 위층 크림 미장 + 江景商會 현판·청록 창, 아래층 회색 화강석, 큰 '강경모던상회' 간판, 세로 '포토존' 간판
+      const granite = canvasTex("granite", 256, 128, (c, w, h) => { c.fillStyle = "#A9ABAD"; c.fillRect(0, 0, w, h); for (let i = 0; i < 900; i++) { c.fillStyle = Math.random() < 0.5 ? "rgba(255,255,255,.25)" : "rgba(0,0,0,.18)"; c.fillRect(Math.random() * w, Math.random() * h, 2, 2); } c.strokeStyle = "rgba(60,60,60,.35)"; c.lineWidth = 2; for (let y = 0; y < h; y += 42) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); } for (let x = 0; x < w; x += 64) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); } });
+      const Wm = W * 1.3;
+      box(g, new THREE.MeshStandardMaterial({ map: granite, roughness: 0.8 }), [Wm, H * 0.48, D], [0, H * 0.24, 0]);
+      const up = facade(`ms-${a.id}`, { wall: "#EAD3A6", cols: 3, rows: 1, kind: "plain", frame: "#3F8A7A" });
+      box(g, wallMat(up, night), [Wm * 0.55, H * 0.55, D * 0.9], [-Wm * 0.22, H * 0.48 + H * 0.275, -D * 0.04]);
+      box(g, flock("#E3D9C4"), [Wm * 0.57, 3, D * 0.95], [-Wm * 0.22, H * 1.04, -D * 0.04]);
+      box(g, flock("#3A3A3C"), [Wm * 0.57, 1.5, D * 0.95], [-Wm * 0.22, H * 1.07, -D * 0.04]);
+      const pl = plate("江景商會", Wm * 0.3, 6, { bg: "#EFE6D2", fg: "#2B2220", border: "#A08C6A", font: "'Song Myung', serif" }); pl.position.set(-Wm * 0.22, H * 0.92, D * 0.42); g.add(pl);
+      const big = plate("강경모던상회", Wm * 0.42, 9, { bg: "#E6D2B8", fg: "#1E1E20", border: "#3A2A20", sub: "", font: "'Song Myung', serif" }); big.position.set(Wm * 0.25, H * 0.58, D / 2 + 1); g.add(big);
+      const ph = plate("포토존", 4, 11, { vertical: true, bg: "#EFE6D2", fg: "#2B2220", border: "#6B4530", font: "'Song Myung', serif" }); ph.position.set(Wm * 0.05, H * 0.24, D / 2 + 1); g.add(ph);
+      box(g, flock("#3F8A7A"), [Wm * 0.14, H * 0.22, 1], [-Wm * 0.18, H * 0.25, D / 2 + 0.6]);
+      box(g, flock("#2B2220"), [Wm * 0.14, H * 0.34, 1.2], [Wm * 0.28, H * 0.17, D / 2 + 0.7]);
+      break;
+    }
     case "gallerygg": { // 강경화랑: 올리브빛 미장 2층, 곡선 박공에 和 문장 + '和信商會', 회색 발코니 띠 'GALLERY GG', 청록 문·창, 타일 기둥
       const f = facade(`gg-${a.id}`, { wall: "#BDB06A", cols: 4, rows: 2, kind: "plain", frame: "#2F7A72" });
       box(g, wallMat(f, night), [W, H, D], [0, H / 2, 0]);
@@ -176,6 +263,12 @@ export function building(a, rand, { night = false } = {}) {
       const vs = plate("江景シネマ", 9, 18, { vertical: true, bg: "#9A7448", fg: "#F4EFE4", border: "#3A2A1A", font: "'Song Myung', serif" }); vs.position.set(W * 0.08, H * 0.75, D / 2 + 1); g.add(vs);
       box(g, flock("#3A2A1A"), [W * 0.22, 2, 8], [W * 0.3, H * 0.92, D / 2 + 3], [0.4, 0, 0]);
       box(g, flock("#2E2A28"), [W * 0.18, H * 0.2, 1], [W * 0.3, H * 0.75, D / 2 + 0.6]);
+      // 나무 팔각 매표소
+      const kb = new THREE.Group(); kb.position.set(W * 0.62, 0, D / 2 + 8); g.add(kb);
+      mesh(new THREE.CylinderGeometry(5, 5, 4, 8), flock("#7A4F33"), [0, 2, 0], [0, Math.PI / 8, 0], kb);
+      mesh(new THREE.CylinderGeometry(4.6, 4.6, 9, 8), new THREE.MeshPhysicalMaterial({ color: "#B9CDD2", roughness: 0.1, transmission: 0.4, emissive: night ? "#FFC873" : "#000", emissiveIntensity: night ? 0.6 : 0 }), [0, 8.5, 0], [0, Math.PI / 8, 0], kb);
+      mesh(new THREE.CylinderGeometry(5.8, 5.4, 2.5, 8), flock("#6B4530"), [0, 14, 0], [0, Math.PI / 8, 0], kb);
+      const tk = plate("매표소", 6, 1.8, { bg: "#8A6040", fg: "#1E1E20", border: "#6B4530", font: "'Song Myung', serif" }); tk.position.set(0, 14, 5.6); kb.add(tk);
       const hs = plate("江景シネマ", W * 0.32, 5, { bg: "#9A7448", fg: "#F4EFE4", border: "#3A2A1A", font: "'Song Myung', serif" }); hs.position.set(-W * 0.22, H * 0.42, D / 2 + 1); g.add(hs);
       box(g, flock("#4A3020"), [W * 0.1, H * 0.3, 1.5], [-W * 0.25, H * 0.15, D / 2 + 1]);
       break;
@@ -261,6 +354,7 @@ export function building(a, rand, { night = false } = {}) {
       const sg = plate("案內所", W * 0.5, W * 0.17, { sub: "Welcome Center", subColor: "#1F3C88", bulbs: true, night }); sg.position.set(0, H * 0.5, D / 2 + 1.2); g.add(sg);
       box(g, flock("#6E7680"), [W * 0.22, H * 0.34, 2], [0, H * 0.17, D / 2 + 1]);
       for (const sx of [-0.55, -0.32, 0.32, 0.55]) box(g, flock("#2B2B2E"), [W * 0.18, 1.2, 6], [sx * Wl, H * 0.4, D / 2 + 3], [0.35, 0, 0]);
+      const ur = plate("우리상점", W * 0.3, 7, { bg: "#F4EAD0", fg: "#1E1E20", border: "#B08A3E", font: "'Song Myung', serif" }); ur.position.set(-Wl * 0.38, H * 0.48, D / 2 + 1); g.add(ur);
       const post = new THREE.Group(); post.position.set(-W * 0.45, 0, D / 2 + 10); g.add(post);
       mesh(new THREE.CylinderGeometry(2.4, 2.4, 9, 16), flock("#C8322B"), [0, 4.5, 0], [0, 0, 0], post);
       mesh(new THREE.SphereGeometry(2.6, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), flock("#C8322B"), [0, 9, 0], [0, 0, 0], post);
@@ -283,7 +377,8 @@ export function building(a, rand, { night = false } = {}) {
       box(g, flock("#BFC3C6"), [W * 0.32, 2, 6], [bx, 1, D * 0.55 + 4]);
       const vs = plate("江景音樂圖書館", 6, 30, { vertical: true, bg: "#F1E3B5", fg: "#2B2220", border: "#B08A3E" }); vs.position.set(-W * 0.12, H * 0.55, D / 2 + 1); g.add(vs);
       const lp = plate("LP 레코-드", 20, 8, { bg: "#C8322B", fg: "#FFFFFF", border: "#E8D9A8", bulbs: true, night, font: "sans-serif" }); lp.position.set(W * 0.12, H * 0.62, D / 2 + 1); g.add(lp);
-      const dc = plate("드-코레 아메리카", 18, 5, { bg: "#F4F1EA", fg: "#1F3C88", border: "#1F3C88", font: "sans-serif" }); dc.position.set(W * 0.38, H * 0.6, D / 2 + 1); g.add(dc);
+      ["江", "景", "金", "融", "組", "合"].forEach((ch, i) => { const d = plate(ch, 3.4, 3.4, { bg: "#F1EDE2", fg: "#2B2220", border: "#C9C3B6", font: "'Song Myung', serif" }); d.position.set(bx - 9 + i * 3.6, H * 0.62, D * 0.55 + 1.5); g.add(d); });
+      const dc = plate("드-코레 아비럼콜", 18, 5, { bg: "#F4F1EA", fg: "#1F3C88", border: "#1F3C88", font: "sans-serif" }); dc.position.set(W * 0.38, H * 0.6, D / 2 + 1); g.add(dc);
       break;
     }
     case "theater": { // 강경관(江景舘): 회색 석재풍 2층, 청록 창틀 + 아르데코 기둥, 큰 차양, 손그림 영화 간판, 밤색 나무문
@@ -301,6 +396,7 @@ export function building(a, rand, { night = false } = {}) {
       for (const sx of [-0.3, -0.1, 0.1, 0.3]) box(g, flock("#5A2A20"), [W * 0.16, H * 0.3, 1.5], [sx * W, H * 0.15, D / 2 + 1]);
       const t = plate(a.id === "cinema" ? "江景씨네마" : "江景舘", W * 0.5, 9, { bg: "#C9C7C1", fg: "#2B2B2E", border: "#C9C7C1", font: "'Song Myung', serif" }); t.position.set(0, H * 0.9, D / 2 + 1); g.add(t);
       box(g, flock("#A9A59D"), [W + 2, 3, D + 2], [0, H + 1.5, 0]);
+      if (a.id === "ganggyeong-gwan") { mesh(new THREE.CylinderGeometry(D * 0.38, D * 0.38, H * 1.1, 24), flock("#D2C9B6"), [W / 2 + D * 0.2, H * 0.55, 0], [0, 0, 0], g); for (const y of [0.35, 0.7]) box(g, flock("#C9C0AC"), [D * 0.8, 1.5, D * 0.8], [W / 2 + D * 0.2, H * y, 0]); }
       break;
     }
     case "hanok": { // 팔작지붕 한옥
