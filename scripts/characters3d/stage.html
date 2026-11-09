@@ -6,6 +6,8 @@ import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { makeCharacter } from "./models.js";
 import { makePlayer, makeNpc, makeMagpie } from "./player.js";
+import { buildDiorama, lights, BOX, PITCH, P } from "./diorama.js";
+import { makeCharacter as mkChar } from "./models.js";
 
 const W = 640, H = 704;
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
@@ -43,5 +45,53 @@ function shoot(obj, { turn = -0.28, fit = 2.75, look = 1.22, back = false, groun
 window.renderChar = (id, mood) => shoot(makeCharacter(id, mood));
 window.renderPlayer = (opts) => shoot(makePlayer(opts), { fit: 3.0, look: 1.38, turn: opts.turn ?? -0.22, ground: (opts.layer ?? "base") === "base" });
 window.renderNpc = (id) => shoot(id === "postman" ? makeMagpie() : makeNpc(id), { fit: 3.0, look: 1.38, turn: -0.25 });
+
+// 지도 배경: 비스듬한 정사영. 지도 좌표 1 = 그림 2픽셀
+window.renderMap = async (mode = "day") => {
+  const locs = await (await fetch("./locations.json")).json();
+  const k = 2, w = BOX.w * k, h = BOX.h * k;
+  renderer.setSize(w, h);
+  const scene = new THREE.Scene(); scene.environment = envTex; scene.environmentIntensity = 0.35;
+  scene.background = new THREE.Color("#BFD58F");
+  buildDiorama(scene, locs, { night: mode === "night" });
+  lights(scene, mode);
+  const S = Math.sin(PITCH), C = Math.cos(PITCH);
+  const target = new THREE.Vector3(BOX.x + BOX.w / 2, 0, (BOX.y + BOX.h / 2) / S);
+  const cam = new THREE.OrthographicCamera(-BOX.w / 2, BOX.w / 2, BOX.h / 2, -BOX.h / 2, 1, 5000);
+  cam.position.copy(target).add(new THREE.Vector3(0, S, C).multiplyScalar(2000)); cam.up.set(0, 1, 0); cam.lookAt(target);
+  renderer.render(scene, cam);
+  const url = renderer.domElement.toDataURL("image/webp", 0.86);
+  renderer.setSize(W, H); return url;
+};
+// 거리 풍경(첫 화면·이야기 배경): 원근 카메라로 거리 높이에서 바라봄
+window.renderScene = async ({ mode = "day", from, to, w = 1080, h = 1920, fov = 38, cast = [], only = null }) => {
+  const locs = await (await fetch("./locations.json")).json();
+  renderer.setSize(w, h);
+  const scene = new THREE.Scene(); scene.environment = envTex; scene.environmentIntensity = mode === "night" || mode === "festival" ? 0.15 : 0.35;
+  const sky = mode === "night" || mode === "festival" ? ["#1B2B3A", "#3E5872"] : mode === "fog" ? ["#C9CEC6", "#E4E4DC"] : mode === "dusk" ? ["#5E6E9A", "#F2B68A"] : ["#9CC9DA", "#F3EBD2"];
+  const c = document.createElement("canvas"); c.width = 4; c.height = 256; const g = c.getContext("2d"); const gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, sky[0]); gr.addColorStop(1, sky[1]); g.fillStyle = gr; g.fillRect(0, 0, 4, 256);
+  const bg = new THREE.CanvasTexture(c); bg.colorSpace = THREE.SRGBColorSpace; scene.background = bg;
+  buildDiorama(scene, locs, { night: mode === "night" || mode === "festival", only });
+  lights(scene, mode);
+  if (mode === "night" || mode === "festival") {
+    const moon = new THREE.Mesh(new THREE.SphereGeometry(60, 32, 16), new THREE.MeshBasicMaterial({ color: "#FFF1C8" }));
+    moon.position.copy(P(to[0] + 330, to[1] - 900)).setY(430); scene.add(moon);
+    for (let y = 120; y < 1100; y += 95) { const pl = new THREE.PointLight("#FFC879", 2.2, 160, 1.4); pl.position.copy(P(530 - (y - 40) * 0.0236, y)).setY(30); scene.add(pl); }
+  }
+  if (mode === "festival") { // 초롱 줄
+    for (const [y, x0, x1] of [[630, 760, 980], [700, 760, 980], [770, 760, 980]]) {
+      for (let i = 0; i <= 12; i++) { const x = x0 + ((x1 - x0) * i) / 12; const sag = Math.sin((i / 12) * Math.PI) * 10;
+        const l = new THREE.Mesh(new THREE.SphereGeometry(3.2, 12, 10), new THREE.MeshStandardMaterial({ color: i % 2 ? "#C83A35" : "#2E5C9A", emissive: i % 2 ? "#FF7A4A" : "#5A8FE0", emissiveIntensity: 1.5 }));
+        l.position.copy(P(x, y)).setY(58 - sag); l.scale.y = 1.3; scene.add(l); }
+      const pl = new THREE.PointLight("#FFB070", 3, 260, 1.3); pl.position.copy(P((x0 + x1) / 2, y)).setY(50); scene.add(pl);
+    }
+  }
+  for (const ch of cast) { const m = mkChar(ch.id, ch.mood ?? "idle"); m.scale.setScalar(ch.s ?? 9); m.position.copy(P(ch.x, ch.y)); m.rotation.y = ch.ry ?? 0; scene.add(m); }
+  const cam = new THREE.PerspectiveCamera(fov, w / h, 1, 6000);
+  cam.position.copy(P(from[0], from[1])).setY(from[2]); cam.lookAt(P(to[0], to[1]).setY(to[2] ?? 0));
+  renderer.render(scene, cam);
+  const url = renderer.domElement.toDataURL("image/webp", 0.86);
+  renderer.setSize(W, H); return url;
+};
 window.ready = true;
 </script></body></html>

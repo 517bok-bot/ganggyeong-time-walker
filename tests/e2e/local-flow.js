@@ -13,7 +13,7 @@ const sign = (id) => `GTW1.${id}.` + crypto.createHmac('sha256','test-secret').u
   await p.screenshot({ path: 'home.png', fullPage: true });
   // prologue
   await p.getByRole('button', { name: '시간 여행 시작' }).click(); await p.waitForTimeout(800);
-  await p.getByRole('button', { name: /건너뛰기/ }).click(); await p.waitForTimeout(400);
+  await p.getByRole('button', { name: /건너뛰기/ }).click(); await p.waitForTimeout(600);
   await p.getByText('이 신수와 함께하기').click();
   await p.getByLabel('이름').fill('테스터');
   await p.getByText('계약의 인장을 찍고 길을 나서다').click(); await p.waitForTimeout(2500);
@@ -42,38 +42,12 @@ const sign = (id) => `GTW1.${id}.` + crypto.createHmac('sha256','test-secret').u
   // forged
   const r = await p.evaluate(async () => (await fetch('/api/qr/verify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({payload:'GTW1.kongi.aaaaaaaaaaaaaaaa'})})).json());
   console.log('forged', JSON.stringify(r));
-  // village
-  await p.goto(`${base}/village`); await p.waitForTimeout(1200);
-  await p.screenshot({ path: 'village.png', fullPage: true });
-  // 숨은 베리쥬: 톡 누르면 걸어가서 저절로 발견
-  await p.getByLabel('수상한 기척').first().dispatchEvent('pointerdown'); await p.waitForTimeout(2500);
-  console.log('collect modal', await p.getByRole('dialog', { name: '캐릭터 발견' }).count());
-  await p.getByText('인연을 기록하다').click(); await p.waitForTimeout(2500);
-  // 이웃 달래: 걸어가서 말 걸기 → 이야기 나누기
-  await p.getByRole('button', { name: '달래에게 가기' }).dispatchEvent('pointerdown'); await p.waitForTimeout(2500);
-  console.log('villager sheet', await p.getByRole('dialog', { name: '이웃' }).count());
-  await p.getByText('이야기 나누기').click(); await p.waitForTimeout(300);
-  await p.locator('[role=dialog] button').first().click(); // 타자기 건너뛰기
-  await p.getByText('▶ 계속').click();
-  await p.locator('[role=dialog] button').first().click();
-  await p.getByText('강경은 어떤 곳이었어요?').click(); await p.waitForTimeout(300);
-  await p.screenshot({ path: 'npc.png' });
-  await p.keyboard.press('Escape');
-  // jeotgal
-  await p.goto(`${base}/jeotgal`); await p.waitForTimeout(800);
-  await p.getByText('첫 젓갈 담그기').click();
-  await p.getByText('새우젓', {exact:false}).first().click();
-  await p.getByText('다음: 항아리에 담기 →').click();
-  for (const name of ['새우','소금','웃소금']) { await p.locator('button', { hasText: name }).first().click(); await p.waitForTimeout(300); }
-  await p.screenshot({ path: 'jeotgal-mix.png', fullPage: true });
-  await p.getByText('다음: 뚜껑 덮기 →').click();
-  await p.getByText('숙성 시작', { exact: true }).click(); await p.waitForTimeout(600);
-  await p.screenshot({ path: 'jeotgal-aging.png', fullPage: true });
-  await p.getByText('숙성 빨리감기 (시연용)').click(); await p.waitForTimeout(800);
-  await p.screenshot({ path: 'jeotgal-result.png' });
-  await p.getByText('젓갈 도감에 저장!').click();
-  await p.goto(`${base}/quests`); await p.waitForTimeout(800);
-  await p.screenshot({ path: 'quests.png', fullPage: true });
+  // 이야기 화면
+  await p.goto(`${base}/story`); await p.waitForTimeout(800);
+  await p.screenshot({ path: 'story.png', fullPage: true });
+  // 없앤 화면은 첫 장으로
+  await p.goto(`${base}/village`); await p.waitForTimeout(500);
+  console.log('village redirect', new URL(p.url()).pathname);
   await p.goto(`${base}/dex`); await p.waitForTimeout(800);
   await p.screenshot({ path: 'dex.png', fullPage: true });
   await p.goto(`${base}/me`); await p.waitForTimeout(800);

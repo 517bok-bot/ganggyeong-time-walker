@@ -55,9 +55,8 @@ export const NPCS: Npc[] = [
         { label: "젓갈 만들기를 배우고 싶어요", next: "learn" },
         { label: "다음에 올게요", action: "close" },
       ]},
-      learn: { text: "좋지! 게임 속 항아리로 연습해 보게나. 단, 여기서 쓰는 비율은 '게임 수치'일 뿐 실제 식품 제조법이 아니라네. 첫 재료는 내가 챙겨주지.", choices: [
+      learn: { text: "젓갈은 시간이 만드는 맛이지. 강경 젓갈 이야기라면 언제든 들려주겠네.", choices: [
         { label: "재료 받기 (새우 2, 소금 3)", action: "give-items", items: { shrimp: 2, salt: 3 } },
-        { label: "항아리 공방으로 가기", action: "open-jeotgal" },
       ]},
     },
   },
@@ -67,8 +66,7 @@ export const NPCS: Npc[] = [
     locationId: "photo-studio",
     greeting: "찰칵! 오늘의 빛이 아주 좋네요. 기념 엽서 한 장 어때요?",
     dialogue: {
-      start: { text: "방문 도장을 받은 곳은 제 엽서 공방에서 기념 엽서로 남길 수 있어요. 옛날이야기도 들려드릴까요?", choices: [
-        { label: "엽서 공방 가기", action: "open-postcard" },
+      start: { text: "찰칵! 오늘의 빛이 아주 좋네요. 옛날이야기 하나 들려드릴까요?", choices: [
         { label: "포구 시절 이야기", knowledgeId: "kd-port" },
         { label: "포구는 어떻게 변했어요?", knowledgeId: "kd-decline" },
         { label: "안녕히 계세요", action: "close" },
@@ -94,8 +92,7 @@ export const NPCS: Npc[] = [
     locationId: "ganggyeong-gwan",
     greeting: "까악! 편지 왔어요~ 과거에서도, 미래에서도요. 시간의 종이 쓴 편지는 까치들이 날라요.",
     dialogue: {
-      start: { text: "시간 우체국에서는 미래의 여행자에게 편지를 남기고, 다른 타임워커의 편지도 받아 볼 수 있어요!", choices: [
-        { label: "우체국으로 가기", action: "open-post" },
+      start: { text: "시간의 종이 고친 날엔 편지가 쏟아질 거예요. 그날까지 조각을 부탁해요, 타임워커!", choices: [
         { label: "다음에 올게요", action: "close" },
         { label: "축제 소식 있어요?", knowledgeId: "kd-festival" },
       ]},

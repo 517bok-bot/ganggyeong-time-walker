@@ -1,0 +1,531 @@
+{
+ "hero": {
+  "mode": "night",
+  "from": [
+   470,
+   1180,
+   52
+  ],
+  "to": [
+   490,
+   700,
+   30
+  ],
+  "fov": 48,
+  "cast": [
+   {
+    "id": "kangi",
+    "x": 458,
+    "y": 1000,
+    "s": 10,
+    "ry": 0.45
+   },
+   {
+    "id": "kaengi",
+    "x": 484,
+    "y": 1004,
+    "s": 10,
+    "ry": -0.1
+   },
+   {
+    "id": "kongi",
+    "x": 506,
+    "y": 994,
+    "s": 8,
+    "ry": -0.45
+   }
+  ]
+ },
+ "scene-night": {
+  "mode": "night",
+  "from": [
+   500,
+   1100,
+   40
+  ],
+  "to": [
+   500,
+   500,
+   40
+  ],
+  "fov": 48
+ },
+ "scene-fog": {
+  "mode": "fog",
+  "from": [
+   500,
+   900,
+   45
+  ],
+  "to": [
+   500,
+   350,
+   30
+  ],
+  "fov": 48
+ },
+ "scene-street": {
+  "mode": "day",
+  "from": [
+   640,
+   1010,
+   170
+  ],
+  "to": [
+   560,
+   760,
+   0
+  ],
+  "fov": 44
+ },
+ "scene-kitchen": {
+  "mode": "dusk",
+  "from": [
+   650,
+   900,
+   150
+  ],
+  "to": [
+   567,
+   716,
+   0
+  ],
+  "fov": 44
+ },
+ "scene-lighthouse": {
+  "mode": "night",
+  "from": [
+   480,
+   660,
+   110
+  ],
+  "to": [
+   390,
+   437,
+   50
+  ],
+  "fov": 46
+ },
+ "scene-festival": {
+  "mode": "festival",
+  "from": [
+   900,
+   980,
+   170
+  ],
+  "to": [
+   860,
+   690,
+   10
+  ],
+  "fov": 46
+ },
+ "loc-welcome-center": {
+  "mode": "day",
+  "from": [
+   450,
+   1112,
+   120
+  ],
+  "to": [
+   410,
+   952,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "welcome-center"
+ },
+ "loc-music-library": {
+  "mode": "day",
+  "from": [
+   420,
+   977,
+   120
+  ],
+  "to": [
+   380,
+   817,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "music-library"
+ },
+ "loc-tailor": {
+  "mode": "day",
+  "from": [
+   430,
+   840,
+   120
+  ],
+  "to": [
+   390,
+   680,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "tailor"
+ },
+ "loc-dance-hall": {
+  "mode": "day",
+  "from": [
+   412,
+   698,
+   120
+  ],
+  "to": [
+   372,
+   538,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "dance-hall"
+ },
+ "loc-memory-lighthouse": {
+  "mode": "day",
+  "from": [
+   430,
+   587,
+   120
+  ],
+  "to": [
+   390,
+   427,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "memory-lighthouse"
+ },
+ "loc-cinema": {
+  "mode": "day",
+  "from": [
+   430,
+   478,
+   120
+  ],
+  "to": [
+   390,
+   318,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "cinema"
+ },
+ "loc-photo-studio": {
+  "mode": "day",
+  "from": [
+   465,
+   382,
+   120
+  ],
+  "to": [
+   425,
+   222,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "photo-studio"
+ },
+ "loc-donkatsu": {
+  "mode": "day",
+  "from": [
+   435,
+   278,
+   120
+  ],
+  "to": [
+   395,
+   118,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "donkatsu"
+ },
+ "loc-gallery": {
+  "mode": "day",
+  "from": [
+   628,
+   312,
+   120
+  ],
+  "to": [
+   588,
+   152,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "gallery"
+ },
+ "loc-dammi": {
+  "mode": "day",
+  "from": [
+   700,
+   412,
+   120
+  ],
+  "to": [
+   660,
+   252,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "dammi"
+ },
+ "loc-milmyeon": {
+  "mode": "day",
+  "from": [
+   612,
+   500,
+   120
+  ],
+  "to": [
+   572,
+   340,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "milmyeon"
+ },
+ "loc-honggyori": {
+  "mode": "day",
+  "from": [
+   628,
+   598,
+   120
+  ],
+  "to": [
+   588,
+   438,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "honggyori"
+ },
+ "loc-bookshop": {
+  "mode": "day",
+  "from": [
+   641,
+   741,
+   120
+  ],
+  "to": [
+   601,
+   581,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "bookshop"
+ },
+ "loc-romance-square": {
+  "mode": "day",
+  "from": [
+   719,
+   840,
+   120
+  ],
+  "to": [
+   679,
+   680,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "romance-square"
+ },
+ "loc-daecheong": {
+  "mode": "day",
+  "from": [
+   607,
+   866,
+   120
+  ],
+  "to": [
+   567,
+   706,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "daecheong"
+ },
+ "loc-gwangshin": {
+  "mode": "day",
+  "from": [
+   615,
+   958,
+   120
+  ],
+  "to": [
+   575,
+   798,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "gwangshin"
+ },
+ "loc-workation": {
+  "mode": "day",
+  "from": [
+   630,
+   1177,
+   120
+  ],
+  "to": [
+   590,
+   1017,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "workation"
+ },
+ "loc-ganggyeong-gwan": {
+  "mode": "day",
+  "from": [
+   691,
+   1113,
+   120
+  ],
+  "to": [
+   651,
+   953,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "ganggyeong-gwan"
+ },
+ "loc-modern-store": {
+  "mode": "day",
+  "from": [
+   900,
+   840,
+   120
+  ],
+  "to": [
+   860,
+   680,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "modern-store"
+ },
+ "loc-coffee-interview": {
+  "mode": "day",
+  "from": [
+   1148,
+   1012,
+   120
+  ],
+  "to": [
+   1108,
+   852,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "coffee-interview"
+ },
+ "loc-hotel-west": {
+  "mode": "day",
+  "from": [
+   1056,
+   964,
+   120
+  ],
+  "to": [
+   1016,
+   804,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-west"
+ },
+ "loc-hotel-east": {
+  "mode": "day",
+  "from": [
+   1092,
+   864,
+   120
+  ],
+  "to": [
+   1052,
+   704,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-east"
+ },
+ "loc-hotel-family": {
+  "mode": "day",
+  "from": [
+   1181,
+   822,
+   120
+  ],
+  "to": [
+   1141,
+   662,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-family"
+ },
+ "loc-hana-donkatsu": {
+  "mode": "day",
+  "from": [
+   1217,
+   905,
+   120
+  ],
+  "to": [
+   1177,
+   745,
+   18
+  ],
+  "fov": 30,
+  "w": 800,
+  "h": 500,
+  "only": "hana-donkatsu"
+ }
+}

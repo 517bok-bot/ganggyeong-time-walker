@@ -51,18 +51,16 @@ export function Hud() {
 /** 화면 제목: 명조 큰 제목 + 붉은 낙관 + 먹선 */
 export function PageHeader({ title, sub, right, seal }: { title: string; sub?: string; right?: React.ReactNode; seal?: string }) {
   return (
-    <header className="pl-4 pr-14 pt-6 pb-3">
+    <header className="pl-1 pr-14 pt-[max(20px,env(safe-area-inset-top))] pb-3">
       <div className="flex items-end justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          <span className="seal w-9 h-11 text-[15px] vertical shrink-0 mt-1" aria-hidden>{seal ?? title.slice(0, 2)}</span>
           <div className="min-w-0">
-            <h1 className="font-story text-[34px] leading-tight text-sumi anim-ink">{title}</h1>
+            <h1 className="font-story text-[30px] leading-tight text-sumi">{title}</h1>
             {sub && <p className="text-sumi-light text-sm mt-0.5">{sub}</p>}
           </div>
         </div>
         {right}
       </div>
-      <div className="ink-rule mt-2" />
     </header>
   );
 }
@@ -76,12 +74,10 @@ export function Modal({ open, onClose, children, label }: { open: boolean; onClo
   if (!open) return null;
   return (<Portal>
     <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center p-3" role="dialog" aria-modal aria-label={label} onClick={onClose}
-      style={{ background: "radial-gradient(ellipse at 50% 30%, rgba(38,61,64,.55), rgba(26,43,45,.82))" }}>
+      style={{ background: "rgba(30,38,44,.55)", backdropFilter: "blur(3px)" }}>
       <div className="relative w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <div className="h-3 mx-[-6px] rounded-full bg-teal border border-sumi-dark relative z-10" style={{ backgroundImage: "var(--woodgrain)" }} />
-        <div className="silk-frame anim-unroll"><div className="paper !rounded-none max-h-[80dvh] overflow-y-auto">{children}</div></div>
-        <div className="h-3 mx-[-6px] rounded-full bg-teal border border-sumi-dark relative z-10" style={{ backgroundImage: "var(--woodgrain)" }} />
-        <button onClick={onClose} aria-label="닫기" className="absolute -top-3 right-2 z-20 seal seal-round w-8 h-8 text-sm">✕</button>
+        <div className="card anim-sheet sm:anim-pop max-h-[84dvh] overflow-y-auto">{children}</div>
+        <button onClick={onClose} aria-label="닫기" className="absolute -top-3 -right-1 z-20 w-9 h-9 rounded-full bg-white text-sumi font-bold shadow-card grid place-items-center">✕</button>
       </div>
     </div>
   </Portal>);
@@ -98,7 +94,7 @@ export function Sheet({ open, onClose, children, label }: { open: boolean; onClo
     <div className="fixed inset-0 z-50 flex items-end justify-center anim-fade" role="dialog" aria-modal aria-label={label} onClick={onClose}
       style={{ background: "linear-gradient(to top, rgba(26,43,45,.7), rgba(26,43,45,.15))" }}>
       <div className="relative w-full max-w-lg anim-sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="paper !rounded-t-[18px] !rounded-b-none max-h-[82dvh] overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+        <div className="card !rounded-b-none max-h-[82dvh] overflow-y-auto pb-[env(safe-area-inset-bottom)]">
           <button onClick={onClose} aria-label="닫기" className="sticky top-0 z-10 block w-full pt-2 pb-1"><span className="block mx-auto w-12 h-1.5 rounded-full bg-sumi/30" /></button>
           {children}
         </div>
@@ -115,7 +111,7 @@ export function MiniHud() {
   const pct = Math.min(1, p.exp / need);
   const C = 2 * Math.PI * 25;
   return (
-    <div className="flex items-center gap-2 pr-3 pl-1 py-1 rounded-full bg-hanji-light/95 border-[1.5px] border-sumi shadow-card" style={{ backgroundImage: "var(--fiber)" }}>
+    <div className="flex items-center gap-2 pr-3 pl-1 py-1 rounded-full bg-[#FFFDF8]/95 shadow-card">
       <Link href="/me" className="relative w-14 h-14 shrink-0" aria-label={`내 공간 · Lv.${p.level}`}>
         <svg viewBox="0 0 56 56" className="absolute inset-0 -rotate-90"><circle cx="28" cy="28" r="25" fill="#E8D8B8" stroke="#D6C29C" strokeWidth="4" />
           <circle cx="28" cy="28" r="25" fill="none" stroke="#263D40" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${C * pct} ${C}`} style={{ transition: "stroke-dasharray .8s var(--out)" }} /></svg>

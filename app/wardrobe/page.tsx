@@ -21,7 +21,7 @@ export default function Wardrobe() {
 
   return (
     <main className="px-3">
-      <PageHeader title="옷장" seal="의복" sub="두루마기와 갓, 장신구로 나그네를 꾸며요" right={<Link href="/album" className="btn-gold btn-sm"><Ico name="album" size={20} />화첩</Link>} />
+      <PageHeader title="옷장" seal="의복" sub="엽전으로 옷과 모자, 소품을 모아 꾸며요" />
       <Hud />
       <div className="grid md:grid-cols-[1fr_1.4fr] gap-3 mt-3">
         <section className="paper p-4 text-center">

@@ -31,15 +31,11 @@
   --corner-br: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22'><path d='M20 2v13a5 5 0 0 1-5 5H2M15 2v8a5 5 0 0 1-5 5H2' fill='none' stroke='%23963F38' stroke-width='1.6'/><circle cx='17' cy='17' r='1.7' fill='%23963F38'/></svg>");
 }
 
-html, body { background: var(--hanji); color: var(--sumi); }
+html, body { background: #F4EEDF; color: var(--sumi); }
 body {
   font-family: "Gowun Dodum", "Noto Sans KR", sans-serif;
-  background-color: var(--hanji);
-  background-image:
-    var(--fiber), var(--grain),
-    radial-gradient(ellipse at 18% 8%, rgba(181,139,72,.18), transparent 55%),
-    radial-gradient(ellipse at 85% 85%, rgba(101,81,111,.10), transparent 60%),
-    radial-gradient(ellipse at 50% 120%, rgba(38,61,64,.16), transparent 60%);
+  background-color: #F4EEDF;
+  background-image: radial-gradient(ellipse at 20% 0%, rgba(191,213,143,.35), transparent 55%), radial-gradient(ellipse at 90% 100%, rgba(181,139,72,.14), transparent 60%);
   min-height: 100dvh;
   -webkit-tap-highlight-color: transparent;
   text-rendering: optimizeLegibility;
@@ -47,93 +43,57 @@ body {
 ::selection { background: rgba(150,63,56,.25); }
 h1, h2, h3 { letter-spacing: -0.01em; }
 
+/* ─────────────────────────────────────────────────────────────
+   3.4 미니어처 스타일 UI: 둥근 카드 · 말랑한 알약 단추 · 부드러운 그림자
+   (3D 피규어·디오라마 그림과 어울리게 장식선을 걷어 냄)
+   ───────────────────────────────────────────────────────────── */
 @layer components {
-  /* 고서 한 쪽: 한지 + 먹 테두리 + 안쪽 금선 + 모서리 꺾쇠 */
-  .paper {
-    @apply relative rounded-[4px] text-wood;
-    background-color: var(--hanji-light);
-    background-image: var(--corner-tl), var(--corner-tr), var(--corner-bl), var(--corner-br), var(--fiber), var(--grain);
-    background-position: 5px 5px, calc(100% - 5px) 5px, 5px calc(100% - 5px), calc(100% - 5px) calc(100% - 5px), 0 0, 0 0;
-    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat;
-    border: 1.5px solid rgba(57,51,47,.85);
-    box-shadow: inset 0 0 0 4px var(--hanji-light), inset 0 0 0 5px rgba(181,139,72,.75), inset 0 0 40px rgba(181,139,72,.18), 0 12px 26px -16px rgba(38,61,64,.55);
-  }
-  .seal:hover, .btn-brick:hover { filter: url(#seal-rough) drop-shadow(0 0 8px rgba(233,185,94,.55)); }
-  .paper { background-size: 22px 22px, 22px 22px, 22px 22px, 22px 22px, auto, auto; }
+  .card { @apply relative rounded-3xl text-sumi; background: #FFFDF8; box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 10px 28px -14px rgba(57,51,47,.35), 0 2px 6px -2px rgba(57,51,47,.12); }
+  .paper { @apply card; }
+  .silk-frame { @apply rounded-3xl; padding: 0; }
+  .silk-frame > .paper { @apply card; }
 
-  /* 버튼 공통: 목판 인쇄 */
   .btn {
-    @apply relative inline-flex items-center justify-center gap-2 px-4 py-3 font-game font-bold text-lg tracking-tight
-      transition-[transform,box-shadow,filter] select-none disabled:opacity-45 disabled:pointer-events-none;
-    border: 1.5px solid #26211E;
-    border-radius: 3px;
-    background-image: var(--woodgrain);
-    box-shadow: 0 3px 0 rgba(38,33,30,.55);
+    @apply relative inline-flex items-center justify-center gap-2 px-5 py-3 font-game font-bold text-lg tracking-tight rounded-full
+      select-none disabled:opacity-45 disabled:pointer-events-none;
+    transition: transform .25s var(--spring), box-shadow .2s, filter .2s;
   }
-  .btn:active { transform: translateY(2px) scale(.97); box-shadow: 0 1px 0 rgba(38,33,30,.55); }
-  .btn { transition: transform .25s var(--spring), box-shadow .2s, filter .2s; }
-  .btn:focus-visible { outline: 2px dashed var(--vermilion); outline-offset: 3px; }
-  /* 붉은 인장: 핵심 행동 */
-  .btn-brick { @apply btn text-hanji-light; background-color: var(--vermilion);
-    box-shadow: inset 0 0 0 3px var(--vermilion), inset 0 0 0 4.5px rgba(242,231,208,.75), 0 3px 0 #5c2520; }
-  /* 청록 현판 */
-  .btn-sage { @apply btn text-hanji-light; background-color: var(--teal);
-    box-shadow: inset 0 0 0 3px var(--teal), inset 0 0 0 4px rgba(181,139,72,.85), 0 3px 0 #121e1f; }
-  /* 금박 표찰: 보상 */
-  .btn-gold { @apply btn text-sumi-dark; background-color: var(--antique);
-    box-shadow: inset 0 0 0 3px var(--antique), inset 0 0 0 4px rgba(57,51,47,.55), 0 3px 0 #6b4f25; }
-  /* 종이 표찰 */
-  .btn-cream { @apply btn text-sumi; background-color: var(--hanji-light);
-    background-image: var(--fiber); box-shadow: inset 0 0 0 3px var(--hanji-light), inset 0 0 0 4px rgba(57,51,47,.35), 0 3px 0 rgba(38,33,30,.45); }
-  .btn-sm { @apply px-3 py-2 text-base; }
+  .btn:active { transform: translateY(2px) scale(.96); }
+  .btn:focus-visible { outline: 3px solid rgba(150,63,56,.4); outline-offset: 3px; }
+  .btn-primary { @apply btn text-white; background: linear-gradient(#B9554B, #963F38); box-shadow: inset 0 2px 0 rgba(255,255,255,.25), 0 5px 0 #6E2A24, 0 12px 20px -8px rgba(150,63,56,.6); }
+  .btn-primary:active { box-shadow: inset 0 2px 0 rgba(255,255,255,.25), 0 2px 0 #6E2A24; }
+  .btn-brick { @apply btn-primary; }
+  .btn-sage { @apply btn text-white; background: linear-gradient(#3E6466, #263D40); box-shadow: inset 0 2px 0 rgba(255,255,255,.18), 0 5px 0 #15232A, 0 12px 20px -8px rgba(38,61,64,.55); }
+  .btn-gold { @apply btn text-sumi-dark; background: linear-gradient(#F0CF83, #D9A94F); box-shadow: inset 0 2px 0 rgba(255,255,255,.4), 0 5px 0 #A67A2E, 0 12px 20px -8px rgba(181,139,72,.6); }
+  .btn-soft { @apply btn text-sumi; background: #FFFDF8; box-shadow: inset 0 0 0 1.5px rgba(57,51,47,.12), 0 4px 0 rgba(57,51,47,.12), 0 10px 18px -10px rgba(57,51,47,.3); }
+  .btn-cream { @apply btn-soft; }
+  .btn-sm { @apply px-4 py-2 text-base; }
+  .btn-sm:active { transform: translateY(1px) scale(.96); }
 
-  /* 작은 표찰 태그 */
-  .chip { @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-game font-bold;
-    border-radius: 2px; border: 1px solid rgba(38,33,30,.35); }
+  .chip { @apply inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-game font-bold rounded-full; }
+  .chip-soft { @apply inline-flex items-center gap-1 px-3 py-1 text-[13px] font-game font-bold rounded-full text-sumi; background: rgba(57,51,47,.07); }
 
-  /* 제목 띠: 청록 현판 + 금빛 글자 + 제비꼬리 끝 */
-  .title-ribbon {
-    @apply relative inline-block px-6 py-1.5 font-story text-xl;
-    color: #f2e7d0; background: var(--teal);
-    clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%);
-    background-image: var(--woodgrain);
-  }
+  .title-ribbon { @apply relative inline-block px-4 py-1 font-story text-xl rounded-full text-white; background: var(--teal); }
   .title-ribbon.\!bg-sage, .title-ribbon.\!bg-wood { background-color: var(--sumi); }
   .title-ribbon.\!bg-brick { background-color: var(--vermilion); }
 
-  /* 금박: 반짝이며 흐르는 금빛 글자 */
   .gold-leaf {
     background: linear-gradient(100deg, #B58B48 0%, #F3D896 20%, #B58B48 38%, #8A6731 52%, #F6E6B4 70%, #B58B48 100%);
     background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
-    animation: shimmer 6s linear infinite; filter: drop-shadow(0 2px 0 rgba(26,43,45,.8));
+    animation: shimmer 6s linear infinite;
   }
-  /* 비단 장황(표구 비단) 테두리: 청록 비단 + 금실 무늬 */
-  .silk-frame {
-    position: relative; padding: 5px; border-radius: 4px;
-    background-color: #263D40;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><rect width='24' height='24' fill='%23263D40'/><path d='M0 12h24M12 0v24' stroke='%231A2B2D' stroke-width='1'/><circle cx='6' cy='6' r='2' fill='none' stroke='%23B58B48' stroke-width='.9'/><circle cx='18' cy='18' r='2' fill='none' stroke='%23B58B48' stroke-width='.9'/><path d='M16 6h4M6 16v4' stroke='%23B58B48' stroke-width='.8'/></svg>");
-    background-size: 18px 18px;
-    box-shadow: inset 0 0 0 1px #B58B48, 0 14px 30px -16px rgba(26,43,45,.7);
-  }
-  .silk-frame > .paper { box-shadow: inset 0 0 0 4px var(--hanji-light), inset 0 0 0 5px rgba(181,139,72,.75); border-color: #B58B48; }
-  .demo-badge { @apply chip text-hanji-light; background: var(--dream); border-color: #4a3a52; }
+  .demo-badge { @apply chip text-white; background: var(--dream); }
 
-  /* 붉은 인장 (원형·사각) */
-  .seal { @apply inline-grid place-items-center font-story text-hanji-light leading-none;
-    background: var(--vermilion); border-radius: 4px;
-    box-shadow: inset 0 0 0 2px var(--vermilion), inset 0 0 0 3.5px rgba(242,231,208,.8);
-    filter: url(#seal-rough); }
+  /* 붉은 도장 (배지·번호) — 테두리 거친 효과 대신 둥글고 매끈하게 */
+  .seal { @apply inline-grid place-items-center font-story text-white leading-none rounded-xl; background: linear-gradient(#B9554B, #963F38); box-shadow: inset 0 2px 0 rgba(255,255,255,.25), 0 3px 8px -2px rgba(150,63,56,.5); }
   .seal-round { border-radius: 9999px; }
 
-  /* 수묵 실루엣 (미수집) */
-  .silhouette svg, .silhouette img { filter: brightness(0) sepia(.4) opacity(.22) blur(.3px) !important; }
-
-  /* 세로 글씨 */
+  .silhouette svg, .silhouette img { filter: brightness(0) opacity(.18) !important; }
   .vertical { writing-mode: vertical-rl; text-orientation: upright; letter-spacing: .12em; }
-
-  /* 먹선 구분선 */
-  .ink-rule { height: 10px; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='10' preserveAspectRatio='none'><path d='M0 5 Q100 2 200 5 T400 5' stroke='%2339332F' stroke-width='1.4' fill='none' opacity='.6'/></svg>") center/100% 100% no-repeat; }
+  .ink-rule { height: 1px; background: rgba(57,51,47,.12); }
 }
+
+@keyframes glow-pulse { 0%,100% { box-shadow: inset 0 2px 0 rgba(255,255,255,.25), 0 5px 0 #6E2A24, 0 0 0 0 rgba(243,216,150,0) } 50% { box-shadow: inset 0 2px 0 rgba(255,255,255,.25), 0 5px 0 #6E2A24, 0 0 34px 8px rgba(243,216,150,.55) } }
 
 /* ── 움직임: 섬세하게 ─────────────────────────────── */
 @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }

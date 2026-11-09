@@ -64,8 +64,8 @@ export const CHAPTERS: Chapter[] = [
   {
     id: "ch2", no: "2장", title: "이름을 받은 고양이", sub: "엄마 고양이 갱이", scene: "street",
     objectives: [
-      { label: "갱이 만나기", done: found("kaengi"), hint: "광신석유 현장 인증 또는 온라인 마을", href: "/explore" },
-      { label: "장소 2곳 방문 (현장 또는 온라인)", done: (s) => places(s) >= 2, hint: "지도에서 장소를 눌러 인증해요", href: "/explore", count: (s) => [Math.min(2, places(s)), 2] },
+      { label: "갱이 만나기", done: found("kaengi"), hint: "광신석유에서 QR·GPS 인증", href: "/explore" },
+      { label: "장소 2곳 방문 인증", done: (s) => places(s) >= 2, hint: "현장에서 장소 QR을 찍거나 GPS 인증", href: "/explore", count: (s) => [Math.min(2, places(s)), 2] },
     ],
     reward: { exp: 90, coins: 60, items: { shrimp: 2 } },
     intro: [
@@ -84,8 +84,8 @@ export const CHAPTERS: Chapter[] = [
   {
     id: "ch3", no: "3장", title: "맛있는 냄새를 따라", sub: "아기 고양이 콩이", scene: "kitchen",
     objectives: [
-      { label: "콩이 만나기", done: found("kongi"), hint: "대청상회 현장 인증 또는 온라인 마을", href: "/explore" },
-      { label: "젓갈 공방에서 항아리 하나 담그기", done: (s) => s.jars.length >= 1, hint: "젓갈 공방에서 재료를 넣어요", href: "/jeotgal" },
+      { label: "콩이 만나기", done: found("kongi"), hint: "대청상회에서 QR·GPS 인증", href: "/explore" },
+      { label: "시간 조각 6개 모으기 (냄새의 실마리)", done: (s) => (s.sparkTotal ?? 0) >= 6, hint: "조각은 매일 새로 떨어져요", href: "/explore", count: (s) => [Math.min(6, s.sparkTotal ?? 0), 6] },
     ],
     reward: { exp: 120, coins: 80, items: { sincerity: 1 } },
     intro: [
@@ -93,17 +93,17 @@ export const CHAPTERS: Chapter[] = [
       { who: "kongi", mood: "happy", text: "저쪽으로 가면 정말 맛있는 냄새가 나!" },
       { who: "kaengi", mood: "surprised", text: "콩이야! 엄마 여기 있어!" },
       { who: "kongi", mood: "wave", text: "엄마! 근데 아빠가 없어. 아빠는 맨날 등대에 올라가서 종을 보잖아." },
-      { who: "deokbae", text: "냄새는 기억을 깨우는 법이지. 항아리 하나 같이 담가 보겠소? 시간이 잘 익으면 길도 보일 거요." },
+      { who: "deokbae", text: "냄새는 기억을 깨우는 법이지. 거리에 흩어진 시간 조각을 몇 개 더 모아 보게. 조각이 모이면 길이 보일 거요." },
     ],
     outro: [
-      { who: "narr", text: "항아리 뚜껑을 덮자 소금 냄새 사이로 강바람이 불었다. 바람은 등대 쪽으로 불고 있었다." },
+      { who: "narr", text: "조각들이 한꺼번에 반짝이자, 젓갈 냄새 사이로 강바람이 불었다. 바람은 등대 쪽으로 불고 있었다." },
       { who: "kongi", mood: "surprised", text: "저기! 등대 꼭대기에 꼬리가 보였어!" },
     ],
   },
   {
     id: "ch4", no: "4장", title: "등대지기의 비밀", sub: "아빠 고양이 강이", scene: "lighthouse",
     objectives: [
-      { label: "강이 만나기", done: found("kangi"), hint: "기억의 등대 현장 인증 또는 온라인 마을", href: "/explore" },
+      { label: "강이 만나기", done: found("kangi"), hint: "기억의 등대에서 QR·GPS 인증", href: "/explore" },
       { label: "시간 조각 10개 모으기 (종을 고칠 만큼)", done: (s) => (s.sparkTotal ?? 0) >= 10, hint: "조각은 매일 새로 떨어져요", href: "/explore", count: (s) => [Math.min(10, s.sparkTotal ?? 0), 10] },
     ],
     reward: { exp: 160, coins: 100, items: { sincerity: 1 } },
@@ -124,7 +124,7 @@ export const CHAPTERS: Chapter[] = [
     id: "ch5", no: "종장", title: "다시 울리는 종", sub: "강경, 다시 축제", scene: "festival",
     objectives: [
       { label: "고양이 가족 모두 만나기", done: (s) => CAT_FAMILY.every((c) => s.characters[c]), hint: "강이·갱이·콩이", href: "/dex" },
-      { label: "강경모던상회에서 가족 재회", done: (s) => !!s.visits["modern-store"] || s.villageFound.includes("reunion"), hint: "현장 인증 또는 온라인 마을 상회 앞", href: "/village" },
+      { label: "강경모던상회에서 가족 재회", done: (s) => !!s.visits["modern-store"] || s.villageFound.includes("reunion"), hint: "강경모던상회에서 QR·GPS 인증", href: "/explore" },
       { label: "논산 여행단 친구 2명 만나기", done: (s) => friends(s) >= 2, hint: "베리쥬·스윗포·대추삼형제", href: "/explore", count: (s) => [Math.min(2, friends(s)), 2] },
     ],
     reward: { exp: 300, coins: 200, items: { sincerity: 2 }, badge: "강경의 종지기" },

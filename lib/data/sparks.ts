@@ -3,7 +3,6 @@
 // - 날짜(한국 시간)마다 같은 자리에 같은 조각이 나타나도록 날짜를 씨앗으로 한 난수를 씁니다.
 // - 보상은 엔진이 sparkReward(day, index)로만 결정합니다. 클라이언트는 몇 번째 조각인지만 보냅니다.
 // - 그림 지도 위의 놀이 요소라 위치 인증은 요구하지 않습니다(하루 개수 제한으로 균형).
-import { PICNIC_ITEMS } from "./picnic";
 
 export const SPARKS_PER_DAY = 6;
 
@@ -27,14 +26,8 @@ export const SPARK_LABEL: Record<SparkKind, string> = {
 export function sparkReward(day: string, index: number): SparkInfo {
   const r = rng(`${day}#${index}`);
   const roll = r();
-  if (roll < 0.12) return { kind: "golden", name: SPARK_LABEL.golden, exp: 30, coins: 30 };
-  if (roll < 0.42) {
-    const foods = PICNIC_ITEMS.filter((p) => p.kind === "food");
-    const pick = foods[Math.floor(r() * foods.length)].id;
-    return { kind: "picnic", name: SPARK_LABEL.picnic, exp: 8, coins: 4, picnic: pick };
-  }
-  if (roll < 0.56) return { kind: "shrimp", name: SPARK_LABEL.shrimp, exp: 8, coins: 4, items: { shrimp: 1 } };
-  if (roll < 0.68) return { kind: "salt", name: SPARK_LABEL.salt, exp: 8, coins: 4, items: { salt: 1 } };
+  if (roll < 0.15) return { kind: "golden", name: SPARK_LABEL.golden, exp: 30, coins: 30 };
+  if (roll < 0.45) return { kind: "picnic", name: "반짝 시간 조각", exp: 20, coins: 15 };
   return { kind: "moment", name: SPARK_LABEL.moment, exp: 14, coins: 10 };
 }
 

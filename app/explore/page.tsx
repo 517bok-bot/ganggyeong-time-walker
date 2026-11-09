@@ -4,14 +4,14 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useGame } from "@/lib/game";
-import { RECOMMENDED_ROUTE, DISTRICT_INFO, type GameLocation } from "@/lib/data/locations";
+import { DISTRICT_INFO, type GameLocation } from "@/lib/data/locations";
 import { useContent } from "@/lib/content";
 import { NPC } from "@/lib/data/npcs";
 import { ITEMS } from "@/lib/data/jeotgal";
 import { DemoBadge, MiniHud, Sheet } from "@/components/ui";
 import { CharacterArt, NpcArt, WalkerArt } from "@/components/Characters";
-import OldMap, { MAP_BOX } from "@/components/art/OldMap";
-import { LocationScene } from "@/components/art/LocationArt";
+import { MAP_BOX } from "@/components/art/OldMap";
+import WorldMap from "@/components/art/WorldMap";
 import { Ico } from "@/components/art/Icons";
 import QrScanner, { verifyQrPayload } from "@/components/QrScanner";
 import NpcDialog from "@/components/NpcDialog";
@@ -159,11 +159,12 @@ export default function Explore() {
   const got = state.sparks?.day === today ? state.sparks.got : [];
   const left = spots.filter((s) => !got.includes(s.index));
 
+  const [heading, setHeading] = useState(false); // 걸어가는 중에는 이야기 장면이 끼어들지 않게
   const tapSpark = async (s: (typeof spots)[number]) => {
-    if (dragged.current || busy) return;
-    sfx.tap();
+    if (dragged.current || busy || heading) return;
+    sfx.tap(); setHeading(true);
     await walkTo(s.x, s.y + 20);
-    setCatching({ index: s.index, info: s.info });
+    setCatching({ index: s.index, info: s.info }); setHeading(false);
   };
   const catchSpark = async () => {
     if (!catching) return null;
@@ -173,10 +174,10 @@ export default function Explore() {
 
   // ── 장소 ─────────────────────────
   const tapLocation = async (l: GameLocation) => {
-    if (dragged.current) return;
-    sfx.page();
+    if (dragged.current || heading) return;
+    sfx.page(); setHeading(true);
     await walkTo(l.mapX + 26, l.mapY + 40);
-    setSel(l);
+    setSel(l); setHeading(false);
   };
 
   const handleQr = useCallback(async (payload: string) => {
@@ -225,13 +226,13 @@ export default function Explore() {
   const prog = cur ? chapterProgress(cur, state) : null;
   const cleared = fogCleared(state);
   useEffect(() => {
-    if (!ready || !cur || story || catching || sel) return;
+    if (!ready || !cur || story || catching || sel || heading) return;
     const seen = seenIntros();
     // 목표를 다 이뤘으면 마무리 장면을 한 번 자동으로, 새 장이 열렸으면 도입 장면을 한 번 자동으로
     if (prog?.complete && !seen.includes(`${cur.id}:outro`)) { markIntro(`${cur.id}:outro`); const t = setTimeout(() => setStory({ ch: cur, part: "outro" }), 600); return () => clearTimeout(t); }
     if (cur.id !== "ch0" && !seen.includes(cur.id)) { const t = setTimeout(() => setStory({ ch: cur, part: "intro" }), 700); return () => clearTimeout(t); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, cur?.id, prog?.complete, story, catching, sel]);
+  }, [ready, cur?.id, prog?.complete, story, catching, sel, heading]);
 
   const finishStory = async () => {
     if (!story) return;
@@ -247,18 +248,16 @@ export default function Explore() {
     setChapterOpen(true);
   };
 
-  const routePts = RECOMMENDED_ROUTE.map((id) => `${LOC[id].mapX},${LOC[id].mapY}`).join(" ");
   const visitedCount = Object.keys(state.visits).length;
   const companion = state.companion;
   const wp = toPx(walker.x, walker.y);
 
   return (
-    <main className="fixed inset-0 overflow-hidden bg-[#CDB98C]">
+    <main className="fixed inset-0 overflow-hidden bg-[#BFD58F]">
       {/* ── 지도 판 ── */}
       <div ref={box} className="absolute inset-0 touch-none select-none" onClickCapture={(e) => { if (dragged.current) { e.stopPropagation(); e.preventDefault(); } }}>
         <div ref={layer} className="absolute left-0 top-0 origin-top-left will-change-transform" style={{ width: W, height: H }}>
-          <OldMap locations={LOCATIONS} state={state} show={{ route: true, chars: true, npcs: true }} selId={sel?.id} routePts={routePts} onSelect={tapLocation}
-            className="absolute inset-0 w-full h-full block" style={{ filter: `saturate(${0.75 + 0.25 * cleared}) sepia(${0.12 * (1 - cleared)})`, transition: "filter 2s" }} />
+          <WorldMap locations={LOCATIONS} state={state} selId={sel?.id} onSelect={tapLocation} className="absolute inset-0 w-full h-full block" />
           {/* 망각의 안개: 이야기가 진행될수록 걷힘 */}
           <div className="absolute inset-0 pointer-events-none transition-opacity duration-[2000ms]" style={{ opacity: 0.28 * (1 - cleared) }}>
             <div className="absolute inset-0 anim-fog" style={{ background: "radial-gradient(ellipse 40% 18% at 30% 30%, rgba(236,232,220,.9), transparent 70%), radial-gradient(ellipse 45% 16% at 70% 60%, rgba(236,232,220,.85), transparent 70%), radial-gradient(ellipse 50% 20% at 40% 85%, rgba(236,232,220,.8), transparent 70%)" }} />
@@ -293,17 +292,17 @@ export default function Explore() {
         <div className="pointer-events-auto"><MiniHud /></div>
         <div className="flex-1" />
         <div className="pointer-events-auto flex flex-col items-end gap-1.5 mr-12">
-          <span className="chip bg-hanji-light/95 text-sumi shadow-card !text-[13px] !py-1"><SparkGem kind="moment" size={18} />{got.length}/{SPARKS_PER_DAY}</span>
-          <span className="chip bg-hanji-light/95 text-sumi shadow-card !text-[13px] !py-1"><Ico name="stamp" size={16} />{visitedCount}/{LOCATIONS.length}</span>
+          <span className="chip bg-[#FFFDF8]/95 text-sumi shadow-card !text-[13px] !py-1"><SparkGem kind="moment" size={18} />{got.length}/{SPARKS_PER_DAY}</span>
+          <span className="chip bg-[#FFFDF8]/95 text-sumi shadow-card !text-[13px] !py-1"><Ico name="stamp" size={16} />{visitedCount}/{LOCATIONS.length}</span>
         </div>
       </div>
-      <button onClick={openChapter} className={`absolute left-3 right-3 top-[calc(max(12px,env(safe-area-inset-top))+70px)] mx-auto max-w-md text-left flex items-center gap-3 px-3 py-2 border-[1.5px] shadow-card ${prog?.complete ? "bg-vermilion text-hanji-light border-vermilion-dark" : "bg-teal/95 text-hanji-light border-sumi-dark"}`}
-        style={{ backgroundImage: "var(--woodgrain)", borderRadius: 6, animation: prog?.complete ? "seal-glow 2.4s ease-in-out infinite" : undefined }}>
-        <span className="font-game font-bold text-[11px] text-antique-light shrink-0 tracking-wider">{cur ? cur.no : "완결"}</span>
+      <button onClick={openChapter} className={`absolute left-3 right-3 top-[calc(max(12px,env(safe-area-inset-top))+70px)] mx-auto max-w-md text-left flex items-center gap-3 px-4 py-2.5 rounded-2xl shadow-card ${prog?.complete ? "bg-vermilion text-white" : "bg-[#FFFDF8]/95 text-sumi"}`}
+        style={{ animation: prog?.complete ? "glow-pulse 2.4s ease-in-out infinite" : undefined }}>
+        <span className={`font-game font-bold text-[12px] shrink-0 px-2 py-0.5 rounded-full ${prog?.complete ? "bg-white/20" : "bg-vermilion text-white"}`}>{cur ? cur.no : "완결"}</span>
         <span className="flex-1 min-w-0">
           <span className="block font-story text-[17px] leading-tight truncate">{cur ? (prog?.complete ? "이야기 이어보기 ▶" : cur.title) : "멈춘 시간의 포구 · 완결"}</span>
-          {cur && !prog?.complete && <span className="block text-[12px] font-game text-hanji/85 truncate">{objectiveLine(cur, state)}</span>}
-          {!cur && <span className="block text-[12px] font-game text-hanji/85">시간 조각은 매일 새로 떨어져요</span>}
+          {cur && !prog?.complete && <span className="block text-[12px] font-game text-sumi-light truncate">{objectiveLine(cur, state)}</span>}
+          {!cur && <span className="block text-[12px] font-game text-sumi-light">시간 조각은 매일 새로 떨어져요</span>}
         </span>
         <Ico name="scroll" size={24} />
       </button>
@@ -311,17 +310,17 @@ export default function Explore() {
       {/* ── 오른쪽: 확대/축소 · 내 위치 · 실제 지도 ── */}
       <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2">
         {[["+", () => zoom(1.25), "확대"], ["−", () => zoom(0.8), "축소"]].map(([t, f, l]) => (
-          <button key={l as string} onClick={f as () => void} aria-label={l as string} className="w-11 h-11 rounded-full bg-hanji-light/95 border-[1.5px] border-sumi shadow-card font-game text-2xl text-sumi active:scale-90 transition-transform">{t as string}</button>
+          <button key={l as string} onClick={f as () => void} aria-label={l as string} className="w-11 h-11 rounded-full bg-[#FFFDF8]/95 shadow-card font-game text-2xl text-sumi active:scale-90 transition-transform">{t as string}</button>
         ))}
-        <button onClick={() => centerOn(walker.x, walker.y)} aria-label="내 캐릭터로" className="w-11 h-11 rounded-full grid place-items-center bg-hanji-light/95 border-[1.5px] border-sumi shadow-card active:scale-90 transition-transform"><Ico name="person" size={24} /></button>
-        <button onClick={() => setRealOpen(true)} aria-label="실제 지도와 GPS" className="w-11 h-11 rounded-full grid place-items-center bg-hanji-light/95 border-[1.5px] border-sumi shadow-card active:scale-90 transition-transform"><Ico name="compass" size={24} /></button>
+        <button onClick={() => centerOn(walker.x, walker.y)} aria-label="내 캐릭터로" className="w-11 h-11 rounded-full grid place-items-center bg-[#FFFDF8]/95 shadow-card active:scale-90 transition-transform"><Ico name="person" size={24} /></button>
+        <button onClick={() => setRealOpen(true)} aria-label="실제 지도와 GPS" className="w-11 h-11 rounded-full grid place-items-center bg-[#FFFDF8]/95 shadow-card active:scale-90 transition-transform"><Ico name="compass" size={24} /></button>
       </div>
 
       {/* ── 아래: QR 큰 버튼 + 온라인 마을 ── */}
       <div className="absolute inset-x-0 bottom-[calc(96px+env(safe-area-inset-bottom))] flex items-end justify-between px-4 pointer-events-none">
-        <Link href="/village" className="pointer-events-auto flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl bg-hanji-light/95 border-[1.5px] border-sumi shadow-card text-[12px] font-game font-bold text-sumi active:scale-95 transition-transform"><Ico name="village" size={26} />온라인 마을</Link>
-        <button onClick={() => setQrOpen(true)} aria-label="QR로 현장 인증" className="pointer-events-auto relative w-[74px] h-[74px] rounded-full grid place-items-center bg-vermilion text-hanji-light border-2 border-vermilion-dark shadow-card active:scale-90 transition-transform"
-          style={{ boxShadow: "inset 0 0 0 4px #963F38, inset 0 0 0 5.5px rgba(242,231,208,.8), 0 6px 0 #5c2520" }}>
+        <span />
+        <button onClick={() => setQrOpen(true)} aria-label="QR로 현장 인증" className="pointer-events-auto relative w-[74px] h-[74px] rounded-full grid place-items-center text-white active:scale-90 transition-transform"
+          style={{ background: "linear-gradient(#C35A4F, #963F38)", boxShadow: "inset 0 3px 0 rgba(255,255,255,.28), 0 5px 0 #6E2A24, 0 12px 22px -6px rgba(150,63,56,.6)" }}>
           <span className="flex flex-col items-center"><Ico name="qr" size={30} /><span className="text-[11px] font-game font-bold -mt-0.5">현장 인증</span></span>
         </button>
       </div>
@@ -331,7 +330,8 @@ export default function Explore() {
         {sel && (
           <div className="px-4 pb-5">
             <div className="relative -mx-1 mb-3 anim-unfold">
-              <LocationScene id={sel.id} name={sel.name} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/world/loc-${sel.id}.webp`} alt={`${sel.name} 미니어처 (분위기 표현)`} className="w-full aspect-[16/10] object-cover rounded-2xl" />
               {state.visits[sel.id] && <span className="absolute right-3 bottom-3 seal w-16 h-16 text-base rotate-[-10deg] anim-stamp">방문<br />인증</span>}
             </div>
             <div className="flex items-start gap-3">
@@ -378,7 +378,7 @@ export default function Explore() {
               방문 보상: +{sel.reward.exp} EXP · 엽전 {sel.reward.coins}
               {sel.reward.items && Object.entries(sel.reward.items).map(([k, v]) => ` · ${ITEMS[k].name}×${v}`)}
             </p>
-            {!state.visits[sel.id] && <p className="text-xs text-sumi-light mt-1">현장에서 QR을 찍거나 GPS로 인증하면 도장을 받아요. 집에서는 온라인 마을에서 같은 장소를 둘러볼 수 있어요.</p>}
+            {!state.visits[sel.id] && <p className="text-xs text-sumi-light mt-1">현장에 가서 장소의 QR을 찍거나 GPS로 인증하면 도장을 받고 숨은 친구를 만나요.</p>}
             <div className="grid grid-cols-2 gap-2 mt-3">
               <button className="btn-brick btn-sm" disabled={busy || !!state.visits[sel.id]} onClick={() => setQrOpen(true)}><Ico name="qr" size={18} />QR 인증</button>
               <button className="btn-sage btn-sm flex-wrap !gap-1" disabled={busy || !!state.visits[sel.id]} onClick={() => gpsVerify(sel)}>
@@ -393,7 +393,6 @@ export default function Explore() {
                 <DemoBadge>시연용</DemoBadge>
               </div>
             )}
-            {state.visits[sel.id] && <Link href={`/postcard?loc=${sel.id}`} className="btn-gold btn-sm w-full mt-3"><Ico name="postcard" size={20} />이 장소로 기념 엽서 만들기</Link>}
           </div>
         )}
       </Sheet>

@@ -6,7 +6,6 @@ import Overlays from "@/components/Overlays";
 import AudioDirector from "@/components/AudioDirector";
 import FxLayer from "@/components/FxLayer";
 import ArtDefs from "@/components/art/ArtDefs";
-import Atmosphere from "@/components/art/Atmosphere";
 import { ContentProvider } from "@/lib/content";
 import { getOverrides } from "@/lib/content-server";
 import { supabaseConfigured } from "@/lib/supabase/config";
@@ -18,7 +17,7 @@ export const metadata: Metadata = {
   icons: { icon: "/icon.svg", apple: "/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "강경 타임워커", statusBarStyle: "black-translucent" },
 };
-export const viewport: Viewport = { themeColor: "#263D40", width: "device-width", initialScale: 1, viewportFit: "cover" };
+export const viewport: Viewport = { themeColor: "#F4EEDF", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const overrides = await getOverrides();
@@ -36,7 +35,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ArtDefs />
         <ContentProvider overrides={overrides}>
           <GameProvider authConfigured={supabaseConfigured()} demoToolsRemote={process.env.DEMO_TOOLS === "true"}>
-            <Atmosphere />
             <div className="mx-auto max-w-5xl pb-36">{children}</div>
             <BottomNav />
             <Overlays />

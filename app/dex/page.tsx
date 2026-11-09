@@ -19,8 +19,7 @@ import { Ico } from "@/components/art/Icons";
 import { sfx } from "@/lib/audio";
 
 const TABS = [
-  ["chars", "인연", "paw"], ["places", "명소", "pin"], ["npcs", "사람", "person"], ["history", "옛이야기", "scroll"],
-  ["jeotgal", "젓갈", "jar"], ["postcards", "엽서", "postcard"], ["achv", "업적", "star"],
+  ["chars", "친구", "paw"], ["places", "명소", "pin"], ["history", "옛이야기", "scroll"], ["achv", "배지", "star"],
 ] as const;
 type Tab = (typeof TABS)[number][0];
 const d = (t: number) => new Date(t).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
@@ -32,9 +31,8 @@ export default function Dex() {
   const [sel, setSel] = useState<GameCharacter | null>(null);
   const [selLoc, setSelLoc] = useState<string | null>(null);
   const charFound = CHARACTERS.filter((c) => state.characters[c.id]).length;
-  const total = CHARACTERS.length + LOCATIONS.length + NPCS.length + KNOWLEDGE.length + JEOTGAL_TYPES.length + LOCATIONS.length;
-  const got = charFound + Object.keys(state.visits).length + state.npcTalked.length + state.knowledgeRead.length
-    + new Set(state.jars.filter((j) => j.status === "done").map((j) => j.typeId)).size + state.postcardsMade.length;
+  const total = CHARACTERS.length + LOCATIONS.length + KNOWLEDGE.length;
+  const got = charFound + Object.keys(state.visits).length + state.knowledgeRead.length;
 
   return (
     <main className="px-3">
@@ -91,19 +89,6 @@ export default function Dex() {
           </>
         )}
 
-        {tab === "npcs" && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {NPCS.map((n, i) => {
-              const met = state.npcTalked.includes(n.id);
-              return (
-                <SpecimenCard key={n.id} no={i + 1} collected={met} stamp="대면" tone="jade" title={met ? n.name : "미상"}
-                  subtitle={`${n.title}${n.locationId ? ` · ${LOC[n.locationId].name}` : ""}`} footer="게임 창작 인물"
-                  art={<div className={`w-full h-full ${met ? "" : "silhouette"}`}><NpcArt look={n.look} /></div>} />
-              );
-            })}
-          </div>
-        )}
-
         {tab === "history" && (
           <div className="space-y-3">
             {KNOWLEDGE.map((k, i) => {
@@ -124,38 +109,8 @@ export default function Dex() {
           </div>
         )}
 
-        {tab === "jeotgal" && (
-          <div className="grid grid-cols-3 gap-3">
-            {JEOTGAL_TYPES.map((t, i) => {
-              const made = state.jars.filter((j) => j.typeId === t.id && j.status === "done");
-              return (
-                <SpecimenCard key={t.id} no={i + 1} collected={made.length > 0} stamp="완성" tone="jade" title={made.length ? t.name : "미상"} subtitle={`${made.length}번 담금`}
-                  art={<div className={`w-full h-full ${made.length ? "" : "silhouette"}`}><JarArt fill={0.8} color={JTYPE[t.id].color} face="happy" /></div>} />
-              );
-            })}
-          </div>
-        )}
-
-        {tab === "postcards" && (
-          <>
-            <Progress label="기념 엽서" a={state.postcardsMade.length} b={LOCATIONS.length} />
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
-              {LOCATIONS.map((l) => {
-                const made = state.postcardsMade.includes(l.id);
-                return (
-                  <div key={l.id} className={`relative aspect-[3/2] border p-1 text-center text-[11px] font-game font-bold grid place-items-center ${made ? "bg-hanji-light border-vermilion text-sumi" : "bg-hanji-dark/50 border-sumi/20 text-sumi/40"}`}>
-                    {made ? <><Ico name="postcard" size={22} /><span className="truncate w-full">{l.name}</span></> : <span>{l.no}</span>}
-                    {made && <span className="absolute -right-1 -top-1 seal seal-round w-5 h-5 text-[9px]">印</span>}
-                  </div>
-                );
-              })}
-            </div>
-            <Link href="/postcard" className="btn-gold btn-sm mt-3"><Ico name="postcard" size={20} />엽서 만들기</Link>
-          </>
-        )}
-
         {tab === "achv" && (
-          Object.keys(state.achievements).length === 0 ? <p className="text-sumi-light">아직 업적이 없어요. 여정(퀘스트)을 마치면 인장이 찍힙니다.</p> : (
+          Object.keys(state.achievements).length === 0 ? <p className="text-sumi-light">아직 배지가 없어요. 이야기를 진행하면 배지를 받아요.</p> : (
             <ul className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {Object.entries(state.achievements).map(([k, at]) => (
                 <li key={k} className="text-center anim-pop">

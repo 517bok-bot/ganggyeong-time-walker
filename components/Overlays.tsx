@@ -40,7 +40,7 @@ export default function Overlays() {
     <>
       <div className="fixed top-[calc(max(12px,env(safe-area-inset-top))+124px)] inset-x-0 z-[60] flex flex-col items-center gap-2 pointer-events-none px-4" aria-live="polite">
         {toasts.slice(-3).map((t) => (
-          <div key={t.id} className="anim-toast pl-2 pr-4 py-1.5 flex items-center gap-2 max-w-sm rounded-full font-game font-bold text-[14px] text-hanji-light bg-sumi/90 border border-antique/70 shadow-card backdrop-blur-sm">
+          <div key={t.id} className="anim-toast pl-2 pr-4 py-1.5 flex items-center gap-2 max-w-sm rounded-full font-game font-bold text-[14px] text-sumi bg-[#FFFDF8]/95 shadow-card backdrop-blur-sm">
             <span className="grid place-items-center w-7 h-7 rounded-full bg-hanji-light shrink-0"><Ico name={toastIcon(t.icon)} size={20} /></span><span className="leading-snug">{t.text}</span>
           </div>
         ))}

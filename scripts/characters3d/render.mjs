@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
-const types = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript" };
+const types = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json" };
 const server = http.createServer((req, res) => {
   const u = decodeURIComponent(new URL(req.url, "http://x").pathname);
   const f = u.startsWith("/node_modules/") ? path.join(root, u) : path.join(root, "scripts/characters3d", u);
@@ -39,6 +39,14 @@ if (what === "player" || what === "all") {
 }
 if (what === "npc" || what === "all") {
   for (const id of ["guide", "artisan", "photographer", "merchant", "postman"]) { save(`npc/${id}.webp`, await p.evaluate((i) => window.renderNpc(i), id)); process.stdout.write("*"); }
+}
+if (what === "map" || what === "all") {
+  save("world/map-day.webp", await p.evaluate(() => window.renderMap("day")));
+  process.stdout.write("M");
+}
+if (what === "scenes" || what === "all") {
+  const scenes = JSON.parse(fs.readFileSync(path.join(root, "scripts/characters3d/scenes.json"), "utf8"));
+  for (const [name, opt] of Object.entries(scenes)) { if (only && name !== only) continue; save(`world/${name}.webp`, await p.evaluate((o) => window.renderScene(o), opt)); process.stdout.write("S"); }
 }
 console.log("\ndone");
 await b.close(); server.close();

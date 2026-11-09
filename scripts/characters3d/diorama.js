@@ -1,0 +1,203 @@
+// 강경근대거리 3D 미니어처(디오라마) — 탐험 지도 배경, 첫 화면, 이야기 장면 배경을 굽습니다.
+// 지도용은 비스듬히 내려다보는 정사영 카메라를 써서 '지도 좌표(mapX, mapY)'가 그림의 픽셀과 그대로 맞습니다.
+// 건물은 안내도 장소의 분위기를 옮긴 창작 미니어처이며 실제 외관과 다를 수 있습니다.
+import * as THREE from "three";
+import { flock, gloss, canvasTex, blob, mesh } from "./models.js";
+
+export const BOX = { x: 230, y: 40, w: 1120, h: 1100 };
+export const PITCH = (42 * Math.PI) / 180;
+const S = Math.sin(PITCH);
+/** 지도 좌표 → 3D 바닥 좌표 */
+export const P = (mx, my) => new THREE.Vector3(mx, 0, my / S);
+
+function rnd(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+// ── 벽 텍스처 (창문 줄) ─────────────────────────────
+function wallTex(key, wall, cols, rows, { brick = false, frame = "#5A3A2A", lit = false } = {}) {
+  return canvasTex(`wall-${key}`, 256, 256, (c, w, h) => {
+    c.fillStyle = wall; c.fillRect(0, 0, w, h);
+    if (brick) { c.strokeStyle = "rgba(0,0,0,.18)"; c.lineWidth = 2; for (let y = 0; y < h; y += 14) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); for (let x = (y / 14) % 2 ? 0 : 14; x < w; x += 28) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 14); c.stroke(); } } }
+    const cw = w / cols, rh = h / rows;
+    for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+      const x = i * cw + cw * 0.25, y = j * rh + rh * 0.22, ww = cw * 0.5, hh = rh * 0.5;
+      c.fillStyle = frame; c.fillRect(x - 3, y - 3, ww + 6, hh + 6);
+      c.fillStyle = lit ? "#F6D27A" : "#9FC1C6"; c.fillRect(x, y, ww, hh);
+      c.fillStyle = "rgba(255,255,255,.35)"; c.fillRect(x, y, ww * 0.35, hh);
+      c.fillStyle = frame; c.fillRect(x + ww / 2 - 1.5, y, 3, hh);
+    }
+  });
+}
+
+/** 기와 지붕 (모임지붕 + 살짝 들린 처마) */
+function hanokRoof(g, w, d, y, color) {
+  const roof = mesh(new THREE.ConeGeometry(1, 1, 4, 1), flock(color, { sheen: 0.3, roughness: 0.7 }), [0, y, 0], [0, Math.PI / 4, 0], g);
+  roof.scale.set(w * 0.78, d * 0.5, d * 0.78);
+  const eave = mesh(new THREE.BoxGeometry(w * 1.18, 3, d * 1.25), flock(color), [0, y - d * 0.25 + 1, 0], [0, 0, 0], g);
+  for (const s of [-1, 1]) mesh(new THREE.ConeGeometry(4, 9, 8), flock(color), [s * w * 0.6, y - d * 0.22 + 4, 0], [0, 0, -s * 1.1], g);
+  mesh(new THREE.BoxGeometry(w * 0.55, 3, 3), flock("#F2EFE6"), [0, y + d * 0.24, 0], [0, 0, 0], g);
+  return eave;
+}
+
+export function building(a, rand) {
+  const g = new THREE.Group();
+  const W = Math.max(60, a.w * 0.56), D = W * 0.72, Hh = a.h * 0.5;
+  const wall = a.wall ?? "#E8DCC0", roof = a.roof ?? "#3E4B4D";
+  const fb = (m, size, pos, rot) => { const b = mesh(new THREE.BoxGeometry(...size), m, pos, rot ?? [0, 0, 0], g); return b; };
+  switch (a.style) {
+    case "hanok": {
+      fb(flock("#CFC6B5"), [W * 1.05, 5, D * 1.05], [0, 2.5, 0]); // 기단
+      fb(flock("#ffffff", { map: wallTex(`hanok-${wall}`, wall, 3, 1, { frame: "#6B4A36" }) }), [W, Hh * 0.75, D], [0, 5 + Hh * 0.375, 0]);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) fb(flock("#7A4A30"), [3, Hh * 0.75, 3], [sx * W / 2, 5 + Hh * 0.375, sz * D / 2]);
+      hanokRoof(g, W, D * 1.3, 5 + Hh * 0.75 + D * 0.3, "#3F4E58");
+      break;
+    }
+    case "brick": {
+      fb(flock("#ffffff", { map: wallTex(`brick-${wall}`, wall, 3, 2, { brick: true, frame: "#E8DCC0" }) }), [W, Hh, D], [0, Hh / 2, 0]);
+      fb(flock("#E8DCC0"), [W + 4, 4, D + 4], [0, Hh + 2, 0]);
+      fb(flock(roof), [W - 6, 6, D - 6], [0, Hh + 5, 0]);
+      fb(flock("#5A3A2A"), [W * 0.22, Hh * 0.35, 2], [0, Hh * 0.17, D / 2 + 1]);
+      break;
+    }
+    case "western": {
+      fb(flock("#ffffff", { map: wallTex(`west-${wall}`, wall, 4, 2, { frame: "#3E4B4D" }) }), [W, Hh, D], [0, Hh / 2, 0]);
+      const roofM = flock(roof, { sheen: 0.3 });
+      const pr = mesh(new THREE.CylinderGeometry(0.01, 1, 1, 4, 1), roofM, [0, Hh + D * 0.22, 0], [0, Math.PI / 4, 0], g);
+      pr.scale.set(W * 0.74, D * 0.44, D * 0.74);
+      for (const s of [-1, 1]) fb(flock("#F4EFE4"), [3, Hh * 0.45, 3], [s * W * 0.14, Hh * 0.22, D / 2 + 4]);
+      fb(flock("#F4EFE4"), [W * 0.36, 3, 8], [0, Hh * 0.46, D / 2 + 3]);
+      fb(flock("#5A3A2A"), [W * 0.16, Hh * 0.32, 2], [0, Hh * 0.16, D / 2 + 1]);
+      break;
+    }
+    case "tower": {
+      fb(flock("#ffffff", { map: wallTex(`tower-${wall}`, wall, 3, 2, { frame: "#5A3A2A" }) }), [W, Hh * 0.8, D], [0, Hh * 0.4, 0]);
+      fb(flock(wall), [W * 0.34, Hh * 0.45, D * 0.4], [0, Hh * 0.8 + Hh * 0.22, 0]);
+      const cl = mesh(new THREE.CylinderGeometry(W * 0.11, W * 0.11, 2, 24), flock("#F7F2E8"), [0, Hh * 1.02, D * 0.2 + 1], [Math.PI / 2, 0, 0], g);
+      cl.castShadow = false;
+      const cap = mesh(new THREE.ConeGeometry(W * 0.3, Hh * 0.28, 4), flock(roof), [0, Hh * 1.25 + Hh * 0.14, 0], [0, Math.PI / 4, 0], g);
+      fb(flock(roof), [W + 4, 4, D + 4], [0, Hh * 0.8 + 2, 0]);
+      break;
+    }
+    case "shop": {
+      fb(flock("#ffffff", { map: wallTex(`shop-${wall}`, wall, 2, 1, { frame: "#5A3A2A" }) }), [W, Hh * 0.75, D], [0, Hh * 0.375, 0]);
+      fb(flock(roof), [W + 6, 5, D + 6], [0, Hh * 0.75 + 2.5, 0]);
+      fb(flock("#ffffff", { map: canvasTex(`awn-${roof}`, 64, 16, (c, w, h) => { for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? "#F4EFE4" : roof; c.fillRect(i * 8, 0, 8, h); } }) }), [W * 0.9, 2, 12], [0, Hh * 0.5, D / 2 + 6], [0.45, 0, 0]);
+      fb(flock("#3E4B4D"), [W * 0.6, 7, 1.5], [0, Hh * 0.75 + 9, D / 2]);
+      break;
+    }
+    case "station": {
+      fb(flock("#ffffff", { map: wallTex(`st-${wall}`, wall, 2, 1, { frame: "#5A3A2A" }) }), [W * 0.45, Hh * 0.6, D * 0.6], [-W * 0.3, Hh * 0.3, -D * 0.1]);
+      fb(flock(roof), [W * 1.15, 5, D * 0.95], [W * 0.05, Hh * 0.8, 0]);
+      for (const sx of [-0.1, 0.5]) for (const sz of [-0.3, 0.3]) fb(flock("#F4EFE4"), [3, Hh * 0.8, 3], [W * sx, Hh * 0.4, D * sz]);
+      fb(flock("#C9463D"), [6, 14, 6], [W * 0.2, 7, D * 0.1]);
+      break;
+    }
+    case "lighthouse": {
+      const t = mesh(new THREE.CylinderGeometry(W * 0.2, W * 0.28, Hh * 1.4, 32), flock("#ffffff", { map: canvasTex("lh", 64, 128, (c, w, h) => { for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? "#C9463D" : "#F7F2E8"; c.fillRect(0, (i * h) / 6, w, h / 6); } }) }), [0, Hh * 0.7, 0], [0, 0, 0], g);
+      mesh(new THREE.CylinderGeometry(W * 0.24, W * 0.24, 4, 32), flock("#3E4B4D"), [0, Hh * 1.42, 0], [0, 0, 0], g);
+      mesh(new THREE.CylinderGeometry(W * 0.15, W * 0.15, 10, 24), new THREE.MeshStandardMaterial({ color: "#F6D27A", emissive: "#F6C25A", emissiveIntensity: 0.9 }), [0, Hh * 1.49, 0], [0, 0, 0], g);
+      mesh(new THREE.ConeGeometry(W * 0.2, 10, 24), flock("#C9463D"), [0, Hh * 1.6, 0], [0, 0, 0], g);
+      fb(flock("#CFC6B5"), [W * 0.8, 4, W * 0.8], [0, 2, 0]);
+      break;
+    }
+  }
+  g.rotation.y = (rand() - 0.5) * 0.12;
+  return g;
+}
+
+// ── 바닥·길·강·나무·산 ─────────────────────────────
+const ROADS = [
+  { pts: [[508, 40], [482, 1140]], w: 34 },
+  { pts: [[482, 1060], [1340, 600]], w: 26 },
+  { pts: [[650, 410], [870, 590], [1340, 440]], w: 26 },
+];
+function ground(scene) {
+  const tex = canvasTex("ground", 1024, 1024, (c, w, h) => {
+    const k = w / BOX.w;
+    c.fillStyle = "#BFD58F"; c.fillRect(0, 0, w, h);
+    const r = rnd(7);
+    for (let i = 0; i < 3500; i++) { c.fillStyle = r() < 0.5 ? "rgba(120,150,90,.10)" : "rgba(255,250,220,.12)"; c.beginPath(); c.arc(r() * w, r() * h, 2 + r() * 10, 0, 7); c.fill(); }
+    // 근대거리·구락부 구역: 따뜻한 흙빛
+    c.fillStyle = "rgba(233,214,166,.92)";
+    c.beginPath(); [[345, 105], [705, 105], [718, 600], [770, 780], [705, 1078], [345, 1078]].forEach(([x, y], i) => { const X = (x - BOX.x) * k, Y = (y - BOX.y) * k; i ? c.lineTo(X, Y) : c.moveTo(X, Y); }); c.closePath(); c.fill();
+    c.beginPath(); [[860, 615], [1290, 500], [1320, 830], [1010, 985]].forEach(([x, y], i) => { const X = (x - BOX.x) * k, Y = (y - BOX.y) * k; i ? c.lineTo(X, Y) : c.moveTo(X, Y); }); c.closePath(); c.fill();
+    // 길
+    for (const rd of ROADS) {
+      c.lineCap = "round"; c.lineJoin = "round";
+      c.strokeStyle = "#B9A57E"; c.lineWidth = (rd.w + 8) * k; c.beginPath(); rd.pts.forEach(([x, y], i) => { const X = (x - BOX.x) * k, Y = (y - BOX.y) * k; i ? c.lineTo(X, Y) : c.moveTo(X, Y); }); c.stroke();
+      c.strokeStyle = "#E9DEC4"; c.lineWidth = rd.w * k; c.stroke();
+      c.strokeStyle = "rgba(160,140,110,.35)"; c.lineWidth = 1.5; c.setLineDash([6, 8]); c.stroke(); c.setLineDash([]);
+    }
+    // 산책로 (돌길)
+    c.fillStyle = "#E1D4B6";
+    for (let t = 0; t < 1; t += 0.012) { const y = 1010 - t * 780, x = 315 + Math.sin(t * 9) * 12; c.beginPath(); c.ellipse((x - BOX.x) * k, (y - BOX.y) * k, 5, 3.5, 0, 0, 7); c.fill(); }
+  });
+  tex.anisotropy = 8;
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(BOX.w + 400, (BOX.h + 400) / S), flock("#ffffff", { map: null }));
+  plane.material = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 });
+  // 텍스처는 지도 범위에만 맞추고 바깥은 같은 풀빛으로
+  const inner = new THREE.Mesh(new THREE.PlaneGeometry(BOX.w, BOX.h / S), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 }));
+  inner.rotation.x = -Math.PI / 2; inner.position.set(BOX.x + BOX.w / 2, 0.2, (BOX.y + BOX.h / 2) / S); inner.receiveShadow = true;
+  plane.material = new THREE.MeshStandardMaterial({ color: "#BFD58F", roughness: 0.95 });
+  plane.rotation.x = -Math.PI / 2; plane.position.copy(inner.position).setY(0); plane.receiveShadow = true;
+  scene.add(plane, inner);
+}
+function river(scene) {
+  const shape = new THREE.Shape();
+  const pts = [[1350, 880], [1250, 960], [1150, 1010], [1040, 1070], [960, 1140], [1350, 1140]];
+  pts.forEach(([x, y], i) => { const v = [x, y / S]; i ? shape.lineTo(...v) : shape.moveTo(...v); });
+  const geo = new THREE.ShapeGeometry(shape);
+  const water = new THREE.Mesh(geo, new THREE.MeshPhysicalMaterial({ color: "#5E9DA6", roughness: 0.15, clearcoat: 1, side: THREE.DoubleSide }));
+  water.rotation.x = Math.PI / 2; water.position.y = 0.6; water.receiveShadow = true; scene.add(water);
+  // 둑
+  const bank = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: "#E6D8B0", side: THREE.DoubleSide })); bank.rotation.x = Math.PI / 2; bank.position.y = 0.4; bank.scale.set(1, 1, 1); scene.add(bank);
+  // 돛단배
+  const boat = new THREE.Group(); boat.position.copy(P(1230, 1060)).setY(1);
+  mesh(new THREE.BoxGeometry(34, 5, 12), flock("#7A4A30"), [0, 2, 0], [0, 0, 0], boat);
+  const sail = mesh(new THREE.ConeGeometry(12, 30, 3), flock("#F4EFE4"), [0, 20, 0], [0, 0, 0], boat); sail.scale.z = 0.15;
+  boat.rotation.y = 0.4; scene.add(boat);
+}
+function tree(scene, x, y, s = 1, kind = "round") {
+  const g = new THREE.Group(); g.position.copy(P(x, y));
+  mesh(new THREE.CylinderGeometry(2.2 * s, 3 * s, 12 * s, 8), flock("#7A5038"), [0, 6 * s, 0], [0, 0, 0], g);
+  if (kind === "pine") { for (let i = 0; i < 3; i++) mesh(new THREE.ConeGeometry((13 - i * 3) * s, 14 * s, 10), flock("#4E7A52"), [0, (14 + i * 8) * s, 0], [0, 0, 0], g); }
+  else { const c = ["#6FA85A", "#88BC64", "#5E9A50", "#E9A7A0"][Math.floor((x * 7 + y) % 4)]; blob(flock(c), [12 * s, 11 * s, 12 * s], [0, 20 * s, 0], [0, 0, 0], g); blob(flock(c), [8 * s, 8 * s, 8 * s], [6 * s, 26 * s, 3 * s], [0, 0, 0], g); }
+  scene.add(g);
+}
+function mountain(scene, x, y, s) {
+  const m = mesh(new THREE.SphereGeometry(1, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), flock("#8FAE7C"), [0, 0, 0], [0, 0, 0]);
+  m.scale.set(60 * s, 55 * s, 40 * s); m.position.copy(P(x, y)); scene.add(m);
+  const cap = mesh(new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), flock("#A9C08F"), [0, 0, 0], [0, 0, 0]);
+  cap.scale.set(30 * s, 30 * s, 22 * s); cap.position.copy(P(x - 10 * s, y + 4)).setY(20 * s); scene.add(cap);
+}
+function lamp(scene, x, y, lit) {
+  const g = new THREE.Group(); g.position.copy(P(x, y));
+  mesh(new THREE.CylinderGeometry(1.4, 1.6, 26, 8), flock("#3E4B4D"), [0, 13, 0], [0, 0, 0], g);
+  mesh(new THREE.SphereGeometry(4.5, 16, 12), new THREE.MeshStandardMaterial({ color: "#F6D27A", emissive: "#F6C25A", emissiveIntensity: lit ? 1.6 : 0.4 }), [0, 28, 0], [0, 0, 0], g);
+  scene.add(g);
+}
+
+/** 디오라마 전체 */
+export function buildDiorama(scene, locs, { night = false, only = null } = {}) {
+  ground(scene); river(scene);
+  const r = rnd(42);
+  for (const a of locs) { if (only && a.id !== only) continue; const b = building(a, r); b.position.copy(P(a.x, a.y - 4)); scene.add(b); }
+  // 산 (지도 위쪽 가장자리)
+  for (let x = 250; x < 1360; x += 85) mountain(scene, x + r() * 30, 52 + r() * 18, 0.8 + r() * 0.5);
+  // 나무: 장소·길을 피해서
+  const free = (x, y) => locs.every((l) => Math.hypot(l.x - x, l.y - y) > 70) && Math.abs(x - (508 - (y - 40) * 0.0236)) > 34 && !(x > 950 && y > 900);
+  for (let i = 0; i < 260; i++) { const x = 250 + r() * 1090, y = 110 + r() * 1020; if (free(x, y)) tree(scene, x, y, 0.7 + r() * 0.5, r() < 0.3 ? "pine" : "round"); }
+  // 길가 가로등
+  for (let y = 120; y < 1100; y += 95) lamp(scene, 530 - (y - 40) * 0.0236, y, night);
+}
+
+// ── 조명 ─────────────────────────────
+export function lights(scene, mode = "day", target = new THREE.Vector3(790, 0, 590 / S)) {
+  const night = mode === "night" || mode === "festival";
+  scene.add(new THREE.HemisphereLight(night ? "#8EA3C8" : "#FFF6E4", night ? "#2A3346" : "#B6A57E", night ? 0.55 : 0.85));
+  const sun = new THREE.DirectionalLight(night ? "#B9C8F0" : "#FFF0D8", night ? 0.9 : 2.4);
+  sun.position.copy(target).add(new THREE.Vector3(-650, 700, 300)); sun.target.position.copy(target);
+  sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004; sun.shadow.radius = 4;
+  Object.assign(sun.shadow.camera, { left: -900, right: 900, top: 1000, bottom: -1000, near: 10, far: 3000 });
+  scene.add(sun, sun.target);
+  if (mode === "fog") scene.fog = new THREE.Fog("#D9DCD3", 200, 900);
+}

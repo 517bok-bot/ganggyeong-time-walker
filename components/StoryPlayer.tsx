@@ -12,44 +12,15 @@ import { Portal } from "./ui";
 
 const CHAR_OF: Partial<Record<Speaker, string>> = { kangi: "kangi", kaengi: "kaengi", kongi: "kongi", berijyu: "berijyu", sweetpo: "sweetpo", daechu: "daechu-1" };
 
-/** 장면 배경 (자체 창작 수묵 채색) */
-export function SceneBackdrop({ scene, cleared = 0 }: { scene: Chapter["scene"]; cleared?: number }) {
-  const sky: Record<Chapter["scene"], [string, string]> = {
-    night: ["#14262A", "#3B5659"], fog: ["#5E6B68", "#A9AEA4"], street: ["#3D5A5C", "#C9B48A"],
-    kitchen: ["#4A3428", "#B9895A"], lighthouse: ["#1F3540", "#6E8C93"], festival: ["#2A1F3A", "#D9806F"],
-  };
-  const [a, b] = sky[scene];
+/** 장면 배경: 3D 미니어처 거리를 미리 구운 그림 (scripts/characters3d/scenes.json) */
+export function SceneBackdrop({ scene }: { scene: Chapter["scene"]; cleared?: number }) {
   return (
-    <svg viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full" aria-hidden>
-      <defs>
-        <linearGradient id="sb-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={a} /><stop offset="1" stopColor={b} /></linearGradient>
-        <radialGradient id="sb-moon"><stop offset="0" stopColor="#FFF4D6" /><stop offset=".55" stopColor="#F3D896" /><stop offset="1" stopColor="#F3D896" stopOpacity="0" /></radialGradient>
-      </defs>
-      <rect width="400" height="700" fill="url(#sb-sky)" />
-      <rect width="400" height="700" fill="url(#pt-grain)" opacity=".6" />
-      {(scene === "night" || scene === "lighthouse" || scene === "festival") && <circle cx="300" cy="140" r="90" fill="url(#sb-moon)" opacity=".9" />}
-      {/* 먼 산 */}
-      <path d="M0 330 L60 270 L110 300 L170 230 L240 300 L300 250 L400 320 V420 H0Z" fill="#39332F" opacity=".35" />
-      <path d="M0 380 L80 330 L150 360 L230 310 L320 360 L400 340 V460 H0Z" fill="#263D40" opacity=".55" />
-      {/* 장면 소품 */}
-      {scene === "lighthouse" && <g transform="translate(250 200)"><path d="M0 0 L30 0 L40 260 L-10 260Z" fill="#E8D8B8" stroke="#39332F" strokeWidth="2" /><path d="M-2 60 H32 M-5 130 H35 M-8 200 H38" stroke="#963F38" strokeWidth="10" /><rect x="-6" y="-26" width="42" height="26" fill="#39332F" /><circle cx="15" cy="-12" r="9" fill="#F3D896" className="anim-glow" /></g>}
-      {scene === "kitchen" && <g>{[60, 150, 250, 330].map((x, i) => <g key={i} transform={`translate(${x} ${400 + (i % 2) * 20})`}><ellipse cx="0" cy="0" rx="40" ry="50" fill="#5A3426" stroke="#26211E" strokeWidth="2" /><ellipse cx="0" cy="-46" rx="26" ry="7" fill="#3a2418" /></g>)}</g>}
-      {scene === "festival" && <g>{Array.from({ length: 9 }, (_, i) => <g key={i} transform={`translate(${20 + i * 45} ${120 + (i % 2) * 16})`}><path d="M0 -20 V-8" stroke="#39332F" /><ellipse cx="0" cy="4" rx="11" ry="14" fill="#963F38" /><ellipse cx="0" cy="4" rx="16" ry="18" fill="#F3D896" opacity=".25" className="anim-glow" style={{ animationDelay: `${i * .3}s` }} /></g>)}<path d="M0 120 Q200 160 400 120" stroke="#39332F" fill="none" /></g>}
-      {/* 거리 실루엣 */}
-      <g fill="#1F2E30" opacity=".85">
-        <path d="M0 470 H60 V430 L90 410 L120 430 V470 H150 V420 H210 V470 H240 V440 L270 420 L300 440 V470 H330 V425 H400 V700 H0Z" />
-      </g>
-      <g fill="#F3D896" opacity=".8">{[[20, 450], [170, 440], [190, 440], [260, 450], [350, 440]].map(([x, y], i) => <rect key={i} x={x} y={y} width="8" height="10" />)}</g>
-      {/* 강 */}
-      <rect y="560" width="400" height="140" fill="#263D40" opacity=".7" />
-      <path d="M0 590 Q100 580 200 592 T400 588 M0 630 Q120 620 240 632 T400 628" stroke="#E8D8B8" strokeWidth="1.2" fill="none" opacity=".35" />
-      {/* 망각의 안개 */}
-      {(scene === "fog" || cleared < 1) && (
-        <g filter="url(#soft-fog)" fill="#D6D6CC" opacity={scene === "fog" ? .7 : .35 * (1 - cleared)} className="anim-fog">
-          <ellipse cx="80" cy="470" rx="200" ry="50" /><ellipse cx="330" cy="420" rx="180" ry="44" /><ellipse cx="200" cy="560" rx="260" ry="50" />
-        </g>
-      )}
-    </svg>
+    <div className="absolute inset-0" aria-hidden>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/world/scene-${scene}.webp`} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(20,30,40,.35), transparent 30%, transparent 55%, rgba(20,30,40,.55))" }} />
+      {scene === "fog" && <div className="absolute inset-0 anim-fog" style={{ background: "radial-gradient(ellipse 60% 20% at 30% 60%, rgba(240,240,232,.7), transparent 70%), radial-gradient(ellipse 50% 18% at 75% 75%, rgba(240,240,232,.6), transparent 70%)" }} />}
+    </div>
   );
 }
 

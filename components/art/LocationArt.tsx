@@ -42,26 +42,9 @@ export function LocationGlyph({ id, scale = 0.42 }: { id: string; scale?: number
   );
 }
 
-/** 장소 상세의 펼쳐지는 삽화 (달밤 하늘 + 건물 + 안개) */
+/** 장소 상세 그림: 3D 미니어처로 구운 장소 모습 (분위기 표현, 실제 외관과 다를 수 있음) */
 export function LocationScene({ id, name }: { id: string; name: string }) {
-  const a = LOCATION_ART[id] ?? { style: "shop" as const, w: 140, h: 120 };
-  const k = 230 / Math.max(a.w, a.h * 1.1);
-  return (
-    <svg viewBox="0 0 400 250" className="w-full h-auto block" role="img" aria-label={`${name} 삽화 (분위기 표현)`}>
-      <defs>
-        <linearGradient id={`ls-${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#263D40" /><stop offset=".7" stopColor="#5E6F68" /><stop offset="1" stopColor="#C9B994" /></linearGradient>
-      </defs>
-      <rect width="400" height="250" fill={`url(#ls-${id})`} />
-      <circle cx="320" cy="62" r="34" fill="#EFE2C2" opacity=".95" />
-      <circle cx="320" cy="62" r="60" fill="#EFE2C2" opacity=".12" className="anim-glow" />
-      <path d="M0 170 Q80 130 160 160 Q240 120 320 155 Q370 140 400 150 V250 H0Z" fill="#65516F" opacity=".45" />
-      <g transform={`translate(${200 - (a.w * k) / 2} ${214 - a.h * k}) scale(${k})`}>
-        {a.image ? <image href={a.image} width={a.w} height={a.h} preserveAspectRatio="xMidYMax meet" />
-          : <Building w={a.w} h={a.h} style={a.style} wall={a.wall} roof={a.roof} />}
-      </g>
-      <rect y="212" width="400" height="38" fill="#C4AC80" stroke="#39332F" strokeWidth="2" />
-      <ellipse cx="200" cy="230" rx="260" ry="16" fill="#E8D8B8" opacity=".5" filter="url(#soft-fog)" className="anim-fog" />
-      <rect x="3" y="3" width="394" height="244" fill="none" stroke="#39332F" strokeWidth="3" />
-    </svg>
-  );
+  const a = LOCATION_ART[id];
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={a?.image ?? `/world/loc-${id}.webp`} alt={`${name} 미니어처 (분위기 표현)`} className="w-full aspect-[16/10] object-cover rounded-2xl block" />;
 }
