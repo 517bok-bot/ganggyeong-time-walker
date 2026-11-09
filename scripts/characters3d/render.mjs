@@ -38,7 +38,7 @@ if (what === "player" || what === "all") {
   for (const j of jobs) { if (only && !j.file.includes(only)) continue; save(j.file, await p.evaluate((o) => window.renderPlayer(o), j.opts)); process.stdout.write("+"); }
 }
 if (what === "npc" || what === "all") {
-  for (const id of ["guide", "artisan", "photographer", "merchant", "postman"]) { save(`npc/${id}.webp`, await p.evaluate((i) => window.renderNpc(i), id)); process.stdout.write("*"); }
+  for (const id of ["guide", "artisan", "photographer", "merchant", "postman", "musician"]) { save(`npc/${id}.webp`, await p.evaluate((i) => window.renderNpc(i), id)); process.stdout.write("*"); }
 }
 if (what === "map" || what === "all") {
   for (const m of only ? [only] : ["day", "dawn", "dusk", "night"]) { save(`world/map-${m}.webp`, await p.evaluate((x) => window.renderMap(x), m)); process.stdout.write("M"); }

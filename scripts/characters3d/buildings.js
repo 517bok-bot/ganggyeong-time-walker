@@ -151,7 +151,7 @@ function classicCar() {
 }
 
 // 현장 사진으로 확인한 건물은 전용 모양으로
-const REAL = { "welcome-center": "welcome", "music-library": "musichall", "ganggyeong-gwan": "theater", cinema: "cinema", gallery: "gallerygg", "dance-hall": "dancehall", "coffee-interview": "coffeehouse", "hotel-west": "hotel", "hotel-east": "clubround", "hotel-family": "clubpavilion", "hana-donkatsu": "hana", "modern-store": "modernstore", milmyeon: "taechang", bookshop: "hongin", dammi: "pungil", donkatsu: "mihwa", honggyori: "singwang", tailor: "tailor", gwangshin: "gasoil", daecheong: "daeseong", "photo-studio": "photo" };
+const REAL = { "welcome-center": "welcome", "music-library": "musichall", "ganggyeong-gwan": "theater", cinema: "cinema", gallery: "gallerygg", "dance-hall": "dancehall", "coffee-interview": "coffeehouse", "hotel-west": "hotel", "hotel-east": "hanok", "hotel-family": "clubpavilion", "hana-donkatsu": "hana", "modern-store": "modernstore", milmyeon: "taechang", bookshop: "hongin", dammi: "pungil", donkatsu: "mihwa", honggyori: "singwang", tailor: "tailor", gwangshin: "gasoil", daecheong: "daeseong", "photo-studio": "photo" };
 
 export function building(a, rand, { night = false } = {}) {
   const g = new THREE.Group();
@@ -585,6 +585,8 @@ export function building(a, rand, { night = false } = {}) {
       break;
     }
   }
+  // 강경구락부 건물들은 서로 가까워 작게 (안내도 비율)
+  if (["coffee-interview", "hotel-west", "hotel-east", "hotel-family", "hana-donkatsu"].includes(a.id)) g.scale.setScalar(0.66);
   if (a.id === "modern-store") { const car = classicCar(); car.position.set(W * 0.75, 0, D / 2 + 14); car.rotation.y = -0.5; g.add(car); }
   if (night && a.style !== "lighthouse") { const l = new THREE.PointLight("#FFC879", 700, 110, 2); l.position.set(0, H * 0.4, D / 2 + 14); g.add(l); }
   g.rotation.y = (rand() - 0.5) * 0.1;

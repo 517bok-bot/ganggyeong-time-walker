@@ -207,7 +207,7 @@ function clubSquare(scene, night) {
   const c = P(1085, 765);
   const cob = canvasTex("clubcob", 256, 256, (cx, w, h) => { cx.fillStyle = "#BDBAB2"; cx.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 12) for (let x = ((y / 12) % 2) * 6; x < w; x += 12) { cx.fillStyle = ["#CBC8C0", "#AFACA4", "#C2BFB7"][(x * 7 + y) % 3]; cx.fillRect(x + 1, y + 1, 10, 10); } });
   const ct = cob.clone(); ct.wrapS = ct.wrapT = THREE.RepeatWrapping; ct.repeat.set(10, 10); ct.needsUpdate = true;
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(150, 48), new THREE.MeshStandardMaterial({ map: ct, roughness: 0.95 })); plaza.rotation.x = -Math.PI / 2; plaza.position.copy(c).setY(0.6); plaza.receiveShadow = true; scene.add(plaza);
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(115, 48), new THREE.MeshStandardMaterial({ map: ct, roughness: 0.95 })); plaza.rotation.x = -Math.PI / 2; plaza.position.copy(c).setY(0.6); plaza.receiveShadow = true; scene.add(plaza);
   const lawn = new THREE.Mesh(new THREE.CircleGeometry(34, 8), flock("#9FB46A")); lawn.rotation.x = -Math.PI / 2; lawn.position.copy(c).setY(0.8); scene.add(lawn);
   const stone = flock("#C9BFA8");
   const f = new THREE.Group(); f.position.copy(c); scene.add(f);

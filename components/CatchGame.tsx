@@ -49,11 +49,15 @@ export default function CatchGame({ info, onCatch, onClose }: { info: SparkInfo 
     const p = ((performance.now() - t0.current) % PERIOD) / PERIOD;
     const scale = 2.6 - 2.05 * p;
     const diff = Math.abs(scale - 1);
-    if (diff > 0.6 && tries.current === 0) {
+    // 도망은 '가끔'만: 타이밍이 좋을수록 덜 도망가고, 한 조각은 최대 두 번까지만 도망가요
+    const slip = info.kind === "golden" ? 0.15 : 0;
+    const chance = diff < 0.15 ? 0 : diff < 0.35 ? 0.15 + slip : diff < 0.6 ? 0.35 + slip : 0.55 + slip;
+    if (tries.current < 2 && Math.random() < chance) {
       tries.current++;
       setPhase("dodge"); sfx.boing(); haptic(20);
-      setPos({ x: (Math.random() > .5 ? 1 : -1) * (50 + Math.random() * 40), y: -30 - Math.random() * 40 });
-      setTimeout(() => { t0.current = performance.now(); setPhase("aim"); }, 650);
+      const ang = Math.random() * Math.PI * 2, dist = 45 + Math.random() * 50;
+      setPos({ x: Math.cos(ang) * dist, y: Math.sin(ang) * dist * 0.8 });
+      setTimeout(() => { t0.current = performance.now(); setPhase("aim"); }, 550 + Math.random() * 300);
       return;
     }
     const g = diff < 0.15 ? "완벽해요!" : diff < 0.35 ? "좋아요!" : "붙잡았다!";
@@ -70,7 +74,7 @@ export default function CatchGame({ info, onCatch, onClose }: { info: SparkInfo 
     <div className="fixed inset-0 z-[72] grid place-items-center anim-fade" role="dialog" aria-modal aria-label="시간 조각 붙잡기"
       style={{ background: "radial-gradient(circle at 50% 45%, rgba(38,61,64,.55), rgba(20,32,34,.9))" }} onPointerDown={tap}>
       <p className="absolute top-[16%] inset-x-0 text-center font-story text-hanji-light text-2xl px-6" style={{ textShadow: "0 2px 0 rgba(0,0,0,.4)" }}>
-        {phase === "caught" ? grade : phase === "dodge" ? "앗, 도망갔다!" : info.name}
+        {phase === "caught" ? grade : phase === "dodge" ? ["앗, 도망갔다!", "휙! 피했어요", "요리조리~"][tries.current % 3] : info.name}
       </p>
       {phase !== "caught" && <p className="absolute top-[16%] mt-10 inset-x-0 text-center font-game text-hanji/80 text-sm">금빛 고리가 조각에 겹칠 때 화면을 톡!</p>}
       <div className="relative w-56 h-56 grid place-items-center">

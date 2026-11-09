@@ -208,7 +208,7 @@ export function makePlayer({ avatar = "sage", outfit = null, layer = "base" }) {
 // ── 마을 사람들 (NPC) ─────────────────────────────
 export function makeNpc(id) {
   const g = new THREE.Group();
-  const look = { guide: ["#C49A55", "teal-cap", "map"], artisan: ["#A34A40", "dugeon", "jar"], photographer: ["#6B4A36", "newsboy", "camera"], merchant: ["#2F4F52", "red-hat", "bag"] }[id];
+  const look = { guide: ["#C49A55", "teal-cap", "map"], artisan: ["#A34A40", "dugeon", "jar"], photographer: ["#6B4A36", "newsboy", "camera"], merchant: ["#2F4F52", "red-hat", "bag"], musician: ["#2E3B5A", "beret", "score"] }[id];
   body(g, { coatColor: look[0] }, false);
   if (look[1] === "teal-cap") { // 조바위
     blob(flock("#2C5052"), [0.84, 0.5, 0.8], [0, 2.22, -0.06], [0, 0, 0], g);
@@ -226,6 +226,12 @@ export function makeNpc(id) {
     blob(flock("#3A3330"), [0.06, 0.04, 0.06], [0, 2.66, 0], [0, 0, 0], g);
   }
   if (look[1] === "red-hat") item(g, "hat-fedora"), g.children.slice(-3).forEach((m) => { if (m.material?.color && m.material.color.getHexString() === "4a3a32") m.material = flock("#8C3A33"); });
+  if (look[1] === "beret") item(g, "hat-beret");
+  if (look[2] === "score") { // 악보 묶음 + 조율 망치
+    mesh(new THREE.BoxGeometry(0.5, 0.62, 0.06), flock("#F4EFE4"), [0.05, 0.85, 0.58], [-0.15, 0, 0.1], g);
+    for (let i = 0; i < 5; i++) mesh(new THREE.BoxGeometry(0.38, 0.012, 0.01), flock("#2B2220"), [0.05, 0.98 - i * 0.07, 0.62], [-0.15, 0, 0.1], g);
+    mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.4, 8), gloss("#B68A3C"), [0.6, 0.8, 0.35], [0, 0, 0.4], g);
+  }
   if (look[2] === "camera") item(g, "prop-camera");
   if (look[2] === "jar") { // 옹기 항아리
     const pts = [[0, 0], [0.18, 0.02], [0.26, 0.16], [0.24, 0.32], [0.14, 0.4], [0.15, 0.44], [0, 0.44]].map(([r, y]) => new THREE.Vector2(r, y));

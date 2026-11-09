@@ -38,7 +38,7 @@ const R = (exp = 30, coins = 10, items?: Record<string, number>) => ({ exp, coin
 export const LOCATIONS: GameLocation[] = [
   { id: "welcome-center", no: 1, name: "웰컴센터", zone: "street", real: true, mapX: 410, mapY: 962, gps: null, historyStatus: "pending",
     gameRole: "타임워커 여정의 출발점. 베리쥬가 여행단 합류를 기다리는 곳 (게임 설정)", characterIds: ["berijyu"], npcId: "guide", reward: R(40, 20, { salt: 2 }) },
-  { id: "music-library", no: 2, name: "음악도서관", zone: "street", real: true, mapX: 380, mapY: 827, gps: null, historyStatus: "pending", reward: R() },
+  { id: "music-library", no: 2, name: "음악도서관", zone: "street", real: true, mapX: 380, mapY: 827, gps: null, historyStatus: "pending", npcId: "musician", reward: R() },
   { id: "tailor", no: 3, name: "양장점", zone: "street", real: true, mapX: 390, mapY: 690, gps: null, historyStatus: "pending", reward: R() },
   { id: "dance-hall", no: 4, name: "딴스홀", zone: "street", real: true, mapX: 372, mapY: 548, gps: null, historyStatus: "pending", reward: R() },
   { id: "memory-lighthouse", no: 5, name: "기억의 등대", zone: "street", real: true, mapX: 390, mapY: 437, gps: null, historyStatus: "pending",
@@ -56,7 +56,7 @@ export const LOCATIONS: GameLocation[] = [
   { id: "bookshop", no: 13, name: "홍인책방", note: "멜랑이", zone: "street", real: true, mapX: 601, mapY: 591, gps: null, historyStatus: "pending", reward: R() },
   { id: "romance-square", no: 14, name: "랑만광장", note: "야간 미디어 파사드", zone: "street", real: true, mapX: 679, mapY: 690, gps: null, historyStatus: "pending",
     gameRole: "대추삼형제 막내의 발견 장소 · 공동 항아리 이벤트 광장 (게임 설정)", characterIds: ["daechu-3"], reward: R(40, 15) },
-  { id: "daecheong", no: 15, name: "대성상회", note: "깜뚜누들", zone: "street", real: true, mapX: 567, mapY: 716, gps: null, historyStatus: "pending",
+  { id: "daecheong", no: 15, name: "대성상회", note: "깜뚜누들", npcId: "artisan", zone: "street", real: true, mapX: 567, mapY: 716, gps: null, historyStatus: "pending",
     gameRole: "간식 냄새를 따라온 아기 고양이 콩이의 발견 장소 (게임 설정)", characterIds: ["kongi"], reward: R(50, 15) },
   { id: "gwangshin", no: 16, name: "광신석유", note: "갱갱", zone: "street", real: true, mapX: 575, mapY: 808, gps: null, historyStatus: "pending",
     gameRole: "엄마 고양이 갱이가 쉬어가는 곳 (게임 설정)", characterIds: ["kaengi"], reward: R(50, 15) },
