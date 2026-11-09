@@ -44,6 +44,9 @@ export interface GameState {
   picnic?: Record<string, number>;
   picnicsHeld?: number;
   lastPicnicDay?: string;
+  sparks?: { day: string; got: number[] };
+  sparkTotal?: number;
+  story?: string[];
   lastDaily?: string;
   log: { at: number; text: string }[];
 }

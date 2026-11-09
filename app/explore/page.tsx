@@ -1,49 +1,196 @@
 "use client";
+// 탐험: 화면 전체가 게임 판. 손가락으로 지도를 밀고 벌려 보고, 장소·시간 조각을 톡 누르면 내 캐릭터가 걸어가요.
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useGame } from "@/lib/game";
-import { RECOMMENDED_ROUTE, DISTRICT_INFO, locLabel, type GameLocation } from "@/lib/data/locations";
+import { RECOMMENDED_ROUTE, DISTRICT_INFO, type GameLocation } from "@/lib/data/locations";
 import { useContent } from "@/lib/content";
 import { NPC } from "@/lib/data/npcs";
 import { ITEMS } from "@/lib/data/jeotgal";
-import { PageHeader, Hud, DemoBadge, Modal } from "@/components/ui";
-import { CharacterArt, NpcArt } from "@/components/Characters";
-import OldMap from "@/components/art/OldMap";
+import { DemoBadge, MiniHud, Sheet } from "@/components/ui";
+import { CharacterArt, NpcArt, WalkerArt } from "@/components/Characters";
+import OldMap, { MAP_BOX } from "@/components/art/OldMap";
 import { LocationScene } from "@/components/art/LocationArt";
 import { Ico } from "@/components/art/Icons";
 import QrScanner, { verifyQrPayload } from "@/components/QrScanner";
 import NpcDialog from "@/components/NpcDialog";
+import CatchGame, { SparkGem } from "@/components/CatchGame";
+import StoryPlayer from "@/components/StoryPlayer";
 import { sfx } from "@/lib/sfx";
+import { dayKeyKST, sparkSpots, SPARKS_PER_DAY, type SparkInfo } from "@/lib/data/sparks";
+import { CHAPTERS, chapterProgress, currentChapter, fogCleared, objectiveLine, type Chapter } from "@/lib/data/story";
+import { haptic } from "@/lib/fx";
 
-const RealMap = dynamic(() => import("@/components/RealMap"), { ssr: false, loading: () => <div className="h-[60vh] grid place-items-center font-game text-wood">지도를 불러오는 중…</div> });
+const RealMap = dynamic(() => import("@/components/RealMap"), { ssr: false, loading: () => <div className="h-[50vh] grid place-items-center font-game text-wood">지도를 불러오는 중…</div> });
 
 type Me = { lat: number; lng: number; accuracy: number };
+type View = { x: number; y: number; k: number };
+const W = MAP_BOX.w, H = MAP_BOX.h;
+const toPx = (x: number, y: number) => ({ x: x - MAP_BOX.x, y: y - MAP_BOX.y });
+const SEEN_KEY = "gtw-intro-seen";
+const seenIntros = (): string[] => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]"); } catch { return []; } };
+const markIntro = (id: string) => { try { localStorage.setItem(SEEN_KEY, JSON.stringify([...new Set([...seenIntros(), id])])); } catch { /* ignore */ } };
 
 export default function Explore() {
-  const { state, visit, toast, mode, demoTools } = useGame();
+  const { state, visit, toast, mode, demoTools, act, ready } = useGame();
   const { locations: LOCATIONS, LOC, CHAR } = useContent();
-  const [tab, setTab] = useState<"illust" | "real">("illust");
   const [sel, setSel] = useState<GameLocation | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
+  const [realOpen, setRealOpen] = useState(false);
   const [npcId, setNpcId] = useState<string | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [geoMsg, setGeoMsg] = useState("");
-  const [show, setShow] = useState({ route: true, chars: true, npcs: true });
   const [busy, setBusy] = useState(false);
+  const [catching, setCatching] = useState<{ index: number; info: SparkInfo } | null>(null);
+  const [story, setStory] = useState<{ ch: Chapter; part: "intro" | "outro" } | null>(null);
+  const [chapterOpen, setChapterOpen] = useState(false);
+
+  // ── 지도 카메라 (밀기·벌리기·휠) ─────────────────────────
+  const box = useRef<HTMLDivElement>(null);
+  const layer = useRef<HTMLDivElement>(null);
+  const view = useRef<View>({ x: 0, y: 0, k: 1 });
+  const dragged = useRef(false);
+  const apply = (animate = false) => {
+    const el = layer.current; if (!el) return;
+    el.style.transition = animate ? "transform .9s var(--out)" : "none";
+    const v = view.current;
+    el.style.transform = `translate3d(${v.x}px, ${v.y}px, 0) scale(${v.k})`;
+  };
+  const clamp = (v: View): View => {
+    const b = box.current; if (!b) return v;
+    const vw = b.clientWidth, vh = b.clientHeight;
+    const minK = Math.max(vw / W, vh / H);
+    const k = Math.min(2.4, Math.max(minK, v.k));
+    const x = Math.min(0, Math.max(vw - W * k, v.x));
+    const y = Math.min(0, Math.max(vh - H * k, v.y));
+    return { x, y, k };
+  };
+  const centerOn = useCallback((mx: number, my: number, animate = true, k?: number) => {
+    const b = box.current; if (!b) return;
+    const kk = k ?? view.current.k;
+    const p = toPx(mx, my);
+    view.current = clamp({ k: kk, x: b.clientWidth / 2 - p.x * kk, y: b.clientHeight * 0.55 - p.y * kk });
+    apply(animate);
+  }, []);
+
+  // 내 캐릭터 위치 (지도 좌표) — 이 기기에만 저장
+  const [walker, setWalker] = useState({ x: LOC["welcome-center"]?.mapX ?? 410, y: (LOC["welcome-center"]?.mapY ?? 962) + 30, flip: false, moving: false, dur: 0 });
+  useEffect(() => {
+    let pos = walker;
+    try { const s = JSON.parse(localStorage.getItem("gtw-pos") ?? "null"); if (s?.x) pos = { ...walker, x: s.x, y: s.y }; } catch { /* ignore */ }
+    setWalker(pos);
+    requestAnimationFrame(() => centerOn(pos.x, pos.y, false, Math.max(0.8, (box.current?.clientWidth ?? 400) / 700)));
+    const onResize = () => { view.current = clamp(view.current); apply(); };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const walkerRef = useRef(walker);
+  walkerRef.current = walker;
+  const walkTo = useCallback((x: number, y: number) => new Promise<void>((done) => {
+    const w = walkerRef.current;
+    const dist = Math.hypot(x - w.x, y - w.y);
+    const dur = Math.round(Math.min(1500, 250 + dist * 2.2));
+    try { localStorage.setItem("gtw-pos", JSON.stringify({ x, y })); } catch { /* ignore */ }
+    const steps = Math.max(1, Math.floor(dur / 260));
+    for (let i = 0; i < steps; i++) setTimeout(() => sfx.step(), i * 260);
+    setWalker({ x, y, flip: x < w.x, moving: dist > 4, dur });
+    setTimeout(() => { setWalker((v) => ({ ...v, moving: false })); done(); }, dur);
+    const b = box.current;
+    if (b) { // 카메라도 함께 따라감
+      const p = toPx(x, y); const k = view.current.k;
+      view.current = clamp({ k, x: b.clientWidth / 2 - p.x * k, y: b.clientHeight * 0.55 - p.y * k });
+      const el = layer.current; if (el) { el.style.transition = `transform ${dur}ms var(--out)`; el.style.transform = `translate3d(${view.current.x}px, ${view.current.y}px, 0) scale(${k})`; }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), []);
+
+  useEffect(() => {
+    const b = box.current; if (!b) return;
+    const pts = new Map<number, { x: number; y: number }>();
+    let start: { v: View; d: number; cx: number; cy: number; x: number; y: number } | null = null;
+    const snap = () => {
+      const arr = [...pts.values()];
+      const cx = arr.reduce((s, p) => s + p.x, 0) / arr.length, cy = arr.reduce((s, p) => s + p.y, 0) / arr.length;
+      const d = arr.length > 1 ? Math.hypot(arr[0].x - arr[1].x, arr[0].y - arr[1].y) : 0;
+      start = { v: { ...view.current }, d, cx, cy, x: cx, y: cy };
+    };
+    const down = (e: PointerEvent) => { if (e.pointerType === "mouse" && e.button !== 0) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); dragged.current = false; snap(); };
+    const move = (e: PointerEvent) => {
+      if (!pts.has(e.pointerId) || !start) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const arr = [...pts.values()];
+      const cx = arr.reduce((s, p) => s + p.x, 0) / arr.length, cy = arr.reduce((s, p) => s + p.y, 0) / arr.length;
+      if (Math.hypot(cx - start.x, cy - start.y) > 6) dragged.current = true;
+      let k = start.v.k;
+      if (arr.length > 1 && start.d) { k = start.v.k * (Math.hypot(arr[0].x - arr[1].x, arr[0].y - arr[1].y) / start.d); dragged.current = true; }
+      const r = b.getBoundingClientRect();
+      const ox = start.cx - r.left, oy = start.cy - r.top;
+      const mx = (ox - start.v.x) / start.v.k, my = (oy - start.v.y) / start.v.k;
+      view.current = clamp({ k, x: cx - r.left - mx * k, y: cy - r.top - my * k });
+      apply();
+    };
+    const up = (e: PointerEvent) => { pts.delete(e.pointerId); if (pts.size) snap(); else start = null; };
+    const wheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const r = b.getBoundingClientRect();
+      const k = view.current.k * (e.deltaY < 0 ? 1.12 : 0.89);
+      const mx = (e.clientX - r.left - view.current.x) / view.current.k, my = (e.clientY - r.top - view.current.y) / view.current.k;
+      view.current = clamp({ k, x: e.clientX - r.left - mx * k, y: e.clientY - r.top - my * k });
+      apply();
+    };
+    b.addEventListener("pointerdown", down);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    b.addEventListener("wheel", wheel, { passive: false });
+    return () => { b.removeEventListener("pointerdown", down); window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); b.removeEventListener("wheel", wheel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const zoom = (f: number) => { const b = box.current; if (!b) return; const v = view.current; const cx = b.clientWidth / 2, cy = b.clientHeight / 2; const k = v.k * f; view.current = clamp({ k, x: cx - ((cx - v.x) / v.k) * k, y: cy - ((cy - v.y) / v.k) * k }); apply(true); };
+
+  // ── 시간 조각 ─────────────────────────
+  const [today, setToday] = useState("");
+  useEffect(() => { setToday(dayKeyKST(Date.now())); }, []);
+  const anchors = useMemo(() => LOCATIONS.map((l) => ({ x: l.mapX, y: l.mapY })), [LOCATIONS]);
+  const spots = useMemo(() => (today ? sparkSpots(today, anchors) : []), [today, anchors]);
+  const got = state.sparks?.day === today ? state.sparks.got : [];
+  const left = spots.filter((s) => !got.includes(s.index));
+
+  const tapSpark = async (s: (typeof spots)[number]) => {
+    if (dragged.current || busy) return;
+    sfx.tap();
+    await walkTo(s.x, s.y + 20);
+    setCatching({ index: s.index, info: s.info });
+  };
+  const catchSpark = async () => {
+    if (!catching) return null;
+    const r = await act({ type: "spark", index: catching.index });
+    return r.ok ? r.data?.spark ?? catching.info : null;
+  };
+
+  // ── 장소 ─────────────────────────
+  const tapLocation = async (l: GameLocation) => {
+    if (dragged.current) return;
+    sfx.page();
+    await walkTo(l.mapX + 26, l.mapY + 40);
+    setSel(l);
+  };
 
   const handleQr = useCallback(async (payload: string) => {
     setQrOpen(false); setBusy(true);
     const r = await verifyQrPayload(payload);
     setBusy(false);
     if (!r.ok || !r.locationId) { sfx.error(); toast(r.reason ?? "인증 실패", "⚠️"); return; }
-    // 서버 모드에서는 QR 원문을 다시 보내 서버가 서명을 검증한 뒤 보상을 지급합니다
     const v = await visit(r.locationId, "qr", { qr: payload });
     if (v.ok) sfx.success();
-    setSel(LOC[r.locationId]);
-  }, [visit, toast, LOC]);
+    const l = LOC[r.locationId];
+    if (l) { centerOn(l.mapX, l.mapY); setWalker((w) => ({ ...w, x: l.mapX + 26, y: l.mapY + 40 })); }
+    setSel(l);
+  }, [visit, toast, LOC, centerOn]);
 
-  // QR을 휴대폰 기본 카메라로 찍으면 /explore?qr=GTW1... 로 열립니다
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("qr");
     if (q) { handleQr(q); window.history.replaceState(null, "", "/explore"); }
@@ -68,82 +215,130 @@ export default function Explore() {
         .then((x) => x.json()).catch(() => ({ ok: false, reason: "서버 연결 실패" }));
       if (!r.ok) { setBusy(false); sfx.error(); toast(r.reason, "📡"); return; }
     }
-    const v = await visit(loc.id, "gps", { gps: m }); // 서버 모드: 서버가 거리·정확도를 다시 검사
+    const v = await visit(loc.id, "gps", { gps: m });
     setBusy(false);
     if (v.ok) sfx.success(); else sfx.error();
   };
 
-  const visitedCount = Object.keys(state.visits).length;
+  // ── 이야기 ─────────────────────────
+  const cur = currentChapter(state);
+  const prog = cur ? chapterProgress(cur, state) : null;
+  const cleared = fogCleared(state);
+  useEffect(() => {
+    if (!ready || !cur || story || catching || sel) return;
+    const seen = seenIntros();
+    // 목표를 다 이뤘으면 마무리 장면을 한 번 자동으로, 새 장이 열렸으면 도입 장면을 한 번 자동으로
+    if (prog?.complete && !seen.includes(`${cur.id}:outro`)) { markIntro(`${cur.id}:outro`); const t = setTimeout(() => setStory({ ch: cur, part: "outro" }), 600); return () => clearTimeout(t); }
+    if (cur.id !== "ch0" && !seen.includes(cur.id)) { const t = setTimeout(() => setStory({ ch: cur, part: "intro" }), 700); return () => clearTimeout(t); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, cur?.id, prog?.complete, story, catching, sel]);
+
+  const finishStory = async () => {
+    if (!story) return;
+    const { ch, part } = story;
+    setStory(null);
+    if (part === "intro") { markIntro(ch.id); return; }
+    const r = await act({ type: "chapter", id: ch.id });
+    if (r.ok) { sfx.quest(); haptic([20, 40, 60]); }
+  };
+  const openChapter = () => {
+    if (!cur) { setChapterOpen(true); return; }
+    if (prog?.complete) { sfx.open(); setStory({ ch: cur, part: "outro" }); return; }
+    setChapterOpen(true);
+  };
+
   const routePts = RECOMMENDED_ROUTE.map((id) => `${LOC[id].mapX},${LOC[id].mapY}`).join(" ");
+  const visitedCount = Object.keys(state.visits).length;
+  const companion = state.companion;
+  const wp = toPx(walker.x, walker.y);
 
   return (
-    <main className="px-3">
-      <PageHeader title="강경 탐험" seal="탐험" sub="안내도의 배치를 옮긴 고지도 · 실제 인증은 공식 좌표와 QR로" right={<button className="btn-brick btn-sm" onClick={() => setQrOpen(true)}><Ico name="qr" size={22} />QR</button>} />
-      <Hud />
+    <main className="fixed inset-0 overflow-hidden bg-[#CDB98C]">
+      {/* ── 지도 판 ── */}
+      <div ref={box} className="absolute inset-0 touch-none select-none" onClickCapture={(e) => { if (dragged.current) { e.stopPropagation(); e.preventDefault(); } }}>
+        <div ref={layer} className="absolute left-0 top-0 origin-top-left will-change-transform" style={{ width: W, height: H }}>
+          <OldMap locations={LOCATIONS} state={state} show={{ route: true, chars: true, npcs: true }} selId={sel?.id} routePts={routePts} onSelect={tapLocation}
+            className="absolute inset-0 w-full h-full block" style={{ filter: `saturate(${0.45 + 0.55 * cleared}) sepia(${0.25 * (1 - cleared)})`, transition: "filter 2s" }} />
+          {/* 망각의 안개: 이야기가 진행될수록 걷힘 */}
+          <div className="absolute inset-0 pointer-events-none transition-opacity duration-[2000ms]" style={{ opacity: 0.55 * (1 - cleared) }}>
+            <div className="absolute inset-0 anim-fog" style={{ background: "radial-gradient(ellipse 40% 18% at 30% 30%, rgba(236,232,220,.9), transparent 70%), radial-gradient(ellipse 45% 16% at 70% 60%, rgba(236,232,220,.85), transparent 70%), radial-gradient(ellipse 50% 20% at 40% 85%, rgba(236,232,220,.8), transparent 70%)" }} />
+          </div>
+          {/* 시간 조각 */}
+          {left.map((s) => {
+            const p = toPx(s.x, s.y);
+            return (
+              <button key={s.index} onClick={() => tapSpark(s)} aria-label={`${s.info.name} 붙잡기`}
+                className="absolute -translate-x-1/2 -translate-y-1/2 p-2 anim-pop" style={{ left: p.x, top: p.y, animationDelay: `${s.index * 0.08}s` }}>
+                <span className="block spark-float" style={{ animationDelay: `${s.index * -0.4}s` }}><SparkGem kind={s.info.kind} size={s.info.kind === "golden" ? 56 : 46} /></span>
+              </button>
+            );
+          })}
+          {/* 나 + 동행 친구 */}
+          <div className="absolute pointer-events-none" style={{ left: 0, top: 0, transform: `translate(${wp.x}px, ${wp.y}px)`, transition: `transform ${walker.moving ? walker.dur : 0}ms linear` }}>
+            {companion && (
+              <div className="absolute w-12 h-12 -translate-x-1/2 -translate-y-full" style={{ left: walker.flip ? 34 : -34, top: 6, transition: "left .4s var(--out)" }}>
+                <div className={walker.moving ? "anim-walk w-full h-full" : "anim-idle w-full h-full"}><CharacterArt id={companion} className="w-full h-full" /></div>
+              </div>
+            )}
+            <div className="absolute w-16 h-[88px] -translate-x-1/2 -translate-y-full">
+              <div className="absolute -inset-3 rounded-full bg-antique-light/40 blur-md anim-glow" />
+              <div className={walker.moving ? "anim-walk w-full h-full" : "w-full h-full"}><WalkerArt avatar={state.player.avatar} walking={walker.moving} flip={walker.flip} /></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <div className="flex gap-2 mt-3">
-        {([["illust", "그림 지도"], ["real", "실제 지도"]] as const).map(([k, l]) => (
-          <button key={k} onClick={() => setTab(k)} className={`flex-1 ${tab === k ? "btn-sage" : "btn-cream"} btn-sm`}><Ico name={k === "illust" ? "map" : "compass"} size={20} />{l}</button>
+      {/* ── 위: 명패 + 이야기 띠 ── */}
+      <div className="absolute top-0 inset-x-0 p-3 pt-[max(12px,env(safe-area-inset-top))] flex items-start gap-2 pointer-events-none">
+        <div className="pointer-events-auto"><MiniHud /></div>
+        <div className="flex-1" />
+        <div className="pointer-events-auto flex flex-col items-end gap-1.5 mr-12">
+          <span className="chip bg-hanji-light/95 text-sumi shadow-card !text-[13px] !py-1"><SparkGem kind="moment" size={18} />{got.length}/{SPARKS_PER_DAY}</span>
+          <span className="chip bg-hanji-light/95 text-sumi shadow-card !text-[13px] !py-1"><Ico name="stamp" size={16} />{visitedCount}/{LOCATIONS.length}</span>
+        </div>
+      </div>
+      <button onClick={openChapter} className={`absolute left-3 right-3 top-[calc(max(12px,env(safe-area-inset-top))+70px)] mx-auto max-w-md text-left flex items-center gap-3 px-3 py-2 border-[1.5px] shadow-card ${prog?.complete ? "bg-vermilion text-hanji-light border-vermilion-dark" : "bg-teal/95 text-hanji-light border-sumi-dark"}`}
+        style={{ backgroundImage: "var(--woodgrain)", borderRadius: 6, animation: prog?.complete ? "seal-glow 2.4s ease-in-out infinite" : undefined }}>
+        <span className="font-game font-bold text-[11px] text-antique-light shrink-0 tracking-wider">{cur ? cur.no : "완결"}</span>
+        <span className="flex-1 min-w-0">
+          <span className="block font-story text-[17px] leading-tight truncate">{cur ? (prog?.complete ? "이야기 이어보기 ▶" : cur.title) : "멈춘 시간의 포구 · 완결"}</span>
+          {cur && !prog?.complete && <span className="block text-[12px] font-game text-hanji/85 truncate">{objectiveLine(cur, state)}</span>}
+          {!cur && <span className="block text-[12px] font-game text-hanji/85">시간 조각은 매일 새로 떨어져요</span>}
+        </span>
+        <Ico name="scroll" size={24} />
+      </button>
+
+      {/* ── 오른쪽: 확대/축소 · 내 위치 · 실제 지도 ── */}
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+        {[["+", () => zoom(1.25), "확대"], ["−", () => zoom(0.8), "축소"]].map(([t, f, l]) => (
+          <button key={l as string} onClick={f as () => void} aria-label={l as string} className="w-11 h-11 rounded-full bg-hanji-light/95 border-[1.5px] border-sumi shadow-card font-game text-2xl text-sumi active:scale-90 transition-transform">{t as string}</button>
         ))}
+        <button onClick={() => centerOn(walker.x, walker.y)} aria-label="내 캐릭터로" className="w-11 h-11 rounded-full grid place-items-center bg-hanji-light/95 border-[1.5px] border-sumi shadow-card active:scale-90 transition-transform"><Ico name="person" size={24} /></button>
+        <button onClick={() => setRealOpen(true)} aria-label="실제 지도와 GPS" className="w-11 h-11 rounded-full grid place-items-center bg-hanji-light/95 border-[1.5px] border-sumi shadow-card active:scale-90 transition-transform"><Ico name="compass" size={24} /></button>
       </div>
 
-      <div className="paper mt-3 p-2 sm:p-3">
-        <div className="flex flex-wrap items-center gap-2 px-1 pb-2 text-sm">
-          <span className="font-game text-wood-dark">방문 {visitedCount}/{LOCATIONS.length}</span>
-          <div className="flex-1" />
-          {tab === "illust" && ([["route", "추천 동선"], ["chars", "캐릭터"], ["npcs", "NPC"]] as const).map(([k, l]) => (
-            <label key={k} className="chip bg-cream-dark text-wood-dark cursor-pointer">
-              <input type="checkbox" className="accent-sage" checked={show[k]} onChange={(e) => setShow({ ...show, [k]: e.target.checked })} /> {l}
-            </label>
-          ))}
-        </div>
-
-        {tab === "illust" ? (
-          <div className="overflow-auto no-scrollbar border-2 border-sumi bg-hanji">
-            <OldMap locations={LOCATIONS} state={state} show={show} selId={sel?.id} routePts={routePts} onSelect={(l) => { sfx.page(); setSel(l); }} />
-          </div>
-        ) : (
-          <div>
-            <RealMap me={me} />
-            <p className="text-xs text-wood mt-2">※ 붉은 점선 원은 강경읍 일대의 <b>근사 위치</b>입니다. 개별 장소의 공식 좌표가 확인되면 관리자가 등록하며, 그 전까지는 장소별 QR로 인증하세요.</p>
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-2 mt-3">
-          <button className="btn-sage btn-sm" onClick={locate}><Ico name="compass" size={20} />내 위치 확인</button>
-          <button className="btn-brick btn-sm" onClick={() => setQrOpen(true)}><Ico name="qr" size={20} />QR 인증</button>
-          <Link href="/village" className="btn-cream btn-sm"><Ico name="village" size={20} />집에서 탐험하기</Link>
-        </div>
-        {geoMsg && <p className="text-sm text-wood-dark mt-2">{geoMsg}</p>}
-        <div className="flex flex-wrap gap-3 mt-3 text-xs text-wood">
-          <span className="flex items-center gap-1"><span className="inline-block w-4 h-4 border-2 border-vermilion bg-hanji-light" />안개 낀 곳(미방문)</span>
-          <span className="flex items-center gap-1"><span className="inline-block w-4 h-4 bg-vermilion" />방문 인장</span>
-          <span className="flex items-center gap-1"><Ico name="paw" size={16} />캐릭터 단서</span>
-          <span className="flex items-center gap-1"><Ico name="lantern" size={16} />NPC</span>
-          <span className="flex items-center gap-1"><Ico name="route" size={16} />추천 동선</span>
-        </div>
+      {/* ── 아래: QR 큰 버튼 + 온라인 마을 ── */}
+      <div className="absolute inset-x-0 bottom-[calc(96px+env(safe-area-inset-bottom))] flex items-end justify-between px-4 pointer-events-none">
+        <Link href="/village" className="pointer-events-auto flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl bg-hanji-light/95 border-[1.5px] border-sumi shadow-card text-[12px] font-game font-bold text-sumi active:scale-95 transition-transform"><Ico name="village" size={26} />온라인 마을</Link>
+        <button onClick={() => setQrOpen(true)} aria-label="QR로 현장 인증" className="pointer-events-auto relative w-[74px] h-[74px] rounded-full grid place-items-center bg-vermilion text-hanji-light border-2 border-vermilion-dark shadow-card active:scale-90 transition-transform"
+          style={{ boxShadow: "inset 0 0 0 4px #963F38, inset 0 0 0 5.5px rgba(242,231,208,.8), 0 6px 0 #5c2520" }}>
+          <span className="flex flex-col items-center"><Ico name="qr" size={30} /><span className="text-[11px] font-game font-bold -mt-0.5">현장 인증</span></span>
+        </button>
       </div>
 
-      <section className="paper p-4 mt-3 text-sm text-wood-dark">
-        <h2 className="font-game text-lg">찾아오시는 길</h2>
-        <p>{DISTRICT_INFO.address} · {DISTRICT_INFO.parking}</p>
-        <p>관광안내: {DISTRICT_INFO.guideReservation}</p>
-        <p className="text-xs text-wood mt-1">안내도 지번 표기: {DISTRICT_INFO.addressOnMap}</p>
-      </section>
-
-      {/* 장소 상세 */}
-      <Modal open={!!sel} onClose={() => setSel(null)} label="장소 정보">
+      {/* ── 장소 시트 ── */}
+      <Sheet open={!!sel} onClose={() => setSel(null)} label="장소 정보">
         {sel && (
-          <div className="p-4">
+          <div className="px-4 pb-5">
             <div className="relative -mx-1 mb-3 anim-unfold">
               <LocationScene id={sel.id} name={sel.name} />
               {state.visits[sel.id] && <span className="absolute right-3 bottom-3 seal w-16 h-16 text-base rotate-[-10deg] anim-stamp">방문<br />인증</span>}
             </div>
             <div className="flex items-start gap-3">
               <div className="seal w-12 h-12 text-2xl shrink-0">{sel.no}</div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap gap-1">
-                  <span className="chip bg-sage text-cream">실제 장소 · 안내도 표기</span>
+                  <span className="chip bg-sage text-cream">실제 장소</span>
                   <span className="chip bg-cream-dark text-wood">{sel.zone === "street" ? "강경근대거리" : "강경구락부"}</span>
                   {state.visits[sel.id] && <span className="chip bg-gold text-wood-dark">방문 완료 ({state.visits[sel.id].method.toUpperCase()})</span>}
                 </div>
@@ -156,20 +351,13 @@ export default function Explore() {
               <img src={sel.photoUrl} alt={`${sel.name} 사진`} className="mt-3 w-full rounded-xl border-2 border-wood object-cover max-h-56" />
             )}
             {sel.description && <p className="mt-2 text-sm text-wood-dark">{sel.description}</p>}
-            {sel.historyStatus === "approved" && sel.history ? (
+            {sel.historyStatus === "approved" && sel.history && (
               <div className="mt-2 rounded-xl bg-cream border-2 border-wood/40 p-3 text-sm">
                 <p className="font-game font-bold text-sumi">역사적 배경 <span className="chip bg-jade text-hanji-light">승인 자료</span></p>
                 <p className="text-wood mt-1 whitespace-pre-line">{sel.history}</p>
               </div>
-            ) : (!sel.photoUrl || !sel.description) && (
-              <div className="mt-3 rounded-xl bg-cream border-2 border-dashed border-wood/40 p-3 text-sm">
-                <p className="font-game font-bold text-sumi flex items-center gap-1"><Ico name="camera" size={18} />대표 사진 · <Ico name="scroll" size={18} />역사적 배경</p>
-                <p className="text-wood">공식 자료 확인 후 등록 예정입니다. (검증되지 않은 역사 정보는 표시하지 않아요)</p>
-              </div>
             )}
-            {sel.gameRole && (
-              <p className="mt-2 text-sm rounded-xl bg-gold/30 p-3"><span className="chip bg-wood text-cream mr-1">게임 설정</span>{sel.gameRole}</p>
-            )}
+            {sel.gameRole && <p className="mt-2 text-sm rounded-xl bg-gold/30 p-3"><span className="chip bg-wood text-cream mr-1">게임 설정</span>{sel.gameRole}</p>}
             {(sel.characterIds?.length || sel.npcId) && (
               <div className="mt-3 flex gap-3 items-center">
                 {sel.characterIds?.map((cid) => (
@@ -187,32 +375,74 @@ export default function Explore() {
               </div>
             )}
             <p className="mt-3 text-sm text-wood-dark font-game">
-              방문 보상: +{sel.reward.exp} EXP · +{sel.reward.coins} 코인
+              방문 보상: +{sel.reward.exp} EXP · 엽전 {sel.reward.coins}
               {sel.reward.items && Object.entries(sel.reward.items).map(([k, v]) => ` · ${ITEMS[k].name}×${v}`)}
             </p>
+            {!state.visits[sel.id] && <p className="text-xs text-sumi-light mt-1">현장에서 QR을 찍거나 GPS로 인증하면 도장을 받아요. 집에서는 온라인 마을에서 같은 장소를 둘러볼 수 있어요.</p>}
             <div className="grid grid-cols-2 gap-2 mt-3">
+              <button className="btn-brick btn-sm" disabled={busy || !!state.visits[sel.id]} onClick={() => setQrOpen(true)}><Ico name="qr" size={18} />QR 인증</button>
               <button className="btn-sage btn-sm flex-wrap !gap-1" disabled={busy || !!state.visits[sel.id]} onClick={() => gpsVerify(sel)}>
                 <Ico name="compass" size={18} />GPS 인증{!sel.gps && <span className="text-[10px] basis-full text-center">(좌표 등록 전)</span>}
               </button>
-              <button className="btn-brick btn-sm" disabled={busy || !!state.visits[sel.id]} onClick={() => setQrOpen(true)}><Ico name="qr" size={18} />QR 인증</button>
             </div>
+            {geoMsg && <p className="text-sm text-wood-dark mt-2">{geoMsg}</p>}
             {demoTools && (
-              <>
-                <div className="mt-2 flex items-center gap-2">
-                  <button className="btn-cream btn-sm flex-1" disabled={!!state.visits[sel.id]}
-                    onClick={async () => { if ((await visit(sel.id, "demo")).ok) sfx.success(); }}>
-                    현장 도착 시뮬레이션
-                  </button>
-                  <DemoBadge>테스트용</DemoBadge>
-                </div>
-                <p className="text-[11px] text-wood mt-2">※ 시뮬레이션은 로컬 모드 또는 DEMO_TOOLS=true 일 때만 보여요. 운영 서버에서는 GPS·QR 서버 검증만 허용됩니다.</p>
-              </>
+              <div className="mt-2 flex items-center gap-2">
+                <button className="btn-cream btn-sm flex-1" disabled={!!state.visits[sel.id]}
+                  onClick={async () => { if ((await visit(sel.id, "demo")).ok) sfx.success(); }}>현장 도착 시뮬레이션</button>
+                <DemoBadge>시연용</DemoBadge>
+              </div>
             )}
             {state.visits[sel.id] && <Link href={`/postcard?loc=${sel.id}`} className="btn-gold btn-sm w-full mt-3"><Ico name="postcard" size={20} />이 장소로 기념 엽서 만들기</Link>}
           </div>
         )}
-      </Modal>
+      </Sheet>
 
+      {/* ── 실제 지도 시트 ── */}
+      <Sheet open={realOpen} onClose={() => setRealOpen(false)} label="실제 지도">
+        <div className="px-4 pb-5">
+          <h2 className="font-story text-2xl text-sumi">실제 강경 지도</h2>
+          <div className="mt-2 border-2 border-sumi overflow-hidden"><RealMap me={me} /></div>
+          <button className="btn-sage btn-sm w-full mt-2" onClick={locate}><Ico name="compass" size={20} />내 위치 확인</button>
+          {geoMsg && <p className="text-sm text-wood-dark mt-2">{geoMsg}</p>}
+          <p className="text-xs text-wood mt-2">※ 붉은 점선 원은 강경읍 일대의 근사 위치예요. 장소별 공식 좌표가 등록되기 전에는 QR로 인증하세요.</p>
+          <p className="text-sm text-wood-dark mt-3">{DISTRICT_INFO.address} · {DISTRICT_INFO.parking}<br />관광안내: {DISTRICT_INFO.guideReservation}</p>
+        </div>
+      </Sheet>
+
+      {/* ── 이야기 목록 시트 ── */}
+      <Sheet open={chapterOpen} onClose={() => setChapterOpen(false)} label="이야기">
+        <div className="px-4 pb-5">
+          <h2 className="font-story text-2xl text-sumi">멈춘 시간의 포구</h2>
+          <p className="text-sm text-sumi-light">시간의 종을 고치고, 흩어진 고양이 가족을 다시 만나게 해 주세요.</p>
+          <ol className="mt-3 space-y-2">
+            {CHAPTERS.map((c) => {
+              const p = chapterProgress(c, state);
+              const isCur = cur?.id === c.id;
+              return (
+                <li key={c.id} className={`p-3 border-[1.5px] ${isCur ? "border-vermilion bg-hanji-light" : "border-sumi/20 bg-hanji/60"} ${!p.claimed && !isCur ? "opacity-60" : ""}`} style={{ borderRadius: 6 }}>
+                  <div className="flex items-center gap-2">
+                    <span className={`seal w-10 h-10 text-[11px] shrink-0 ${p.claimed ? "" : "!bg-transparent !text-vermilion !shadow-none border border-vermilion"}`}>{p.claimed ? "완" : c.no}</span>
+                    <div className="flex-1 min-w-0"><p className="font-story text-lg text-sumi leading-tight">{c.title}</p><p className="text-xs text-sumi-light">{c.sub}</p></div>
+                    {(p.claimed || isCur) && <button className="btn-cream btn-sm !px-2 !py-1 text-sm" onClick={() => { setChapterOpen(false); setStory({ ch: c, part: p.claimed ? "outro" : "intro" }); }}>다시 보기</button>}
+                  </div>
+                  {isCur && (
+                    <ul className="mt-2 space-y-1">
+                      {c.objectives.map((o) => {
+                        const d = o.done(state);
+                        return <li key={o.label}><Link href={o.href} onClick={() => setChapterOpen(false)} className="flex items-start gap-2 text-sm"><span className={`mt-0.5 w-4 h-4 shrink-0 grid place-items-center border ${d ? "bg-jade border-jade text-hanji-light" : "border-sumi/50"}`}>{d && "✓"}</span><span className={d ? "line-through text-sumi-light" : "font-game font-bold text-sumi"}>{o.label}<span className="block text-xs font-normal text-sumi-light no-underline">{o.hint}</span></span></Link></li>;
+                      })}
+                    </ul>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </Sheet>
+
+      <CatchGame info={catching?.info ?? null} onCatch={catchSpark} onClose={() => setCatching(null)} />
+      <StoryPlayer chapter={story?.ch ?? null} part={story?.part ?? "intro"} onDone={finishStory} />
       <QrScanner open={qrOpen} onClose={() => setQrOpen(false)} onResult={handleQr} />
       <NpcDialog npcId={npcId} onClose={() => setNpcId(null)} />
     </main>

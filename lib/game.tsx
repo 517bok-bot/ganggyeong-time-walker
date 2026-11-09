@@ -11,6 +11,10 @@ import { QUESTS, questProgress } from "./data/quests";
 import { applyAction, expToNext, initialState, normalize, type Action, type Msg } from "./engine";
 import { getBrowserSupabase } from "./supabase/browser";
 import { sfx, type SfxName } from "./audio";
+import type { SparkInfo } from "./data/sparks";
+import { fx, haptic } from "./fx";
+
+const totalExp = (p: GameState["player"]) => { let t = p.exp; for (let l = 1; l < p.level; l++) t += expToNext(l); return t; };
 import { QUESTS as ALL_QUESTS } from "./data/quests";
 
 /** 행동별 성공 효과음 */
@@ -24,7 +28,8 @@ export function buildShowcase(): GameState {
   let s = initialState();
   let t = Date.now() - 3 * 86400_000;
   const run = (a: Action) => { t += 600_000; const o = applyAction(s, a, { now: t, allowDemo: true }); if (o.ok) s = o.state; return o; };
-  run({ type: "profile", name: "강경탐험가", avatar: "sage" });
+  run({ type: "profile", name: "강경탐험가", avatar: "sage", house: "cheongryong" });
+  for (let i = 0; i < 6; i++) run({ type: "spark", index: i });
   for (const id of ["welcome-center", "gwangshin", "memory-lighthouse", "photo-studio", "gallery", "honggyori", "coffee-interview", "modern-store"])
     run({ type: "visit", locationId: id, method: "demo" });
   for (const k of ["place:welcome-center", "place:music-library", "place:v-market", "place:romance-square"]) run({ type: "villageFind", key: k });
@@ -40,6 +45,7 @@ export function buildShowcase(): GameState {
   run({ type: "companion", charId: "kaengi" });
   for (const k of ["picnic:2", "picnic:3", "picnic:4", "picnic:5"]) run({ type: "villageFind", key: k });
   run({ type: "startJar", typeId: "saeu", ratio: 28, order: ["main", "salt", "topsalt"], useSincerity: false, jarSkin: "basic" });
+  for (const id of ["ch0", "ch1", "ch2", "ch3"]) run({ type: "chapter", id });
   return s;
 }
 
@@ -48,7 +54,7 @@ export { expToNext, initialState };
 const KEY = "gtw-save-v1";
 
 export interface Toast { id: number; text: string; icon?: string }
-export interface ActResult { ok: boolean; error?: string; data?: { jar?: JarRecord; correct?: boolean } }
+export interface ActResult { ok: boolean; error?: string; data?: { jar?: JarRecord; correct?: boolean; spark?: SparkInfo } }
 export interface SessionUser { id: string; email: string | null; isAnonymous: boolean }
 
 interface Ctx {
@@ -88,6 +94,7 @@ export function GameProvider({ children, authConfigured, demoToolsRemote }: { ch
   const [user, setUser] = useState<SessionUser | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [collectQueue, setCollectQueue] = useState<string[]>([]);
+  const pendingLevel = useRef<number | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
   const modeRef = useRef(mode);
@@ -150,6 +157,7 @@ export function GameProvider({ children, authConfigured, demoToolsRemote }: { ch
     const run = async (): Promise<ActResult> => {
       await readyGate.current!.promise;
       const prevLevel = stateRef.current.player.level;
+      const prevP = stateRef.current.player;
       let res: { ok: boolean; error?: string; newly?: string[]; messages?: Msg[]; data?: ActResult["data"]; state?: GameState };
       if (modeRef.current === "remote") {
         try {
@@ -167,9 +175,17 @@ export function GameProvider({ children, authConfigured, demoToolsRemote }: { ch
         if (res.newly?.length) setCollectQueue((q) => [...q, ...res.newly!]);
         const snd = ACTION_SFX[a.type];
         if (snd && (res.messages?.length || a.type === "equip" || a.type === "openJar")) sfx[snd]();
-        const lv = stateRef.current.player.level;
-        if (lv > prevLevel) setTimeout(() => { sfx.levelUp(); toast(`레벨 업! Lv.${lv} 달성`, "🎉"); }, 500);
-      } else if (!opts?.quiet && res.error) { sfx.error(); toast(res.error, "ℹ️"); }
+        const np = stateRef.current.player;
+        const dCoins = np.coins - prevP.coins, dExp = totalExp(np) - totalExp(prevP);
+        if (dCoins > 0 || dExp > 0) fx.reward(Math.max(0, dCoins), Math.max(0, dExp));
+        else haptic(10);
+        const lv = np.level;
+        if (lv > prevLevel) {
+          // 새 인연 장면이 떠 있으면 그 장면을 닫은 뒤에 레벨 업을 보여 줍니다
+          if (res.newly?.length) pendingLevel.current = lv;
+          else setTimeout(() => { sfx.levelUp(); fx.levelUp(lv); }, 900);
+        }
+      } else if (!opts?.quiet && res.error) { sfx.error(); haptic([30, 40, 30]); toast(res.error, "ℹ️"); }
       return { ok: res.ok, error: res.error, data: res.data };
     };
     const p = queue.current.then(run, run); // 서버 버전 충돌을 막기 위해 순차 실행
@@ -181,7 +197,11 @@ export function GameProvider({ children, authConfigured, demoToolsRemote }: { ch
     state, ready, mode, user, authConfigured,
     demoTools: mode === "local" || demoToolsRemote,
     toasts, collectQueue, toast, act,
-    dismissCollect: () => setCollectQueue((q) => q.slice(1)),
+    dismissCollect: () => setCollectQueue((q) => {
+      const rest = q.slice(1);
+      if (!rest.length && pendingLevel.current) { const lv = pendingLevel.current; pendingLevel.current = null; setTimeout(() => { sfx.levelUp(); fx.levelUp(lv); }, 400); }
+      return rest;
+    }),
     visit: (locationId, method, proof) => act({ type: "visit", locationId, method }, { proof }),
     findOnline: (charId) => act({ type: "findOnline", charId }),
     villageFind: async (key) => (await act({ type: "villageFind", key }, { quiet: true })).ok,

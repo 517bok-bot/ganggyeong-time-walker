@@ -15,6 +15,8 @@ import { NPC } from "./data/npcs";
 import { PLACES, VILLAGE_REWARDS, VILLAGE_TREASURES, ONLINE_CHARACTERS } from "./data/village";
 import { WEAR, type Slot } from "./data/wardrobe";
 import { PICNIC, LOCATION_PICNIC, VILLAGE_PICNIC_SPOTS, PICNIC_FOOD_NEED } from "./data/picnic";
+import { SPARKS_PER_DAY, sparkReward } from "./data/sparks";
+import { CHAPTER, CHAPTERS, chapterProgress } from "./data/story";
 
 export type Action =
   | { type: "visit"; locationId: string; method: VisitMethod }
@@ -34,7 +36,9 @@ export type Action =
   | { type: "equip"; slot: Slot; wearId: string | null }
   | { type: "companion"; charId: string | null }
   | { type: "letter" }
-  | { type: "picnic"; foods: string[] };
+  | { type: "picnic"; foods: string[] }
+  | { type: "spark"; index: number }
+  | { type: "chapter"; id: string };
 
 /** DB 정규화 테이블에 같이 기록할 부수 효과 (중복 방지 UNIQUE 제약·통계용) */
 export interface Effects {
@@ -52,7 +56,7 @@ export interface Outcome {
   newly: string[];
   messages: Msg[];
   effects: Effects;
-  data?: { jar?: JarRecord; correct?: boolean };
+  data?: { jar?: JarRecord; correct?: boolean; spark?: import("./data/sparks").SparkInfo };
 }
 export interface EngineCtx { now: number; allowDemo: boolean }
 
@@ -87,7 +91,7 @@ export function normalize(raw: unknown): GameState {
   const r = raw as Partial<GameState>;
   return { ...base, ...r, player: { ...base.player, ...(r.player ?? {}) }, postcardsMade: r.postcardsMade ?? [],
     wardrobe: r.wardrobe ?? base.wardrobe, equipped: r.equipped ?? base.equipped, companion: r.companion ?? null, lettersSent: r.lettersSent ?? 0,
-    picnic: r.picnic ?? {}, picnicsHeld: r.picnicsHeld ?? 0 };
+    picnic: r.picnic ?? {}, picnicsHeld: r.picnicsHeld ?? 0, sparks: r.sparks ?? { day: "", got: [] }, sparkTotal: r.sparkTotal ?? 0, story: r.story ?? [] };
 }
 
 export const expToNext = (level: number) => 100 + (level - 1) * 50;
@@ -352,6 +356,41 @@ export function applyAction(state: GameState, a: Action, ctx: EngineCtx): Outcom
       }
       r.s = log(st, `금강 둑에서 소풍을 펼쳤어요 (${foods.map((f) => PICNIC[f].name).join(", ")})`, now);
       r.msg(held === 1 ? "첫 소풍! ‘강경 소풍객’ 배지와 정성 한 스푼을 받았어요" : "즐거운 소풍! 정성 한 스푼을 받았어요", "🎉");
+      return r.done();
+    }
+    case "spark": {
+      const i = a.index;
+      if (!Number.isInteger(i) || i < 0 || i >= SPARKS_PER_DAY) return fail(s, "사라진 시간 조각이에요");
+      const today = dayKey(now);
+      const cur = s.sparks?.day === today ? s.sparks.got : [];
+      if (cur.includes(i)) return fail(s, "이미 모은 시간 조각이에요");
+      const info = sparkReward(today, i);
+      let st: GameState = { ...s, sparks: { day: today, got: [...cur, i] }, sparkTotal: (s.sparkTotal ?? 0) + 1 };
+      st = applyExp(st, info.exp, info.coins);
+      st = addItems(st, info.items);
+      if (info.picnic) st = addPicnic(st, info.picnic);
+      if (cur.length + 1 === SPARKS_PER_DAY) { st = applyExp(st, 40, 30); r.msg("오늘의 시간 조각을 모두 모았어요! 보너스 +40EXP", "✨"); }
+      r.s = st;
+      r.data = { spark: info };
+      return r.done();
+    }
+    case "chapter": {
+      const c = CHAPTER[a.id];
+      if (!c) return fail(s, "없는 이야기예요");
+      const story = s.story ?? [];
+      if (story.includes(c.id)) return fail(s, "이미 마친 장이에요");
+      const next = CHAPTERS.find((x) => !story.includes(x.id));
+      if (next?.id !== c.id) return fail(s, "앞 장을 먼저 마쳐 주세요");
+      if (!chapterProgress(c, s).complete) return fail(s, "아직 이 장의 목표를 다 이루지 못했어요");
+      let st: GameState = { ...s, story: [...story, c.id] };
+      st = applyExp(st, c.reward.exp, c.reward.coins);
+      st = addItems(st, c.reward.items);
+      if (c.reward.badge) {
+        st = { ...st, achievements: { ...st.achievements, [`badge:${c.reward.badge}`]: now } };
+        r.effects.collections.push({ item_type: "achievement", item_id: `badge:${c.reward.badge}` });
+      }
+      r.s = log(st, `${c.no} 「${c.title}」을(를) 마쳤어요`, now);
+      r.msg(`${c.no} 완료! +${c.reward.exp}EXP · 엽전 ${c.reward.coins}`, "📜");
       return r.done();
     }
     case "letter": {

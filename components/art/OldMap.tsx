@@ -24,12 +24,14 @@ const MOUNTAINS: [number, number, number][] = [
 ];
 const TREES: [number, number][] = [[300, 360], [292, 520], [300, 860], [800, 300], [760, 470], [1200, 470], [1050, 1060], [880, 1090], [1300, 720]];
 
-export default function OldMap({ locations, state, show, selId, onSelect, routePts }: {
+export const MAP_BOX = { x: 230, y: 40, w: 1120, h: 1100 };
+
+export default function OldMap({ locations, state, show, selId, onSelect, routePts, className = "min-w-[620px] w-full h-auto block", style }: {
   locations: GameLocation[]; state: GameState; show: { route: boolean; chars: boolean; npcs: boolean };
-  selId?: string; onSelect: (l: GameLocation) => void; routePts: string;
+  selId?: string; onSelect: (l: GameLocation) => void; routePts: string; className?: string; style?: React.CSSProperties;
 }) {
   return (
-    <svg viewBox="230 40 1120 1100" className="min-w-[620px] w-full h-auto block" role="img" aria-label="강경근대거리 고지도풍 탐험 지도">
+    <svg viewBox="230 40 1120 1100" className={className} style={style} role="img" aria-label="강경근대거리 고지도풍 탐험 지도">
       <defs>
         <linearGradient id="om-peak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#5E7F5A" /><stop offset=".6" stopColor="#8FA77A" /><stop offset="1" stopColor="#C9C58E" /></linearGradient>
         <radialGradient id="om-vignette" cx="50%" cy="50%" r="70%"><stop offset=".6" stopColor="#E8D8B8" stopOpacity="0" /><stop offset="1" stopColor="#8A6731" stopOpacity=".35" /></radialGradient>

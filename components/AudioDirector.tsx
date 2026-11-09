@@ -39,14 +39,14 @@ export default function AudioDirector() {
   if (path.startsWith("/admin")) return null;
 
   return (
-    <div className="fixed bottom-24 right-3 z-[45]">
+    <div className="fixed top-[max(12px,env(safe-area-inset-top))] right-3 z-[45]">
       <button data-nosfx aria-label="소리 설정" onClick={() => setOpen(!open)}
-        className="w-12 h-12 rounded-full grid place-items-center border-2 border-sumi bg-hanji-light shadow-card" style={{ backgroundImage: "var(--fiber)" }}>
-        <Ico name={s.muted ? "bellmute" : "bell"} size={28} />
+        className="relative w-10 h-10 rounded-full grid place-items-center border-[1.5px] border-sumi bg-hanji-light/95 shadow-card active:scale-90 transition-transform" style={{ backgroundImage: "var(--fiber)" }}>
+        <Ico name={s.muted ? "bellmute" : "bell"} size={24} />
+        {!unlocked && !s.muted && <span className="absolute inset-0 rounded-full border-2 border-antique anim-ring pointer-events-none" aria-hidden />}
       </button>
-      {!unlocked && !s.muted && <span className="absolute right-14 top-3 whitespace-nowrap text-[11px] font-game font-bold bg-teal text-hanji-light px-2 py-1 animate-pulse pointer-events-none">화면을 누르면 음악이 시작돼요</span>}
       {open && (
-        <div className="absolute right-0 bottom-14 w-60 paper p-3 text-sm anim-rise">
+        <div className="absolute right-0 top-12 w-60 paper p-3 text-sm anim-rise">
           <p className="font-story text-lg text-sumi">♪ {track ? TRACK_NAME[track] : "-"}</p>
           <label className="block mt-2">배경음악 <input type="range" min={0} max={1} step={0.05} value={s.bgm} onChange={(e) => update({ ...s, bgm: Number(e.target.value) })} className="w-full accent-teal" /></label>
           <label className="block mt-1">효과음 <input type="range" min={0} max={1} step={0.05} value={s.sfx} onChange={(e) => { update({ ...s, sfx: Number(e.target.value) }); sfx.coin(); }} className="w-full accent-vermilion" /></label>

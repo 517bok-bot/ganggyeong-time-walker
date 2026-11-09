@@ -1,5 +1,14 @@
 "use client";
 import Link from "next/link";
+import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
+
+/** 화면 최상단(body)으로 띄워 페이지 전환 효과·쌓임 순서의 영향을 받지 않게 */
+export function Portal({ children }: { children: React.ReactNode }) {
+  const [el, setEl] = useState<HTMLElement | null>(null);
+  useEffect(() => setEl(document.body), []);
+  return el ? createPortal(children, el) : null;
+}
 import { useGame, expToNext } from "@/lib/game";
 import { WalkerArt } from "./Characters";
 import { Ico } from "./art/Icons";
@@ -33,7 +42,7 @@ export function Hud() {
         </div>
       </div>
       <div className="flex items-center gap-1 font-game font-bold text-sumi pl-2 border-l border-sumi/30">
-        <Ico name="coin" size={22} />{p.coins}
+        <span data-fx-target="coin" className="inline-flex"><Ico name="coin" size={22} /></span>{p.coins}
       </div>
     </div></div>
   );
@@ -42,7 +51,7 @@ export function Hud() {
 /** 화면 제목: 명조 큰 제목 + 붉은 낙관 + 먹선 */
 export function PageHeader({ title, sub, right, seal }: { title: string; sub?: string; right?: React.ReactNode; seal?: string }) {
   return (
-    <header className="px-4 pt-6 pb-3">
+    <header className="pl-4 pr-14 pt-6 pb-3">
       <div className="flex items-end justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <span className="seal w-9 h-11 text-[15px] vertical shrink-0 mt-1" aria-hidden>{seal ?? title.slice(0, 2)}</span>
@@ -65,7 +74,7 @@ export function DemoBadge({ children = "데모" }: { children?: React.ReactNode 
 /** 두루마리처럼 펼쳐지는 창 */
 export function Modal({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: React.ReactNode; label: string }) {
   if (!open) return null;
-  return (
+  return (<Portal>
     <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center p-3" role="dialog" aria-modal aria-label={label} onClick={onClose}
       style={{ background: "radial-gradient(ellipse at 50% 30%, rgba(38,61,64,.55), rgba(26,43,45,.82))" }}>
       <div className="relative w-full max-w-md" onClick={(e) => e.stopPropagation()}>
@@ -75,9 +84,48 @@ export function Modal({ open, onClose, children, label }: { open: boolean; onClo
         <button onClick={onClose} aria-label="닫기" className="absolute -top-3 right-2 z-20 seal seal-round w-8 h-8 text-sm">✕</button>
       </div>
     </div>
-  );
+  </Portal>);
 }
 
 export function Stars({ n, max = 4 }: { n: number; max?: number }) {
   return <span className="tracking-tight" aria-label={`${n}개 중 ${max}`}><span className="text-antique">{"★".repeat(n)}</span><span className="text-sumi/20">{"★".repeat(max - n)}</span></span>;
+}
+
+/** 아래에서 올라오는 시트 (모바일 한 손 조작) */
+export function Sheet({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: React.ReactNode; label: string }) {
+  if (!open) return null;
+  return (<Portal>
+    <div className="fixed inset-0 z-50 flex items-end justify-center anim-fade" role="dialog" aria-modal aria-label={label} onClick={onClose}
+      style={{ background: "linear-gradient(to top, rgba(26,43,45,.7), rgba(26,43,45,.15))" }}>
+      <div className="relative w-full max-w-lg anim-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="paper !rounded-t-[18px] !rounded-b-none max-h-[82dvh] overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+          <button onClick={onClose} aria-label="닫기" className="sticky top-0 z-10 block w-full pt-2 pb-1"><span className="block mx-auto w-12 h-1.5 rounded-full bg-sumi/30" /></button>
+          {children}
+        </div>
+      </div>
+    </div>
+  </Portal>);
+}
+
+/** 지도 위 작은 명패: 초상 + 레벨 고리 + 엽전 */
+export function MiniHud() {
+  const { state } = useGame();
+  const p = state.player;
+  const need = expToNext(p.level);
+  const pct = Math.min(1, p.exp / need);
+  const C = 2 * Math.PI * 25;
+  return (
+    <div className="flex items-center gap-2 pr-3 pl-1 py-1 rounded-full bg-hanji-light/95 border-[1.5px] border-sumi shadow-card" style={{ backgroundImage: "var(--fiber)" }}>
+      <Link href="/me" className="relative w-14 h-14 shrink-0" aria-label={`내 공간 · Lv.${p.level}`}>
+        <svg viewBox="0 0 56 56" className="absolute inset-0 -rotate-90"><circle cx="28" cy="28" r="25" fill="#E8D8B8" stroke="#D6C29C" strokeWidth="4" />
+          <circle cx="28" cy="28" r="25" fill="none" stroke="#263D40" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${C * pct} ${C}`} style={{ transition: "stroke-dasharray .8s var(--out)" }} /></svg>
+        <span className="absolute inset-[5px] rounded-full overflow-hidden"><span className="absolute inset-x-0 -bottom-1 h-[52px]"><WalkerArt avatar={p.avatar} /></span></span>
+        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 seal px-1.5 h-5 text-[11px] whitespace-nowrap">Lv.{p.level}</span>
+      </Link>
+      <div className="min-w-0">
+        <p className="font-story text-[15px] text-sumi leading-none truncate max-w-[96px]">{p.name}</p>
+        <p className="flex items-center gap-1 font-game font-bold text-sumi text-sm mt-1"><span data-fx-target="coin" className="inline-flex"><Ico name="coin" size={18} /></span>{p.coins}</p>
+      </div>
+    </div>
+  );
 }

@@ -138,6 +138,16 @@ export const QUESTS: Quest[] = [
     ],
     reward: { exp: 120, coins: 60, items: { shrimp: 2 } },
   },
+  {
+    id: "q-sparks", title: "흩어진 시간 조각", type: "daily", difficulty: 1,
+    desc: "강경 지도 위에 매일 새로 떨어지는 시간 조각을 붙잡아 보세요. 하루 여섯 개, 내일이면 또 새로 생겨요.",
+    steps: [
+      { label: "시간 조각 1개 붙잡기", done: (s) => (s.sparkTotal ?? 0) >= 1 },
+      { label: "시간 조각 6개 모으기", done: (s) => (s.sparkTotal ?? 0) >= 6 },
+      { label: "시간 조각 15개 모으기", done: (s) => (s.sparkTotal ?? 0) >= 15 },
+    ],
+    reward: { exp: 150, coins: 80, items: { sincerity: 1 }, badge: "시간 조각 수집가" },
+  },
 ];
 
 export const QUEST = Object.fromEntries(QUESTS.map((q) => [q.id, q])) as Record<string, Quest>;

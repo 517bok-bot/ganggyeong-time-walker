@@ -1,7 +1,11 @@
 "use client";
 // 첫 장: 표구된 큰 그림 한 폭 + 붉은 인장 시작 버튼 + 두루마리·방(榜)·수배 전단
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import StoryPlayer from "@/components/StoryPlayer";
+import { CHAPTER, chapterProgress, currentChapter, CHAPTERS, objectiveLine } from "@/lib/data/story";
+import { SPARKS_PER_DAY, dayKeyKST } from "@/lib/data/sparks";
 import { useGame } from "@/lib/game";
 import HeroPainting from "@/components/art/HeroPainting";
 import { MeanderBand, CloudCorner, Fireflies } from "@/components/art/Ornaments";
@@ -27,6 +31,15 @@ export default function Home() {
   const found = Object.keys(state.characters).length;
 
   const [house, setHouse] = useState("cheongryong");
+  const [intro, setIntro] = useState(false);
+  const router = useRouter();
+  const enrolled = !!state.player.house;
+  const cur = currentChapter(state);
+  const cp = cur ? chapterProgress(cur, state) : null;
+  const [today, setToday] = useState("");
+  useEffect(() => { setToday(dayKeyKST(Date.now())); if (new URLSearchParams(window.location.search).get("prologue")) { setIntro(true); window.history.replaceState(null, "", "/"); } }, []);
+  const sparksToday = state.sparks?.day === today ? state.sparks.got.length : 0;
+  const start = () => { sfx.fanfare(); if (enrolled) router.push("/explore"); else setIntro(true); };
   const PROLOGUE = [
     "어느 달 밝은 밤, 까치 한 마리가 붉은 인장이 찍힌 편지를 물고 창가에 내려앉았습니다.",
     "‘그대의 강경 시간 학당(時間學堂) 입학을 허가합니다. 금강 달빛이 가장 밝은 밤, 근대거리로 오시오.’",
@@ -55,19 +68,34 @@ export default function Home() {
             </div>
           </div>
         </div>
-        {/* 하단: 붉은 인장 '시간 여행 시작' */}
-        <div className="absolute inset-x-0 bottom-[100px] sm:bottom-[132px] flex items-end justify-center sm:justify-end gap-3 sm:gap-5 px-3 sm:pr-14">
-          <Link href="/explore" className="btn-cream flex-col !gap-1 w-24 sm:w-32 !py-2.5 text-sm opacity-95"><Ico name="pin" size={28} />실제 강경 탐험</Link>
-          <button onClick={() => { sfx.fanfare(); setPage(0); setPrologue(true); }} aria-label="시간 여행 시작"
-            className="relative w-28 h-32 sm:w-36 sm:h-40 grid place-items-center text-hanji-light font-story text-[24px] sm:text-[30px] leading-[1.15] active:scale-95 transition-transform"
-            style={{ background: "#963F38", borderRadius: 6, filter: "url(#seal-rough)", animation: "seal-glow 3.2s ease-in-out infinite" }}>
-            <span className="text-center">시간<br />여행<br />시작</span>
+        {/* 하단: 붉은 인장 단추 하나 */}
+        <div className="absolute inset-x-0 bottom-[118px] flex flex-col items-center gap-3 px-6">
+          {enrolled && cur && (
+            <p className="px-3 py-1 rounded-full bg-sumi/70 text-hanji-light text-[13px] font-game font-bold backdrop-blur-sm anim-rise">{cur.no} · {cur.title} <span className="text-antique-light">{cp?.done}/{cp?.total}</span></p>
+          )}
+          <button onClick={start} aria-label={enrolled ? "이어서 걷기" : "시간 여행 시작"}
+            className="relative min-w-[230px] h-[68px] px-8 grid place-items-center text-hanji-light font-story text-[28px] tracking-wider active:scale-95 transition-transform"
+            style={{ background: "#963F38", borderRadius: 8, filter: "url(#seal-rough)", animation: "seal-glow 3.2s ease-in-out infinite", transitionTimingFunction: "var(--spring)" }}>
+            <span className="absolute inset-[5px] border border-hanji-light/70 rounded-[4px] pointer-events-none" />
+            {enrolled ? "이어서 걷기" : "시간 여행 시작"}
           </button>
-          <Link href="/village" className="btn-cream flex-col !gap-1 w-24 sm:w-32 !py-2.5 text-sm opacity-95"><Ico name="village" size={28} />온라인 마을</Link>
+          <div className="flex gap-2">
+            <Link href="/village" className="px-3 py-1.5 rounded-full bg-hanji-light/90 border border-sumi text-sumi text-[13px] font-game font-bold flex items-center gap-1"><Ico name="village" size={18} />집에서 걷기</Link>
+            <Link href="/explore" className="px-3 py-1.5 rounded-full bg-hanji-light/90 border border-sumi text-sumi text-[13px] font-game font-bold flex items-center gap-1"><Ico name="pin" size={18} />현장 탐험</Link>
+          </div>
         </div>
       </section>
 
       <div className="mt-6"><Hud /></div>
+
+      {/* ── 오늘의 강경: 이야기 + 시간 조각 ── */}
+      <Link href="/explore" className="mt-4 block relative overflow-hidden p-4 border-[1.5px] border-sumi-dark text-hanji-light shadow-card active:scale-[.99] transition-transform" style={{ borderRadius: 10, background: "linear-gradient(120deg,#263D40,#3B5659)", backgroundImage: "var(--woodgrain), linear-gradient(120deg,#263D40,#3B5659)" }}>
+        <p className="font-game font-bold text-[11px] tracking-[.3em] text-antique-light">멈춘 시간의 포구 · {cur ? cur.no : "완결"}</p>
+        <p className="font-story text-2xl mt-0.5">{cur ? cur.title : "강경의 종지기"}</p>
+        <div className="flex gap-1 mt-2">{CHAPTERS.map((c) => <span key={c.id} className={`h-1.5 flex-1 rounded-full ${(state.story ?? []).includes(c.id) ? "bg-antique-light" : c.id === cur?.id ? "bg-hanji/50" : "bg-hanji/15"}`} />)}</div>
+        <p className="text-sm font-game mt-2 text-hanji/90">{cur ? (cp?.complete ? "목표 달성! 지도에서 이야기를 이어 보세요" : objectiveLine(cur, state)) : "모든 장을 마쳤어요. 고마워요, 종지기!"}</p>
+        <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-game font-bold bg-black/20 rounded-full px-3 py-1">오늘의 시간 조각 {sparksToday}/{SPARKS_PER_DAY} <span className="text-antique-light">지도로 ›</span></p>
+      </Link>
 
       {/* ── 걸린 표찰 바로가기 ── */}
       <nav className="mt-5 relative" aria-label="바로가기">
@@ -172,6 +200,7 @@ export default function Home() {
       </section>
       <p className="text-[11px] text-sumi-light/90 mt-4 text-center max-w-2xl mx-auto">강이·갱이·콩이·베리쥬·대추삼형제·스윗포는 논산시 지역 캐릭터이며, 논산시 사업 협의에 따라 사용합니다.</p>
 
+      <StoryPlayer chapter={intro ? CHAPTER.ch0 : null} part="intro" onDone={() => { setIntro(false); setPage(PROLOGUE.length); setPrologue(true); sfx.open(); }} />
       <Modal open={prologue} onClose={() => setPrologue(false)} label="프롤로그">
         <div className="p-6 text-center">
           {page === PROLOGUE.length ? (
@@ -212,7 +241,7 @@ export default function Home() {
               </div>
               <input className="mt-3 w-full border-b-2 border-sumi bg-transparent px-3 py-3 font-story text-xl text-center focus:outline-none focus:border-vermilion" maxLength={12}
                 placeholder={state.player.name} value={name} onChange={(e) => setName(e.target.value)} aria-label="이름" />
-              <Link href="/explore" className="btn-brick w-full mt-4" onClick={() => { rename(name || state.player.name, avatar, house); setPrologue(false); sfx.fanfare(); }}>입학 인장을 찍고 길을 나서다</Link>
+              <button className="btn-brick w-full mt-4" onClick={async () => { await rename(name || state.player.name, avatar, house); setPrologue(false); sfx.stamp(); router.push("/explore"); }}>입학 인장을 찍고 길을 나서다</button>
             </>
           )}
         </div>

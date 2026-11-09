@@ -161,4 +161,35 @@ t("근대 의상·소품 착용과 학당 문(門)", () => {
   assert.equal(run(s, { type: "profile", name: "학생", avatar: "sage", house: "slytherin" }).ok, false);
 });
 
+
+t("시간 조각: 하루 6개 · 중복/범위 차단 · 다음 날 초기화 · 보상은 엔진 결정", () => {
+  let s = initialState();
+  assert.equal(run(s, { type: "spark", index: 6 }).ok, false);
+  assert.equal(run(s, { type: "spark", index: -1 }).ok, false);
+  assert.equal(run(s, { type: "spark", index: 1.5 }).ok, false);
+  const a = run(s, { type: "spark", index: 0 });
+  assert.ok(a.ok); assert.ok(a.data?.spark); assert.ok(a.state.player.exp > 0 || a.state.player.level > 1);
+  assert.equal(run(a.state, { type: "spark", index: 0 }).ok, false);
+  s = a.state;
+  for (let i = 1; i < 6; i++) s = run(s, { type: "spark", index: i }).state;
+  assert.equal(s.sparks?.got.length, 6); assert.equal(s.sparkTotal, 6);
+  const tomorrow = run(s, { type: "spark", index: 0 }, { now: now + 86400_000, allowDemo: false });
+  assert.ok(tomorrow.ok); assert.equal(tomorrow.state.sparks?.got.length, 1); assert.equal(tomorrow.state.sparkTotal, 7);
+});
+
+t("이야기 장: 순서대로 · 목표 달성 후에만 · 1회", () => {
+  let s = initialState();
+  assert.equal(run(s, { type: "chapter", id: "ch1" }).ok, false); // 서장 먼저
+  assert.equal(run(s, { type: "chapter", id: "ch0" }).ok, false); // 문 미선택
+  s = run(s, { type: "profile", name: "길손", avatar: "sage", house: "jujak" }).state;
+  const c0 = run(s, { type: "chapter", id: "ch0" });
+  assert.ok(c0.ok); s = c0.state;
+  assert.equal(run(s, { type: "chapter", id: "ch0" }).ok, false);
+  assert.equal(run(s, { type: "chapter", id: "ch1" }).ok, false); // 조각 0개
+  for (let i = 0; i < 3; i++) s = run(s, { type: "spark", index: i }).state;
+  const c1 = run(s, { type: "chapter", id: "ch1" });
+  assert.ok(c1.ok); assert.deepEqual(c1.state.story, ["ch0", "ch1"]);
+  assert.equal(run(c1.state, { type: "chapter", id: "nope" }).ok, false);
+});
+
 console.log(`\n${passed}개 테스트 통과`);

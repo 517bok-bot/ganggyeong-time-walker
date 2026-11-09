@@ -4,6 +4,7 @@ import { GameProvider } from "@/lib/game";
 import BottomNav from "@/components/BottomNav";
 import Overlays from "@/components/Overlays";
 import AudioDirector from "@/components/AudioDirector";
+import FxLayer from "@/components/FxLayer";
 import ArtDefs from "@/components/art/ArtDefs";
 import Atmosphere from "@/components/art/Atmosphere";
 import { ContentProvider } from "@/lib/content";
@@ -36,10 +37,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ContentProvider overrides={overrides}>
           <GameProvider authConfigured={supabaseConfigured()} demoToolsRemote={process.env.DEMO_TOOLS === "true"}>
             <Atmosphere />
-            <div className="mx-auto max-w-5xl pb-32">{children}</div>
+            <div className="mx-auto max-w-5xl pb-36">{children}</div>
             <BottomNav />
             <Overlays />
             <AudioDirector />
+            <FxLayer />
           </GameProvider>
         </ContentProvider>
       </body>

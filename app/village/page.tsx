@@ -10,7 +10,7 @@ import { CharacterArt, NpcArt, WalkerArt } from "@/components/Characters";
 import { NPC } from "@/lib/data/npcs";
 import { CAT_FAMILY } from "@/lib/data/characters";
 import { useContent } from "@/lib/content";
-import { PageHeader, Hud, Modal } from "@/components/ui";
+import { MiniHud, Modal } from "@/components/ui";
 import NpcDialog from "@/components/NpcDialog";
 import { sfx } from "@/lib/sfx";
 
@@ -70,8 +70,13 @@ export default function Village() {
 
   return (
     <main className="px-3">
-      <PageHeader title="온라인 강경마을" sub="집에서도 강경을 걸어요 · ← → 키, 버튼, 땅 터치로 이동" />
-      <Hud />
+      <header className="flex items-center gap-2 pt-[max(12px,env(safe-area-inset-top))] pr-12">
+        <MiniHud />
+        <div className="min-w-0">
+          <h1 className="font-story text-2xl text-sumi leading-none">온라인 강경마을</h1>
+          <p className="text-[12px] text-sumi-light mt-1 leading-tight">땅을 톡 누르면 걸어가요 · 반짝이는 것을 찾아요</p>
+        </div>
+      </header>
 
       <div ref={wrap} className="paper mt-3 overflow-hidden relative select-none touch-none" style={{ height: 440 }}
         onPointerDown={(e) => {
