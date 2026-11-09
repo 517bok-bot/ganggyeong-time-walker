@@ -258,9 +258,9 @@ export default function Explore() {
       <div ref={box} className="absolute inset-0 touch-none select-none" onClickCapture={(e) => { if (dragged.current) { e.stopPropagation(); e.preventDefault(); } }}>
         <div ref={layer} className="absolute left-0 top-0 origin-top-left will-change-transform" style={{ width: W, height: H }}>
           <OldMap locations={LOCATIONS} state={state} show={{ route: true, chars: true, npcs: true }} selId={sel?.id} routePts={routePts} onSelect={tapLocation}
-            className="absolute inset-0 w-full h-full block" style={{ filter: `saturate(${0.45 + 0.55 * cleared}) sepia(${0.25 * (1 - cleared)})`, transition: "filter 2s" }} />
+            className="absolute inset-0 w-full h-full block" style={{ filter: `saturate(${0.75 + 0.25 * cleared}) sepia(${0.12 * (1 - cleared)})`, transition: "filter 2s" }} />
           {/* 망각의 안개: 이야기가 진행될수록 걷힘 */}
-          <div className="absolute inset-0 pointer-events-none transition-opacity duration-[2000ms]" style={{ opacity: 0.55 * (1 - cleared) }}>
+          <div className="absolute inset-0 pointer-events-none transition-opacity duration-[2000ms]" style={{ opacity: 0.28 * (1 - cleared) }}>
             <div className="absolute inset-0 anim-fog" style={{ background: "radial-gradient(ellipse 40% 18% at 30% 30%, rgba(236,232,220,.9), transparent 70%), radial-gradient(ellipse 45% 16% at 70% 60%, rgba(236,232,220,.85), transparent 70%), radial-gradient(ellipse 50% 20% at 40% 85%, rgba(236,232,220,.8), transparent 70%)" }} />
           </div>
           {/* 시간 조각 */}

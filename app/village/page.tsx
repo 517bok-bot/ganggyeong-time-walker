@@ -132,7 +132,7 @@ export default function Village() {
     <main className="fixed inset-0 overflow-hidden bg-[#1A2B2D]">
       {/* ── 마을 무대 ── */}
       <div ref={stage} className="absolute inset-x-0 top-0 bottom-[86px] overflow-hidden select-none touch-none" onPointerDown={tapGround}>
-        <div ref={world} className="absolute left-0 origin-top-left will-change-transform" style={{ width: WORLD_W, height: H, top: Math.max(0, view.h - H * view.k) }}>
+        <div ref={world} className="absolute left-0 origin-top-left will-change-transform" style={{ width: WORLD_W, height: H, top: view.h - H * view.k }}>
           <VillageBackdrop />
 
           {/* 숨은 친구 */}

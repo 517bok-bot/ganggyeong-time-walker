@@ -85,9 +85,9 @@ export default function OldMap({ locations, state, show, selId, onSelect, routeP
             role="button" tabIndex={0} aria-label={`${l.no}번 ${l.name}${l.note ? `(${l.note})` : ""} ${v ? "방문 완료" : "미방문"}`}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onSelect(l); }}>
             {isSel && <circle r="58" cy="-14" fill="none" stroke="#B58B48" strokeWidth="4" className="anim-ring" style={{ transformOrigin: "0px -14px" }} />}
-            <g transform="translate(0 6)" opacity={v ? 1 : 0.8}><LocationGlyph id={l.id} scale={0.4} /></g>
+            <g transform="translate(0 6)"><LocationGlyph id={l.id} scale={0.4} /></g>
             {/* 미방문: 옅은 안개 */}
-            {!v && <g opacity=".75" className="anim-glow" style={{ animationDuration: "7s" }}><ellipse cx="0" cy="-16" rx="44" ry="26" fill="#F2E7D0" filter="url(#soft-fog)" /></g>}
+            {!v && <g opacity=".35" className="anim-glow" style={{ animationDuration: "7s" }}><ellipse cx="0" cy="-30" rx="40" ry="14" fill="#F2E7D0" filter="url(#soft-fog)" /></g>}
             {/* 장소 고유 원형 인장: 이름 첫 글자 + 번호 */}
             <g transform="translate(-36 -50)">
               <circle r="21" fill={v ? V : "#F2E7D0"} stroke={V} strokeWidth="2.6" filter="url(#seal-rough)" />
