@@ -64,7 +64,7 @@ export const CHARACTERS: GameCharacter[] = [
     source: "캐릭터 전시 안내판 (사진 1·2)",
     uncertain: "해시태그 중 두 번째 항목은 판독이 어려워 생략했습니다.",
     rarity: "R", locationId: "daecheong",
-    howToGet: "대청상회(깜뚜누들) 방문 인증 (GPS/QR)",
+    howToGet: "대성상회(깜뚜누들) 방문 인증 (GPS/QR)",
     onlineHint: "온라인 마을: 맛있는 냄새가 나는 가게 앞 화분 뒤!",
   },
   {

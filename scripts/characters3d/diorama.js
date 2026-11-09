@@ -231,6 +231,39 @@ function clubSquare(scene, night) {
   ["강", "경", "구", "락", "부"].forEach((ch, i) => { const t = canvasTex(`club-${ch}`, 64, 64, (cx, w, h) => { cx.fillStyle = "#4A5054"; cx.fillRect(0, 0, w, h); cx.fillStyle = "#F2F2F2"; cx.font = "bold 40px sans-serif"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(ch, w / 2, h / 2 + 2); }); const d = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ map: t, side: THREE.DoubleSide })); d.rotation.z = Math.PI / 4; d.position.set(-14 + i * 7, 37 + Math.sin((i / 4) * Math.PI) * 4, 0.6); gt.add(d); });
 }
 
+/** 옛 한일은행 강경지점(강경역사관, 국가등록문화유산): 붉은 벽돌 2층, 석재 기둥머리·돌림띠, 높은 철창 창, 슬레이트 지붕과 지붕창 */
+function oldBank(scene, night) {
+  const g = new THREE.Group(); g.position.copy(P(925, 945)); g.rotation.y = 0.45; scene.add(g);
+  const brick = canvasTex("bankbrick", 256, 256, (c, w, h) => { c.fillStyle = "#8A3A2A"; c.fillRect(0, 0, w, h); c.strokeStyle = "rgba(40,10,5,.3)"; c.lineWidth = 2; for (let y = 0; y < h; y += 10) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); } });
+  const W = 70, H = 46, D = 46;
+  mesh(new THREE.BoxGeometry(W, H, D), new THREE.MeshStandardMaterial({ map: brick, roughness: 0.9 }), [0, H / 2, 0], [0, 0, 0], g);
+  const stone = flock("#C9C2B2");
+  mesh(new THREE.BoxGeometry(W + 3, 4, D + 3), stone, [0, 2, 0], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(W + 3, 5, D + 3), stone, [0, H - 2.5, 0], [0, 0, 0], g);
+  for (const sx of [-0.42, -0.14, 0.14, 0.42]) mesh(new THREE.BoxGeometry(6, H - 8, 2), new THREE.MeshStandardMaterial({ map: brick }), [sx * W, H / 2, D / 2 + 1], [0, 0, 0], g);
+  for (const sx of [-0.28, 0.28]) mesh(new THREE.BoxGeometry(11, 26, 1), new THREE.MeshStandardMaterial({ color: "#2E3A44", emissive: night ? "#FFC873" : "#000", emissiveIntensity: night ? 0.6 : 0 }), [sx * W, H * 0.48, D / 2 + 0.6], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(10, 16, 1.5), flock("#E3B98E"), [0, 12, D / 2 + 0.8], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(14, 4, 3), stone, [0, 22, D / 2 + 1], [0, 0, 0], g);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 4), flock("#4E5660")); roof.rotation.y = Math.PI / 4; roof.scale.set(W * 0.74, 16, D * 0.74); roof.position.y = H + 8; roof.castShadow = true; g.add(roof);
+  for (const sx of [-0.2, 0.2]) mesh(new THREE.ConeGeometry(3.5, 6, 4), flock("#3A3230"), [sx * W, H + 9, D * 0.22], [0, Math.PI / 4, 0], g);
+}
+/** 나무 전봇대 (애자가 달린 가로대 셋) */
+function pole(scene, x, y) {
+  const g = new THREE.Group(); g.position.copy(P(x, y)); scene.add(g);
+  const wood = flock("#4A3A30");
+  mesh(new THREE.CylinderGeometry(0.9, 1.2, 50, 8), wood, [0, 25, 0], [0, 0, 0], g);
+  for (const yy of [46, 42, 38]) { mesh(new THREE.BoxGeometry(14, 1, 1.2), wood, [0, yy, 0], [0, 0, 0], g); for (const sx of [-6, -2, 2, 6]) mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.4, 6), flock("#E9E6E0"), [sx, yy + 1.1, 0], [0, 0, 0], g); }
+}
+/** 나무 육각 공중전화 부스 'TELEPHONE' */
+function phoneBooth(scene, x, y) {
+  const g = new THREE.Group(); g.position.copy(P(x, y)); g.rotation.y = 0.3; scene.add(g);
+  mesh(new THREE.CylinderGeometry(5.5, 5.5, 5, 6), flock("#5A3A26"), [0, 2.5, 0], [0, 0, 0], g);
+  mesh(new THREE.CylinderGeometry(5.2, 5.2, 12, 6), new THREE.MeshPhysicalMaterial({ color: "#C4D4D8", roughness: 0.1, transmission: 0.4 }), [0, 11, 0], [0, 0, 0], g);
+  for (let i = 0; i < 6; i++) { const t = (i / 6) * Math.PI * 2; mesh(new THREE.BoxGeometry(1, 12, 1), flock("#5A3A26"), [Math.cos(t) * 5.3, 11, Math.sin(t) * 5.3], [0, 0, 0], g); }
+  mesh(new THREE.ConeGeometry(7.5, 6, 6), flock("#6B4530"), [0, 20, 0], [0, 0, 0], g);
+  mesh(new THREE.SphereGeometry(1, 8, 6), flock("#6B4530"), [0, 23.5, 0], [0, 0, 0], g);
+}
+
 /** 디오라마 전체 */
 export function buildDiorama(scene, locs, { night = false, only = null } = {}) {
   ground(scene); river(scene);
@@ -244,6 +277,7 @@ export function buildDiorama(scene, locs, { night = false, only = null } = {}) {
   // 감성산책로: 옛 포구 장터의 고양이 이야기 — 산책로 곳곳의 고양이 가족 조형물
   if (!only) for (const [v, y, ry] of [["kangi", 330, 0.9], ["kaengi", 640, 0.6], ["kongi", 905, 1.1]]) { const c = makeCat(v, "idle"); c.scale.setScalar(7); c.position.copy(P(332, y)); c.rotation.y = ry; scene.add(c); }
   if (!only || ["coffee-interview", "hotel-west", "hotel-east", "hotel-family", "hana-donkatsu"].includes(only)) clubSquare(scene, night);
+  if (!only) { oldBank(scene, night); for (let y = 160; y < 1100; y += 190) pole(scene, 460 - (y - 40) * 0.0236, y); for (const [px, py] of [[700, 670], [820, 820], [1000, 690]]) pole(scene, px, py); phoneBooth(scene, 540, 860); phoneBooth(scene, 470, 1010); }
   // 길가 가로등
   for (let y = 120; y < 1100; y += 95) lamp(scene, 530 - (y - 40) * 0.0236, y, night);
 }

@@ -22,7 +22,7 @@ export const PLACES: Place[] = [
     hidden: { charId: "daechu-2", dx: 20, dy: 20 }, desc: "창가에 무언가 반짝여요." },
   { key: "romance-square", x: 1220, w: 200, h: 90, label: "랑만광장", real: true, style: "station", roof: "#B58B48",
     hidden: { charId: "daechu-3", dx: 180, dy: 70 }, desc: "밤에는 미디어 파사드가 빛나는 광장 (안내도 표기)." },
-  { key: "daecheong", x: 1470, w: 150, h: 140, label: "대청상회", real: true, style: "shop", roof: "#963F38",
+  { key: "daecheong", x: 1470, w: 150, h: 140, label: "대성상회", real: true, style: "shop", roof: "#963F38",
     hidden: { charId: "kongi", dx: -20, dy: 70 }, desc: "어디선가 맛있는 냄새가 솔솔~" },
   { key: "gwangshin", x: 1670, w: 160, h: 130, label: "광신석유", real: true, style: "station", roof: "#963F38",
     hidden: { charId: "kaengi", dx: 100, dy: 60 }, desc: "간판 아래 그늘이 시원해 보여요." },

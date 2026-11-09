@@ -56,7 +56,7 @@ export const LOCATIONS: GameLocation[] = [
   { id: "bookshop", no: 13, name: "홍인책방", note: "멜랑이", zone: "street", real: true, mapX: 601, mapY: 591, gps: null, historyStatus: "pending", reward: R() },
   { id: "romance-square", no: 14, name: "랑만광장", note: "야간 미디어 파사드", zone: "street", real: true, mapX: 679, mapY: 690, gps: null, historyStatus: "pending",
     gameRole: "대추삼형제 막내의 발견 장소 · 공동 항아리 이벤트 광장 (게임 설정)", characterIds: ["daechu-3"], reward: R(40, 15) },
-  { id: "daecheong", no: 15, name: "대청상회", note: "깜뚜누들", zone: "street", real: true, mapX: 567, mapY: 716, gps: null, historyStatus: "pending",
+  { id: "daecheong", no: 15, name: "대성상회", note: "깜뚜누들", zone: "street", real: true, mapX: 567, mapY: 716, gps: null, historyStatus: "pending",
     gameRole: "간식 냄새를 따라온 아기 고양이 콩이의 발견 장소 (게임 설정)", characterIds: ["kongi"], reward: R(50, 15) },
   { id: "gwangshin", no: 16, name: "광신석유", note: "갱갱", zone: "street", real: true, mapX: 575, mapY: 808, gps: null, historyStatus: "pending",
     gameRole: "엄마 고양이 갱이가 쉬어가는 곳 (게임 설정)", characterIds: ["kaengi"], reward: R(50, 15) },
@@ -77,7 +77,7 @@ export const LOCATIONS: GameLocation[] = [
  *  운영 내용은 바뀔 수 있으니 현장·논산시 안내를 우선합니다. */
 const FACTS: Record<string, string> = {
   "welcome-center": "강경근대거리 초입의 안내소(案內所 · Welcome Center). 붉은 벽돌 단층 건물에 전구를 두른 노란 간판이 걸려 있고, 강경과 논산의 관광 정보를 한눈에 안내해요. 안으로 들어가면 샹들리에 아래 붉은 벽에 ‘WELCOME TO GANG GYEONG’ 글씨, 그리고 옛 강경 포구에 선 검은 고양이 영상이 반겨 줘요.",
-  "music-library": "‘江景音樂圖書館’ 세로 간판과 ‘LP 레코-드’·Columbia 간판이 걸린 2층 붉은 벽돌 건물. 모서리 탑에는 ‘江景金融組合’ 글자판이 붙어 있어요. 피아노와 재즈, 명화 미디어아트로 근대의 감성을 느끼는 공간이에요. 거리 신문에는 ‘손 하나 대지 않고 울려 퍼지는 피아노 선율’로 소개돼요.",
+  "music-library": "‘귀 기울이면 들려오는 그 시절.’ 1층에는 스스로 연주하는 마법 피아노와 명화 미디어아트가 흐르는 스크린 음악회, 2층에는 나만의 LP 만들기·음악과 테이블·JAZZ Q·MUSIC BOX가 있어요. ‘江景音樂圖書館’ 세로 간판과 ‘LP 레코-드’·Columbia 간판이 걸린 2층 붉은 벽돌 건물. 모서리 탑에는 ‘江景金融組合’ 글자판이 붙어 있어요. 피아노와 재즈, 명화 미디어아트로 근대의 감성을 느끼는 공간이에요. 거리 신문에는 ‘손 하나 대지 않고 울려 퍼지는 피아노 선율’로 소개돼요.",
   tailor: "베이지 석재 벽에 마름모 한자 현판 ‘裕昌商會’가 걸린 건물. AR 가상 피팅과 시대별 메이크업으로 근대의 옷차림을 직접 입어 보는 체험 공간이에요.",
   "dance-hall": "흰 난간을 두른 길고 낮은 회색 석재 건물에 ‘韓敬美洋靴店’·‘DANCEHALL’ 글씨가 돋을새김돼 있어요. 사교댄스와 게임으로 그 시절의 문화를 즐겨 보는 체험 공간이에요.",
   "memory-lighthouse": "짙은 초록 주물 기둥에 LED 화면을 두른 거리의 상징물. 금빛 ‘THE LIGHTHOUSE OF MEMORY’ 띠 아래로 강경의 옛 기억과 내일의 이야기가 흘러가요.",
@@ -91,7 +91,11 @@ const FACTS: Record<string, string> = {
   "hotel-east": "둥근 창과 기둥 현관이 있는 크림빛 석재 건물. 강경구락부 광장을 유럽의 작은 광장처럼 만들어 줘요.",
   "hotel-family": "검은 돔 지붕을 얹은 유리 정자. 강경구락부 광장 한쪽에서 반짝여요.",
   "hana-donkatsu": "붉은 벽돌에 회녹색 금속 지붕, 청록 격자 문. ‘江景俱樂部 하나네 수제 돈-가스’ 간판이 걸려 있어요.",
-  milmyeon: "기와 맞배지붕을 얹은 목조 단층 건물에 큰 현판 ‘太昌商會’와 ‘園道食’ 간판이 걸려 있어요.",
+  milmyeon: "기와 지붕을 얹은 목조 단층 건물들에 ‘小谷製麵所’·‘백년가야밀면’, 큰 현판 ‘太昌商會’와 ‘園道食’ 간판이 이어져 있어요.",
+  bookshop: "황토빛 미장 2층에 ‘홍인책방’ 돋을 글씨와 ‘三樣堂製菓店’ 금빛 간판이 걸린 건물. 1층에는 스콘 카페 ‘멜랑이’가 있어요.",
+  dammi: "흰 회벽에 짙은 나무 기둥과 가새가 드러난 기와 맞배 건물. 박공에 ‘豐溢商會’ 현판, 처마를 따라 작은 전구가 달려 있어요.",
+  donkatsu: "‘美花屋旅館’·‘藥房’ 간판이 걸린 3층 미장 건물 1층에 나무 처마를 단 강경돈까스가 있어요.",
+  honggyori: "둥근 창이 있는 분홍빛 모서리 2층 건물에 금테 ‘新光洋靴店’ 간판, 1층에 붉은 ‘紅橋里’ 간판이 빛나요.",
   "romance-square": "마술·인형극·재즈·근대음악 공연이 열리는 야외 무대. 강경국가유산야행 때는 ‘강경 풍류 예인쇼’가 열렸어요.",
   "modern-store": "위층은 크림빛 미장에 ‘江景商會’ 현판, 아래층은 회색 화강석에 큰 ‘강경모던상회’ 간판과 세로 ‘포토존’ 간판이 걸려 있어요. 논산여행단 굿즈 전시와 클래식카 포토존이 있는 팝업 상점. 체험 공간 8곳의 스탬프를 모아 오면 굿즈를 받을 수 있어요 (스탬프투어 매일 10:00~17:30).",
   "ganggyeong-gwan": "‘江景舘’ 글씨와 손그림 영화 간판, 청록 창틀이 눈에 띄는 근대풍 극장 건물이에요.",
@@ -113,6 +117,7 @@ export const DISTRICT_INFO = {
   walkway: "감성산책로 (고보 라이트 길) — 옛 강경 포구 장터의 고양이 이야기를 주제로 한 야간 산책로",
   hours: "전시·체험 시설 매일 10:00~18:00 (강경국가유산야행 기간 22:00까지)",
   night: "해가 지면 영란등·미디어퍼사드·고보라이트가 거리를 밝혀요",
+  bank: "강경구락부 정문 옆 붉은 벽돌 건물은 국가등록문화유산 옛 한일은행 강경지점이에요. 1905년 한호농공은행 강경지점으로 세워져 조선식산은행 강경지점으로 쓰였고, 지금은 강경역사관이에요",
   history: "조선 후기 강경포는 원산과 함께 2대 포구, 강경장은 평양장·대구장과 함께 3대 시장으로 불렸어요",
   /** 강경읍 일대 근사 중심 좌표 — 지도 표시용, 공식 검증 필요 */
   approxCenter: { lat: 36.1586, lng: 127.0136 },

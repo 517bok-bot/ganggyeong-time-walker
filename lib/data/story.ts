@@ -88,7 +88,7 @@ export const CHAPTERS: Chapter[] = [
   {
     id: "ch3", no: "3장", title: "맛있는 냄새를 따라", sub: "아기 고양이 콩이", scene: "kitchen",
     objectives: [
-      { label: "콩이 만나기", done: found("kongi"), hint: "대청상회에서 QR·GPS 인증", href: "/explore" },
+      { label: "콩이 만나기", done: found("kongi"), hint: "대성상회에서 QR·GPS 인증", href: "/explore" },
       { label: "시간 조각 6개 모으기 (냄새의 실마리)", done: (s) => (s.sparkTotal ?? 0) >= 6, hint: "조각은 매일 새로 떨어져요", href: "/explore", count: (s) => [Math.min(6, s.sparkTotal ?? 0), 6] },
     ],
     reward: { exp: 120, coins: 80, items: { sincerity: 1 } },
