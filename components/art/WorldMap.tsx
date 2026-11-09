@@ -5,13 +5,18 @@
 import type { GameLocation } from "@/lib/data/locations";
 import type { GameState } from "@/lib/types";
 import { charImg } from "../Characters";
+import { useDaytime } from "@/lib/daytime";
 
 export default function WorldMap({ locations, state, selId, onSelect, className, style }: {
   locations: GameLocation[]; state: GameState; selId?: string; onSelect: (l: GameLocation) => void; className?: string; style?: React.CSSProperties;
 }) {
+  const dt = useDaytime();
+  const night = dt.phase === "night" || (dt.phase === "dusk" && dt.t > 0.5);
   return (
     <svg viewBox="230 40 1120 1100" className={className} style={style} role="img" aria-label="강경근대거리 미니어처 지도">
-      <image href="/world/map-day.webp" x="230" y="40" width="1120" height="1100" preserveAspectRatio="none" />
+      {/* 실제 시간대 그림 + 다음 시간대가 서서히 겹쳐짐 */}
+      <image href={`/world/map-${dt.phase}.webp`} x="230" y="40" width="1120" height="1100" preserveAspectRatio="none" />
+      {dt.t > 0 && <image href={`/world/map-${dt.next}.webp`} x="230" y="40" width="1120" height="1100" preserveAspectRatio="none" opacity={dt.t} style={{ transition: "opacity 2s" }} />}
       {locations.map((l) => {
         const v = !!state.visits[l.id];
         const sel = selId === l.id;
@@ -38,8 +43,8 @@ export default function WorldMap({ locations, state, selId, onSelect, className,
             )}
             {/* 이름표 */}
             <g transform="translate(0 30)">
-              <rect x={-(l.name.length * 7 + 10)} y="-12" width={l.name.length * 14 + 20} height="24" rx="12" fill="#FFFDF7" opacity=".94" stroke={v ? "#963F38" : "#39332F"} strokeOpacity=".35" strokeWidth="1.5" />
-              <text y="5" textAnchor="middle" fontSize="13" fontWeight="700" fontFamily="'Gowun Dodum', sans-serif" fill="#39332F">{l.name}</text>
+              <rect x={-(l.name.length * 7 + 10)} y="-12" width={l.name.length * 14 + 20} height="24" rx="12" fill={night ? "#2B2F3A" : "#FFFDF7"} opacity=".9" stroke={v ? "#963F38" : "#39332F"} strokeOpacity=".35" strokeWidth="1.5" />
+              <text y="5" textAnchor="middle" fontSize="13" fontWeight="700" fontFamily="'Gowun Dodum', sans-serif" fill={night ? "#F6E7C4" : "#39332F"}>{l.name}</text>
             </g>
           </g>
         );

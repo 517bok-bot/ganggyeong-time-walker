@@ -3,6 +3,7 @@
 // 건물은 안내도 장소의 분위기를 옮긴 창작 미니어처이며 실제 외관과 다를 수 있습니다.
 import * as THREE from "three";
 import { flock, gloss, canvasTex, blob, mesh } from "./models.js";
+import { building as building2 } from "./buildings.js";
 
 export const BOX = { x: 230, y: 40, w: 1120, h: 1100 };
 export const PITCH = (42 * Math.PI) / 180;
@@ -171,6 +172,7 @@ function mountain(scene, x, y, s) {
 }
 function lamp(scene, x, y, lit) {
   const g = new THREE.Group(); g.position.copy(P(x, y));
+  if (lit) { const pl = new THREE.PointLight("#FFC879", 1400, 170, 2); pl.position.set(0, 30, 0); g.add(pl); }
   mesh(new THREE.CylinderGeometry(1.4, 1.6, 26, 8), flock("#3E4B4D"), [0, 13, 0], [0, 0, 0], g);
   mesh(new THREE.SphereGeometry(4.5, 16, 12), new THREE.MeshStandardMaterial({ color: "#F6D27A", emissive: "#F6C25A", emissiveIntensity: lit ? 1.6 : 0.4 }), [0, 28, 0], [0, 0, 0], g);
   scene.add(g);
@@ -180,7 +182,7 @@ function lamp(scene, x, y, lit) {
 export function buildDiorama(scene, locs, { night = false, only = null } = {}) {
   ground(scene); river(scene);
   const r = rnd(42);
-  for (const a of locs) { if (only && a.id !== only) continue; const b = building(a, r); b.position.copy(P(a.x, a.y - 4)); scene.add(b); }
+  for (const a of locs) { if (only && a.id !== only) continue; const b = building2(a, r, { night }); b.position.copy(P(a.x, a.y - 4)); scene.add(b); }
   // 산 (지도 위쪽 가장자리)
   for (let x = 250; x < 1360; x += 85) mountain(scene, x + r() * 30, 52 + r() * 18, 0.8 + r() * 0.5);
   // 나무: 장소·길을 피해서
@@ -192,12 +194,21 @@ export function buildDiorama(scene, locs, { night = false, only = null } = {}) {
 
 // ── 조명 ─────────────────────────────
 export function lights(scene, mode = "day", target = new THREE.Vector3(790, 0, 590 / S)) {
-  const night = mode === "night" || mode === "festival";
-  scene.add(new THREE.HemisphereLight(night ? "#8EA3C8" : "#FFF6E4", night ? "#2A3346" : "#B6A57E", night ? 0.55 : 0.85));
-  const sun = new THREE.DirectionalLight(night ? "#B9C8F0" : "#FFF0D8", night ? 0.9 : 2.4);
-  sun.position.copy(target).add(new THREE.Vector3(-650, 700, 300)); sun.target.position.copy(target);
+  // 시간대별 빛: 새벽(동쪽 분홍빛) · 낮 · 해 질 녘(서쪽 주황빛, 긴 그림자) · 밤(달빛 + 가로등)
+  const L = {
+    dawn: { hemi: ["#D9DDF5", "#8C7E92", 0.55], sun: ["#FFC9B0", 1.25], dir: [800, 300, 250] },
+    day: { hemi: ["#FFF6E4", "#B6A57E", 0.85], sun: ["#FFF0D8", 2.4], dir: [-650, 700, 300] },
+    dusk: { hemi: ["#F2B48C", "#3E3658", 0.42], sun: ["#FF9A55", 1.35], dir: [-900, 260, 150] },
+    night: { hemi: ["#6E84B8", "#141A26", 0.22], sun: ["#A9BCF0", 0.38], dir: [-500, 900, 400] },
+    fog: { hemi: ["#F1F1EA", "#B6B0A0", 0.95], sun: ["#FFFFFF", 1.2], dir: [-650, 700, 300] },
+  }[mode === "festival" ? "night" : mode] ?? null;
+  const c = L ?? { hemi: ["#FFF6E4", "#B6A57E", 0.85], sun: ["#FFF0D8", 2.4], dir: [-650, 700, 300] };
+  scene.add(new THREE.HemisphereLight(c.hemi[0], c.hemi[1], c.hemi[2]));
+  const sun = new THREE.DirectionalLight(c.sun[0], c.sun[1]);
+  sun.position.copy(target).add(new THREE.Vector3(...c.dir)); sun.target.position.copy(target);
   sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004; sun.shadow.radius = 4;
-  Object.assign(sun.shadow.camera, { left: -900, right: 900, top: 1000, bottom: -1000, near: 10, far: 3000 });
+  Object.assign(sun.shadow.camera, { left: -1100, right: 1100, top: 1100, bottom: -1100, near: 10, far: 4000 });
   scene.add(sun, sun.target);
   if (mode === "fog") scene.fog = new THREE.Fog("#D9DCD3", 200, 900);
 }
+export const isLit = (mode) => mode === "night" || mode === "festival" || mode === "dusk";

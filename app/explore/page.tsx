@@ -21,6 +21,7 @@ import { sfx } from "@/lib/sfx";
 import { dayKeyKST, sparkSpots, SPARKS_PER_DAY, type SparkInfo } from "@/lib/data/sparks";
 import { CHAPTERS, chapterProgress, currentChapter, fogCleared, objectiveLine, type Chapter } from "@/lib/data/story";
 import { haptic } from "@/lib/fx";
+import { useDaytime, PHASE_LABEL, PHASE_BG } from "@/lib/daytime";
 
 const RealMap = dynamic(() => import("@/components/RealMap"), { ssr: false, loading: () => <div className="h-[50vh] grid place-items-center font-game text-wood">지도를 불러오는 중…</div> });
 
@@ -250,10 +251,11 @@ export default function Explore() {
 
   const visitedCount = Object.keys(state.visits).length;
   const companion = state.companion;
+  const dt = useDaytime();
   const wp = toPx(walker.x, walker.y);
 
   return (
-    <main className="fixed inset-0 overflow-hidden bg-[#BFD58F]">
+    <main className="fixed inset-0 overflow-hidden" style={{ background: PHASE_BG[dt.phase], transition: "background 2s" }}>
       {/* ── 지도 판 ── */}
       <div ref={box} className="absolute inset-0 touch-none select-none" onClickCapture={(e) => { if (dragged.current) { e.stopPropagation(); e.preventDefault(); } }}>
         <div ref={layer} className="absolute left-0 top-0 origin-top-left will-change-transform" style={{ width: W, height: H }}>
@@ -292,6 +294,7 @@ export default function Explore() {
         <div className="pointer-events-auto"><MiniHud /></div>
         <div className="flex-1" />
         <div className="pointer-events-auto flex flex-col items-end gap-1.5 mr-12">
+          <span className="chip bg-[#FFFDF8]/95 text-sumi shadow-card !text-[13px] !py-1" title="강경의 지금 시각">{dt.phase === "night" ? "🌙" : dt.phase === "dusk" ? "🌇" : dt.phase === "dawn" ? "🌅" : "☀️"} {PHASE_LABEL[dt.phase]} {dt.clock}</span>
           <span className="chip bg-[#FFFDF8]/95 text-sumi shadow-card !text-[13px] !py-1"><SparkGem kind="moment" size={18} />{got.length}/{SPARKS_PER_DAY}</span>
           <span className="chip bg-[#FFFDF8]/95 text-sumi shadow-card !text-[13px] !py-1"><Ico name="stamp" size={16} />{visitedCount}/{LOCATIONS.length}</span>
         </div>

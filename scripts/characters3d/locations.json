@@ -2,6 +2,7 @@
  {
   "id": "welcome-center",
   "no": 1,
+  "name": "웰컴센터",
   "x": 410,
   "y": 962,
   "zone": "street",
@@ -14,6 +15,7 @@
  {
   "id": "music-library",
   "no": 2,
+  "name": "음악도서관",
   "x": 380,
   "y": 827,
   "zone": "street",
@@ -26,6 +28,7 @@
  {
   "id": "tailor",
   "no": 3,
+  "name": "양장점",
   "x": 390,
   "y": 690,
   "zone": "street",
@@ -37,6 +40,7 @@
  {
   "id": "dance-hall",
   "no": 4,
+  "name": "딴스홀",
   "x": 372,
   "y": 548,
   "zone": "street",
@@ -49,6 +53,7 @@
  {
   "id": "memory-lighthouse",
   "no": 5,
+  "name": "기억의 등대",
   "x": 390,
   "y": 437,
   "zone": "street",
@@ -59,6 +64,7 @@
  {
   "id": "cinema",
   "no": 6,
+  "name": "강경씨네마",
   "x": 390,
   "y": 328,
   "zone": "street",
@@ -71,6 +77,7 @@
  {
   "id": "photo-studio",
   "no": 7,
+  "name": "갱갱사진관",
   "x": 425,
   "y": 232,
   "zone": "street",
@@ -83,6 +90,7 @@
  {
   "id": "donkatsu",
   "no": 8,
+  "name": "강경돈까스",
   "x": 395,
   "y": 128,
   "zone": "street",
@@ -94,6 +102,7 @@
  {
   "id": "gallery",
   "no": 9,
+  "name": "강경화랑",
   "x": 588,
   "y": 162,
   "zone": "street",
@@ -104,6 +113,7 @@
  {
   "id": "dammi",
   "no": 10,
+  "name": "담미",
   "x": 660,
   "y": 262,
   "zone": "street",
@@ -115,6 +125,7 @@
  {
   "id": "milmyeon",
   "no": 11,
+  "name": "백년가야밀면",
   "x": 572,
   "y": 350,
   "zone": "street",
@@ -126,6 +137,7 @@
  {
   "id": "honggyori",
   "no": 12,
+  "name": "홍교리",
   "x": 588,
   "y": 448,
   "zone": "street",
@@ -138,6 +150,7 @@
  {
   "id": "bookshop",
   "no": 13,
+  "name": "홍인책방",
   "x": 601,
   "y": 591,
   "zone": "street",
@@ -150,6 +163,7 @@
  {
   "id": "romance-square",
   "no": 14,
+  "name": "랑만광장",
   "x": 679,
   "y": 690,
   "zone": "street",
@@ -161,6 +175,7 @@
  {
   "id": "daecheong",
   "no": 15,
+  "name": "대청상회",
   "x": 567,
   "y": 716,
   "zone": "street",
@@ -172,6 +187,7 @@
  {
   "id": "gwangshin",
   "no": 16,
+  "name": "광신석유",
   "x": 575,
   "y": 808,
   "zone": "street",
@@ -183,6 +199,7 @@
  {
   "id": "workation",
   "no": 17,
+  "name": "워케이션",
   "x": 590,
   "y": 1027,
   "zone": "street",
@@ -195,6 +212,7 @@
  {
   "id": "ganggyeong-gwan",
   "no": 18,
+  "name": "강경관",
   "x": 651,
   "y": 963,
   "zone": "street",
@@ -207,6 +225,7 @@
  {
   "id": "modern-store",
   "no": 19,
+  "name": "강경모던상회",
   "x": 860,
   "y": 690,
   "zone": "club",
@@ -219,6 +238,7 @@
  {
   "id": "coffee-interview",
   "no": 20,
+  "name": "커피인터뷰",
   "x": 1108,
   "y": 862,
   "zone": "club",
@@ -230,6 +250,7 @@
  {
   "id": "hotel-west",
   "no": 21,
+  "name": "강경호텔",
   "x": 1016,
   "y": 814,
   "zone": "club",
@@ -242,6 +263,7 @@
  {
   "id": "hotel-east",
   "no": 22,
+  "name": "강경호텔",
   "x": 1052,
   "y": 714,
   "zone": "club",
@@ -253,6 +275,7 @@
  {
   "id": "hotel-family",
   "no": 23,
+  "name": "강경호텔",
   "x": 1141,
   "y": 672,
   "zone": "club",
@@ -264,6 +287,7 @@
  {
   "id": "hana-donkatsu",
   "no": 24,
+  "name": "하나네돈까스",
   "x": 1177,
   "y": 755,
   "zone": "club",

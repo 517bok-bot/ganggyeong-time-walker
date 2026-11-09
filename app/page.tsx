@@ -15,6 +15,7 @@ import { useContent } from "@/lib/content";
 import { sfx } from "@/lib/sfx";
 import { HOUSES, HouseEmblem } from "@/components/art/Houses";
 import { DISTRICT_INFO } from "@/lib/data/locations";
+import { useDaytime, PHASE_LABEL } from "@/lib/daytime";
 
 export default function Home() {
   const { state, rename } = useGame();
@@ -31,6 +32,7 @@ export default function Home() {
   useEffect(() => { setToday(dayKeyKST(Date.now())); if (new URLSearchParams(window.location.search).get("prologue")) { setStep("story"); window.history.replaceState(null, "", "/"); } }, []);
   const sparksToday = state.sparks?.day === today ? state.sparks.got.length : 0;
   const found = Object.keys(state.characters).length;
+  const dt = useDaytime();
   const start = () => { sfx.fanfare(); if (enrolled) router.push("/explore"); else setStep("story"); };
 
   return (
@@ -38,13 +40,15 @@ export default function Home() {
       {/* ── 첫 화면 ── */}
       <section className="relative left-1/2 -translate-x-1/2 w-screen h-[100svh] min-h-[560px] overflow-hidden bg-[#1B2B3A]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/world/hero.webp" alt="달밤의 강경근대거리 미니어처와 고양이 가족" className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "50% 70%" }} />
+        <img src={`/world/hero-${dt.phase}.webp`} alt={`${PHASE_LABEL[dt.phase]}의 강경근대거리 미니어처와 고양이 가족`} className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: "50% 70%" }} />
+        {dt.t > 0 && <img src={`/world/hero-${dt.next}.webp`} alt="" className="absolute inset-0 w-full h-full object-cover transition-opacity duration-[2000ms]" style={{ objectPosition: "50% 70%", opacity: dt.t }} />}
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(15,25,35,.55), transparent 30%, transparent 55%, rgba(15,25,35,.75))" }} />
-        <Fireflies count={18} />
+        {(dt.phase === "night" || dt.phase === "dusk") && <Fireflies count={18} />}
         <div className="absolute top-[max(28px,env(safe-area-inset-top))] inset-x-0 text-center px-6">
           <p className="font-game font-bold text-[12px] tracking-[.35em] text-antique-light">時間行者 · 멈춘 시간의 포구</p>
           <h1 className="font-story text-hanji-light text-[46px] leading-none mt-2 anim-ink" style={{ textShadow: "0 3px 12px rgba(0,0,0,.45)" }}>강경 타임워커</h1>
           <p className="font-game font-bold text-hanji/90 text-sm mt-2">강경근대거리를 걸으며 흩어진 시간을 모아요</p>
+          <p className="inline-block mt-2 px-3 py-0.5 rounded-full bg-black/30 text-hanji-light text-[12px] font-game font-bold">지금 강경은 {PHASE_LABEL[dt.phase]} · {dt.clock}</p>
         </div>
         <div className="absolute inset-x-0 bottom-[118px] flex flex-col items-center gap-3 px-6">
           {enrolled && cur && <p className="px-3 py-1 rounded-full bg-black/40 text-hanji-light text-[13px] font-game font-bold backdrop-blur-sm anim-rise">{cur.no} · {cur.title} <span className="text-antique-light">{cp?.done}/{cp?.total}</span></p>}

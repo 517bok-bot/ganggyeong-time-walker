@@ -41,8 +41,7 @@ if (what === "npc" || what === "all") {
   for (const id of ["guide", "artisan", "photographer", "merchant", "postman"]) { save(`npc/${id}.webp`, await p.evaluate((i) => window.renderNpc(i), id)); process.stdout.write("*"); }
 }
 if (what === "map" || what === "all") {
-  save("world/map-day.webp", await p.evaluate(() => window.renderMap("day")));
-  process.stdout.write("M");
+  for (const m of only ? [only] : ["day", "dawn", "dusk", "night"]) { save(`world/map-${m}.webp`, await p.evaluate((x) => window.renderMap(x), m)); process.stdout.write("M"); }
 }
 if (what === "scenes" || what === "all") {
   const scenes = JSON.parse(fs.readFileSync(path.join(root, "scripts/characters3d/scenes.json"), "utf8"));
