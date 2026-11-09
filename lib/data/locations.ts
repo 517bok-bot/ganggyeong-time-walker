@@ -73,6 +73,23 @@ export const LOCATIONS: GameLocation[] = [
   { id: "hana-donkatsu", no: 24, name: "하나네돈까스", zone: "club", real: true, mapX: 1177, mapY: 755, gps: null, historyStatus: "pending", reward: R() },
 ];
 
+/** 언론 보도(2025~2026 강경근대거리 개관·스탬프투어 기사)와 현장 사진으로 확인한 실제 정보.
+ *  운영 내용은 바뀔 수 있으니 현장·논산시 안내를 우선합니다. */
+const FACTS: Record<string, string> = {
+  "welcome-center": "강경근대거리 초입의 안내소(案內所 · Welcome Center). 붉은 벽돌 단층 건물에 전구를 두른 노란 간판이 걸려 있고, 강경과 논산의 관광 정보를 한눈에 안내해요.",
+  "music-library": "‘江景音樂圖書館’ 세로 간판이 걸린 2층 붉은 벽돌 건물. 피아노와 재즈, 명화 미디어아트로 근대의 감성을 느끼는 공간이에요. 거리 신문에는 ‘손 하나 대지 않고 울려 퍼지는 피아노 선율’로 소개돼요.",
+  tailor: "AR 가상 피팅과 시대별 메이크업으로 근대의 옷차림을 직접 입어 보는 체험 공간이에요.",
+  "dance-hall": "사교댄스와 게임으로 그 시절의 문화를 즐겨 보는 체험 공간이에요.",
+  "memory-lighthouse": "짙은 초록 주물 기둥에 LED 화면을 두른 거리의 상징물. 금빛 ‘THE LIGHTHOUSE OF MEMORY’ 띠 아래로 강경의 옛 기억과 내일의 이야기가 흘러가요.",
+  cinema: "미디어아트와 AI 포토 체험으로 강경의 과거와 현재를 색다르게 만나는 공간이에요.",
+  "photo-studio": "AI 포토 체험으로 근대풍 기념사진을 남길 수 있는 사진관이에요.",
+  "romance-square": "마술·인형극·재즈·근대음악 공연이 열리는 야외 무대. 강경국가유산야행 때는 ‘강경 풍류 예인쇼’가 열렸어요.",
+  "modern-store": "논산여행단 굿즈 전시와 클래식카 포토존이 있는 팝업 상점. 체험 공간 8곳의 스탬프를 모아 오면 굿즈를 받을 수 있어요 (스탬프투어 매일 10:00~17:30).",
+  "ganggyeong-gwan": "‘江景舘’ 글씨와 손그림 영화 간판, 청록 창틀이 눈에 띄는 근대풍 극장 건물이에요.",
+};
+for (const l of LOCATIONS) if (!l.description && FACTS[l.id]) l.description = FACTS[l.id];
+
+
 export const LOC = Object.fromEntries(LOCATIONS.map((l) => [l.id, l])) as Record<string, GameLocation>;
 
 export const locLabel = (l: GameLocation) => (l.note ? `${l.name}(${l.note})` : l.name);
@@ -84,7 +101,10 @@ export const DISTRICT_INFO = {
   addressOnMap: "충남 논산시 강경읍 중앙리 40-2 (안내도의 지번 표기)",
   parking: "인근 공용주차장 이용 (안내도 표기)",
   guideReservation: "문화관광해설사 예약 041-746-5405 (논산시청 관광과)",
-  walkway: "감성산책로 (고보 라이트 길)",
+  walkway: "감성산책로 (고보 라이트 길) — 옛 강경 포구 장터의 고양이 이야기를 주제로 한 야간 산책로",
+  hours: "전시·체험 시설 매일 10:00~18:00 (강경국가유산야행 기간 22:00까지)",
+  night: "해가 지면 영란등·미디어퍼사드·고보라이트가 거리를 밝혀요",
+  history: "조선 후기 강경포는 원산과 함께 2대 포구, 강경장은 평양장·대구장과 함께 3대 시장으로 불렸어요",
   /** 강경읍 일대 근사 중심 좌표 — 지도 표시용, 공식 검증 필요 */
   approxCenter: { lat: 36.1586, lng: 127.0136 },
 };

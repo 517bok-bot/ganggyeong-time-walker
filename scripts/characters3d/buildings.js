@@ -108,13 +108,102 @@ function signboard(name, w, color = "#2E3B3D", text = "#F1E6C8") {
 
 const box = (g, mat, size, pos, rot = [0, 0, 0]) => mesh(new THREE.BoxGeometry(...size), mat, pos, rot, g);
 
+/** 글자 간판 (가로/세로, 전구 테두리 선택) */
+function plate(text, w, h, { bg = "#F1D66A", fg = "#1F3C88", border = "#7A5A2A", bulbs = false, vertical = false, sub = "", subColor = "#C0392B", font = "'Nanum Myeongjo', serif", night = false } = {}) {
+  const PW = vertical ? 128 : 512, PH = vertical ? 512 : Math.round(512 * (h / w));
+  const t = canvasTex(`plate-${text}-${bg}-${w}-${h}-${bulbs}`, PW, PH, (c, W, H) => {
+    c.fillStyle = bg; c.fillRect(0, 0, W, H); c.strokeStyle = border; c.lineWidth = 10; c.strokeRect(5, 5, W - 10, H - 10);
+    if (bulbs) { c.fillStyle = "#FFF6D0"; const n = vertical ? 8 : 16; for (let i = 0; i <= n; i++) { for (const y of [10, H - 10]) { c.beginPath(); c.arc(10 + (i * (W - 20)) / n, y, 6, 0, 7); c.fill(); } } }
+    c.fillStyle = fg; c.textAlign = "center"; c.textBaseline = "middle";
+    if (vertical) { const n = [...text].length; const sz = Math.min(96, (H - 30) / n); c.font = `700 ${sz}px ${font}`; [...text].forEach((ch, i) => c.fillText(ch, W / 2, 20 + sz / 2 + i * sz)); }
+    else if (sub) { c.font = `700 ${H * 0.36}px ${font}`; c.fillText(text, W / 2, H * 0.36); c.fillStyle = subColor; c.font = `800 ${H * 0.26}px sans-serif`; c.fillText(sub, W / 2, H * 0.74); }
+    else { const sz = Math.min(H * 0.62, (W - 40) / Math.max(2, [...text].length) * 1.1); c.font = `700 ${sz}px ${font}`; c.fillText(text, W / 2, H / 2 + 3); }
+  });
+  const face = new THREE.MeshStandardMaterial({ map: t, roughness: 0.6, emissiveMap: t, emissive: night && bulbs ? "#FFFFFF" : "#000", emissiveIntensity: night && bulbs ? 0.5 : 0 });
+  const side = flock(border);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 1.2), [side, side, side, side, face, side]); m.castShadow = true; return m;
+}
+
+/** 클래식카 (강경모던상회 포토존) */
+function classicCar() {
+  const g = new THREE.Group();
+  const body = new THREE.MeshPhysicalMaterial({ color: "#1E1E22", roughness: 0.3, clearcoat: 1 });
+  const chrome = new THREE.MeshPhysicalMaterial({ color: "#D8D8D8", metalness: 1, roughness: 0.2 });
+  mesh(new THREE.BoxGeometry(26, 6, 11), body, [0, 6, 0], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(13, 8, 10.5), body, [-3, 13, 0], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(12.6, 5, 10.8), new THREE.MeshPhysicalMaterial({ color: "#9FC4D6", roughness: 0.1, transmission: 0.3 }), [-3, 13.5, 0], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(7, 5, 9), body, [10, 9, 0], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(1, 5, 8), chrome, [13.6, 8.5, 0], [0, 0, 0], g);
+  for (const sz of [-1, 1]) for (const sx of [-8.5, 8.5]) { mesh(new THREE.CylinderGeometry(3.6, 3.6, 2.4, 20), flock("#151515"), [sx, 3.6, sz * 6], [Math.PI / 2, 0, 0], g); mesh(new THREE.CylinderGeometry(1.8, 1.8, 2.6, 16), chrome, [sx, 3.6, sz * 6], [Math.PI / 2, 0, 0], g); }
+  for (const sz of [-1, 1]) mesh(new THREE.BoxGeometry(22, 0.8, 2.5), body, [0, 4.5, sz * 6.6], [0, 0, 0], g);
+  for (const sz of [-1, 1]) mesh(new THREE.SphereGeometry(1.3, 12, 10), new THREE.MeshStandardMaterial({ color: "#FFF4C8", emissive: "#FFE9A0", emissiveIntensity: 0.6 }), [14, 10, sz * 3.2], [0, 0, 0], g);
+  return g;
+}
+
+// 현장 사진으로 확인한 건물은 전용 모양으로
+const REAL = { "welcome-center": "welcome", "music-library": "musichall", "ganggyeong-gwan": "theater", cinema: "theater" };
+
 export function building(a, rand, { night = false } = {}) {
   const g = new THREE.Group();
   const W = Math.max(64, a.w * 0.58), D = W * 0.7, H = a.h * 0.5;
   const wall = a.wall ?? "#E8DCC0", accent = a.roof ?? "#3E4B4D";
   const name = a.name ?? "";
   const stone = flock("#CFC6B5"), wood = flock("#6B4530");
-  switch (a.style) {
+  switch (REAL[a.id] ?? a.style) {
+    case "welcome": { // 웰컴센터(案內所): 단층 붉은 벽돌, 가운데 계단식 박공 + 회색 돌림띠, 노란 전구 간판, 철제 차양, 빨간 우체통
+      const Wl = W * 1.5;
+      const f = facade(`wel-${a.id}`, { wall: "#7E4A38", cols: 5, rows: 1, kind: "brick", frame: "#6E7680" });
+      box(g, wallMat(f, night), [Wl, H * 0.62, D], [0, H * 0.31, 0]);
+      box(g, flock("#9AA0A6"), [Wl + 3, 3, D + 3], [0, H * 0.62 + 1.5, 0]);
+      box(g, flock("#BFC3C6"), [Wl + 2, 3, D + 2], [0, 1.5, 0]);
+      const gab = new THREE.Shape(); gab.moveTo(-W * 0.32, 0); gab.lineTo(W * 0.32, 0); gab.lineTo(W * 0.32, H * 0.12); gab.lineTo(0, H * 0.3); gab.lineTo(-W * 0.32, H * 0.12); gab.closePath();
+      const gm = new THREE.Mesh(new THREE.ExtrudeGeometry(gab, { depth: 4, bevelEnabled: false }), flock("#7E4A38")); gm.position.set(0, H * 0.62, D / 2 - 3); gm.castShadow = true; g.add(gm);
+      for (const sx of [-1, 1]) { box(g, flock("#7E4A38"), [6, H * 0.84, 6], [sx * W * 0.32, H * 0.42, D / 2], [0, 0, 0]); box(g, flock("#9AA0A6"), [7.5, 2, 7.5], [sx * W * 0.32, H * 0.84 + 1, D / 2]); mesh(new THREE.ConeGeometry(4.6, 3, 4), flock("#9AA0A6"), [sx * W * 0.32, H * 0.84 + 3.4, D / 2], [0, Math.PI / 4, 0], g); }
+      const sg = plate("案內所", W * 0.5, W * 0.17, { sub: "Welcome Center", subColor: "#1F3C88", bulbs: true, night }); sg.position.set(0, H * 0.5, D / 2 + 1.2); g.add(sg);
+      box(g, flock("#6E7680"), [W * 0.22, H * 0.34, 2], [0, H * 0.17, D / 2 + 1]);
+      for (const sx of [-0.55, -0.32, 0.32, 0.55]) box(g, flock("#2B2B2E"), [W * 0.18, 1.2, 6], [sx * Wl, H * 0.4, D / 2 + 3], [0.35, 0, 0]);
+      const post = new THREE.Group(); post.position.set(-W * 0.45, 0, D / 2 + 10); g.add(post);
+      mesh(new THREE.CylinderGeometry(2.4, 2.4, 9, 16), flock("#C8322B"), [0, 4.5, 0], [0, 0, 0], post);
+      mesh(new THREE.SphereGeometry(2.6, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), flock("#C8322B"), [0, 9, 0], [0, 0, 0], post);
+      break;
+    }
+    case "musichall": { // 강경음악도서관(江景音樂圖書館): 2층 붉은 벽돌, 모서리 곡선 박공 + 둥근 창, 흰 아치 출입문, 흰 창, 세로 한자 간판, LP 레코-드 간판
+      const f = facade(`mus-${a.id}`, { wall: "#8E3F31", cols: 5, rows: 2, kind: "brick", frame: "#F4F1EA" });
+      box(g, wallMat(f, night), [W * 1.15, H, D], [0, H / 2, 0]);
+      box(g, flock("#BFC3C6"), [W * 1.15 + 2, 4, D + 2], [0, 2, 0]);
+      box(g, flock("#E8E2D6"), [W * 1.15 + 2, 2, D + 2], [0, H + 1, 0]);
+      box(g, flock("#3A3A3E"), [W * 1.15, 3, D - 2], [0, H + 3, 0]);
+      // 모서리 출입 탑 + 곡선 박공
+      const bx = -W * 0.5;
+      box(g, flock("#8E3F31"), [W * 0.3, H * 1.12, D * 0.5], [bx, H * 0.56, D * 0.3]);
+      const cg = new THREE.Shape(); const cw = W * 0.17; cg.moveTo(-cw, 0); cg.lineTo(cw, 0); cg.quadraticCurveTo(cw, H * 0.1, cw * 0.45, H * 0.12); cg.quadraticCurveTo(cw * 0.3, H * 0.22, 0, H * 0.24); cg.quadraticCurveTo(-cw * 0.3, H * 0.22, -cw * 0.45, H * 0.12); cg.quadraticCurveTo(-cw, H * 0.1, -cw, 0);
+      const cgm = new THREE.Mesh(new THREE.ExtrudeGeometry(cg, { depth: 3, bevelEnabled: true, bevelSize: 1, bevelThickness: 1 }), flock("#D9D4CA")); cgm.position.set(bx, H * 1.12, D * 0.55 - 2); cgm.castShadow = true; g.add(cgm);
+      mesh(new THREE.CylinderGeometry(2.6, 2.6, 1, 20), flock("#F4F1EA"), [bx, H * 1.2, D * 0.55 + 1.6], [Math.PI / 2, 0, 0], g);
+      const door = new THREE.Shape(); door.moveTo(-6, 0); door.lineTo(6, 0); door.lineTo(6, 12); door.absarc(0, 12, 6, 0, Math.PI, false); door.closePath();
+      const dm = new THREE.Mesh(new THREE.ExtrudeGeometry(door, { depth: 1, bevelEnabled: false }), flock("#F4F1EA")); dm.position.set(bx, 3, D * 0.55); g.add(dm);
+      box(g, flock("#BFC3C6"), [W * 0.32, 2, 6], [bx, 1, D * 0.55 + 4]);
+      const vs = plate("江景音樂圖書館", 6, 30, { vertical: true, bg: "#F1E3B5", fg: "#2B2220", border: "#B08A3E" }); vs.position.set(-W * 0.12, H * 0.55, D / 2 + 1); g.add(vs);
+      const lp = plate("LP 레코-드", 20, 8, { bg: "#C8322B", fg: "#FFFFFF", border: "#E8D9A8", bulbs: true, night, font: "sans-serif" }); lp.position.set(W * 0.12, H * 0.62, D / 2 + 1); g.add(lp);
+      const dc = plate("드-코레 아메리카", 18, 5, { bg: "#F4F1EA", fg: "#1F3C88", border: "#1F3C88", font: "sans-serif" }); dc.position.set(W * 0.38, H * 0.6, D / 2 + 1); g.add(dc);
+      break;
+    }
+    case "theater": { // 강경관(江景舘): 회색 석재풍 2층, 청록 창틀 + 아르데코 기둥, 큰 차양, 손그림 영화 간판, 밤색 나무문
+      const f = facade(`th-${a.id}`, { wall: "#C9C7C1", cols: 4, rows: 2, kind: "plain", frame: "#2F8C86" });
+      box(g, wallMat(f, night), [W, H, D], [0, H / 2, 0]);
+      box(g, flock("#EDE6D4"), [W + 1, H * 0.4, D + 1], [0, H * 0.2, 0]);
+      for (let i = 0; i < 4; i++) box(g, flock("#B9B5AC"), [2.6, H * 0.34, 2.4], [-W * 0.3 + i * W * 0.2, H * 0.72, D / 2 + 1.2]);
+      box(g, flock("#BDB9B1"), [W + 6, 3, 14], [0, H * 0.48, D / 2 + 6]);
+      const posters = canvasTex(`posters-${a.id}`, 1024, 192, (c, w, h) => {
+        const cols = [["#F4E3C0", "#C0392B", "戰爭과 平和"], ["#D9E6F2", "#B03A2E", "冬柏아가씨"], ["#F7D9C4", "#8E44AD", "비는 온다"], ["#EADBC8", "#2C3E50", "春香傳"]];
+        cols.forEach(([bg, fg, t], i) => { const x = (i * w) / 4; c.fillStyle = bg; c.fillRect(x + 4, 4, w / 4 - 8, h - 8); c.fillStyle = "#E3B08A"; c.beginPath(); c.arc(x + 60, h / 2 + 10, 40, 0, 7); c.fill(); c.fillStyle = "#2B2220"; c.beginPath(); c.arc(x + 60, h / 2 - 15, 40, Math.PI, 0); c.fill(); c.fillStyle = fg; c.font = "900 46px serif"; c.textAlign = "center"; c.fillText(t, x + w / 8 + 40, h / 2 + 16); });
+      });
+      const pm = new THREE.Mesh(new THREE.BoxGeometry(W * 0.95, H * 0.16, 1), [flock("#6B4530"), flock("#6B4530"), flock("#6B4530"), flock("#6B4530"), new THREE.MeshStandardMaterial({ map: posters, emissiveMap: posters, emissive: night ? "#FFFFFF" : "#000", emissiveIntensity: night ? 0.35 : 0 }), flock("#6B4530")]);
+      pm.position.set(0, H * 0.4, D / 2 + 13); pm.rotation.x = -0.25; pm.castShadow = true; g.add(pm);
+      for (const sx of [-0.3, -0.1, 0.1, 0.3]) box(g, flock("#5A2A20"), [W * 0.16, H * 0.3, 1.5], [sx * W, H * 0.15, D / 2 + 1]);
+      const t = plate(a.id === "cinema" ? "江景씨네마" : "江景舘", W * 0.5, 9, { bg: "#C9C7C1", fg: "#2B2B2E", border: "#C9C7C1", font: "'Song Myung', serif" }); t.position.set(0, H * 0.9, D / 2 + 1); g.add(t);
+      box(g, flock("#A9A59D"), [W + 2, 3, D + 2], [0, H + 1.5, 0]);
+      break;
+    }
     case "hanok": { // 팔작지붕 한옥
       box(g, stone, [W * 1.08, 6, D * 1.1], [0, 3, 0]);
       const f = facade(`hanok-${a.id}`, { wall: "#EFE6D2", cols: 4, rows: 1, kind: "hanok" });
@@ -244,6 +333,7 @@ export function building(a, rand, { night = false } = {}) {
       break;
     }
   }
+  if (a.id === "modern-store") { const car = classicCar(); car.position.set(W * 0.75, 0, D / 2 + 14); car.rotation.y = -0.5; g.add(car); }
   if (night && a.style !== "lighthouse") { const l = new THREE.PointLight("#FFC879", 700, 110, 2); l.position.set(0, H * 0.4, D / 2 + 14); g.add(l); }
   g.rotation.y = (rand() - 0.5) * 0.1;
   return g;

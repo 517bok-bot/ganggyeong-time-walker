@@ -4,6 +4,7 @@
 import * as THREE from "three";
 import { flock, gloss, canvasTex, blob, mesh } from "./models.js";
 import { building as building2 } from "./buildings.js";
+import { makeCat } from "./models.js";
 
 export const BOX = { x: 230, y: 40, w: 1120, h: 1100 };
 export const PITCH = (42 * Math.PI) / 180;
@@ -186,8 +187,16 @@ function lamp(scene, x, y, lit) {
     const disc = new THREE.Mesh(new THREE.CircleGeometry(16, 32), new THREE.MeshBasicMaterial({ map: gobo, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     disc.rotation.x = -Math.PI / 2; disc.position.set(-22, 0.8, 4); g.add(disc);
   }
-  mesh(new THREE.CylinderGeometry(1.4, 1.6, 26, 8), flock("#3E4B4D"), [0, 13, 0], [0, 0, 0], g);
-  mesh(new THREE.SphereGeometry(4.5, 16, 12), new THREE.MeshStandardMaterial({ color: "#F6D27A", emissive: "#F6C25A", emissiveIntensity: lit ? 1.6 : 0.4 }), [0, 28, 0], [0, 0, 0], g);
+  // 영란등(은방울꽃 모양 가로등): 검은 기둥 + 둥글게 휜 두 팔 + 아래로 매달린 방울 등
+  const iron = flock("#2B2E30");
+  mesh(new THREE.CylinderGeometry(1.2, 1.8, 30, 10), iron, [0, 15, 0], [0, 0, 0], g);
+  for (const sd of [-1, 1]) {
+    const arm = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 27, 0), new THREE.Vector3(sd * 4, 32, 0), new THREE.Vector3(sd * 8, 30, 0), new THREE.Vector3(sd * 8.5, 27, 0)]);
+    mesh(new THREE.TubeGeometry(arm, 12, 0.6, 6), iron, [0, 0, 0], [0, 0, 0], g);
+    const bell = new THREE.LatheGeometry([[0, 0], [2.6, 0.3], [3.2, -2.5], [2.2, -4.2], [0, -4.5]].map(([r, y]) => new THREE.Vector2(r, y)), 16);
+    mesh(bell, new THREE.MeshStandardMaterial({ color: "#FFF4D6", emissive: "#FFD58A", emissiveIntensity: lit ? 1.8 : 0.15, side: THREE.DoubleSide }), [sd * 8.5, 27, 0], [0, 0, 0], g);
+  }
+  mesh(new THREE.SphereGeometry(1.4, 10, 8), iron, [0, 33, 0], [0, 0, 0], g);
   scene.add(g);
 }
 
@@ -201,6 +210,8 @@ export function buildDiorama(scene, locs, { night = false, only = null } = {}) {
   // 나무: 장소·길을 피해서
   const free = (x, y) => locs.every((l) => Math.hypot(l.x - x, l.y - y) > 70) && Math.abs(x - (508 - (y - 40) * 0.0236)) > 34 && !(x > 950 && y > 900);
   for (let i = 0; i < 260; i++) { const x = 250 + r() * 1090, y = 110 + r() * 1020; if (free(x, y)) tree(scene, x, y, 0.7 + r() * 0.5, r() < 0.3 ? "pine" : "round"); }
+  // 감성산책로: 옛 포구 장터의 고양이 이야기 — 산책로 곳곳의 고양이 가족 조형물
+  if (!only) for (const [v, y, ry] of [["kangi", 330, 0.9], ["kaengi", 640, 0.6], ["kongi", 905, 1.1]]) { const c = makeCat(v, "idle"); c.scale.setScalar(7); c.position.copy(P(332, y)); c.rotation.y = ry; scene.add(c); }
   // 길가 가로등
   for (let y = 120; y < 1100; y += 95) lamp(scene, 530 - (y - 40) * 0.0236, y, night);
 }

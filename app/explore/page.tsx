@@ -64,8 +64,10 @@ export default function Explore() {
     const vw = b.clientWidth, vh = b.clientHeight;
     const minK = Math.max(vw / W, vh / H);
     const k = Math.min(2.4, Math.max(minK, v.k));
-    const x = Math.min(0, Math.max(vw - W * k, v.x));
-    const y = Math.min(0, Math.max(vh - H * k, v.y));
+    // 위·아래 겹쳐진 버튼 밑의 장소도 끌어내려 누를 수 있도록 여유를 둠
+    const padT = 150, padB = 120, padX = 40;
+    const x = Math.min(padX, Math.max(vw - W * k - padX, v.x));
+    const y = Math.min(padT, Math.max(vh - H * k - padB, v.y));
     return { x, y, k };
   };
   const centerOn = useCallback((mx: number, my: number, animate = true, k?: number) => {
@@ -300,15 +302,11 @@ export default function Explore() {
           <span className="chip bg-[#FFFDF8]/95 text-sumi shadow-card !text-[13px] !py-1"><Ico name="stamp" size={16} />{visitedCount}/{LOCATIONS.length}</span>
         </div>
       </div>
-      <button onClick={openChapter} className={`absolute left-3 right-3 top-[calc(max(12px,env(safe-area-inset-top))+70px)] mx-auto max-w-md text-left flex items-center gap-3 px-4 py-2.5 rounded-2xl shadow-card ${prog?.complete ? "bg-vermilion text-white" : "bg-[#FFFDF8]/95 text-sumi"}`}
-        style={{ animation: prog?.complete ? "glow-pulse 2.4s ease-in-out infinite" : undefined }}>
-        <span className={`font-game font-bold text-[12px] shrink-0 px-2 py-0.5 rounded-full ${prog?.complete ? "bg-white/20" : "bg-vermilion text-white"}`}>{cur ? cur.no : "완결"}</span>
-        <span className="flex-1 min-w-0">
-          <span className="block font-story text-[17px] leading-tight truncate">{cur ? (prog?.complete ? "이야기 이어보기 ▶" : cur.title) : "멈춘 시간의 포구 · 완결"}</span>
-          {cur && !prog?.complete && <span className="block text-[12px] font-game text-sumi-light truncate">{objectiveLine(cur, state)}</span>}
-          {!cur && <span className="block text-[12px] font-game text-sumi-light">시간 조각은 매일 새로 떨어져요</span>}
-        </span>
-        <Ico name="scroll" size={24} />
+      {/* 이야기 알약: 한 줄로 작게 — 지도를 가리지 않게 */}
+      <button onClick={openChapter} className={`absolute left-3 top-[calc(max(12px,env(safe-area-inset-top))+70px)] max-w-[calc(100%-120px)] flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full shadow-card text-left ${prog?.complete ? "bg-vermilion text-white" : "bg-[#FFFDF8]/95 text-sumi"}`}
+        style={{ animation: prog?.complete ? "glow-pulse 2.4s ease-in-out infinite" : undefined }} aria-label="이야기 보기">
+        <span className={`font-game font-bold text-[11px] shrink-0 px-2 py-0.5 rounded-full ${prog?.complete ? "bg-white/25" : "bg-vermilion text-white"}`}>{cur ? cur.no : "완결"}</span>
+        <span className="min-w-0 truncate text-[13px] font-game font-bold">{cur ? (prog?.complete ? "이야기 이어보기 ▶" : objectiveLine(cur, state)) : "시간 조각은 매일 새로 떨어져요"}</span>
       </button>
 
       {/* ── 오른쪽: 확대/축소 · 내 위치 · 실제 지도 ── */}

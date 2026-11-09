@@ -87,7 +87,9 @@ export default function Home() {
       <section className="card mt-3 p-4 text-sm text-sumi-light">
         <p className="font-story text-lg text-sumi flex items-center gap-1"><Ico name="pin" size={20} />강경근대거리</p>
         <p className="mt-1">{DISTRICT_INFO.address}</p>
-        <p>현장에서 장소마다 붙은 QR을 찍으면 도장을 받고 숨은 친구를 만나요.</p>
+        <p>{DISTRICT_INFO.hours}</p>
+        <p className="mt-2 text-[13px]">{DISTRICT_INFO.history}. {DISTRICT_INFO.night}.</p>
+        <p className="mt-2">현장에서 장소마다 붙은 QR을 찍으면 도장을 받고 숨은 친구를 만나요.</p>
       </section>
       <p className="text-[11px] text-sumi-light/90 mt-4 mb-2 text-center">강이·갱이·콩이·베리쥬·대추삼형제·스윗포는 논산시 지역 캐릭터이며, 논산시 사업 협의에 따라 사용합니다.</p>
 

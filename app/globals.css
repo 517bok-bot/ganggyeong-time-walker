@@ -202,3 +202,5 @@ html[data-motion="reduced"] .atmosphere { display: none; }
 
 /* Leaflet 실제 지도도 한지 톤으로 */
 .leaflet-container { background: var(--hanji-dark) !important; filter: sepia(.35) saturate(.8) hue-rotate(-8deg); }
+svg g[role="button"]:focus { outline: none; }
+svg g[role="button"]:focus-visible circle { stroke: #F3D896; }
