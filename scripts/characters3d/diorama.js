@@ -174,7 +174,7 @@ function mountain(scene, x, y, s) {
 function lamp(scene, x, y, lit) {
   const g = new THREE.Group(); g.position.copy(P(x, y));
   if (lit) {
-    const pl = new THREE.PointLight("#FFC879", 1400, 170, 2); pl.position.set(0, 30, 0); g.add(pl);
+    const pl = new THREE.PointLight("#FFC879", 1400, 170, 2); pl.position.set(12, 32, 0); g.add(pl);
     // 고보 조명: 길바닥에 비치는 무늬 빛 (강경근대거리의 밤 풍경)
     const gobo = canvasTex("gobo", 256, 256, (c, w, h) => {
       c.clearRect(0, 0, w, h); c.translate(w / 2, h / 2);
@@ -185,18 +185,20 @@ function lamp(scene, x, y, lit) {
       c.beginPath(); c.arc(0, 0, 16, 0, 7); c.fill();
     });
     const disc = new THREE.Mesh(new THREE.CircleGeometry(16, 32), new THREE.MeshBasicMaterial({ map: gobo, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    disc.rotation.x = -Math.PI / 2; disc.position.set(-22, 0.8, 4); g.add(disc);
+    disc.rotation.x = -Math.PI / 2; disc.position.set(12, 0.8, 4); g.add(disc);
   }
-  // 영란등(은방울꽃 모양 가로등): 검은 기둥 + 둥글게 휜 두 팔 + 아래로 매달린 방울 등
+  // 강경근대거리 가로등: 검은 주물 기둥 + 덩굴무늬 곡선 팔 + 줄지어 매달린 둥근 유리등
   const iron = flock("#2B2E30");
-  mesh(new THREE.CylinderGeometry(1.2, 1.8, 30, 10), iron, [0, 15, 0], [0, 0, 0], g);
-  for (const sd of [-1, 1]) {
-    const arm = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 27, 0), new THREE.Vector3(sd * 4, 32, 0), new THREE.Vector3(sd * 8, 30, 0), new THREE.Vector3(sd * 8.5, 27, 0)]);
-    mesh(new THREE.TubeGeometry(arm, 12, 0.6, 6), iron, [0, 0, 0], [0, 0, 0], g);
-    const bell = new THREE.LatheGeometry([[0, 0], [2.6, 0.3], [3.2, -2.5], [2.2, -4.2], [0, -4.5]].map(([r, y]) => new THREE.Vector2(r, y)), 16);
-    mesh(bell, new THREE.MeshStandardMaterial({ color: "#FFF4D6", emissive: "#FFD58A", emissiveIntensity: lit ? 1.8 : 0.15, side: THREE.DoubleSide }), [sd * 8.5, 27, 0], [0, 0, 0], g);
+  mesh(new THREE.CylinderGeometry(1.1, 1.9, 34, 10), iron, [0, 17, 0], [0, 0, 0], g);
+  mesh(new THREE.CylinderGeometry(2.2, 2.4, 3, 10), iron, [0, 1.5, 0], [0, 0, 0], g);
+  const arm = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 30, 0), new THREE.Vector3(6, 34, 0), new THREE.Vector3(14, 36, 0), new THREE.Vector3(22, 37, 0)]);
+  mesh(new THREE.TubeGeometry(arm, 16, 0.6, 6), iron, [0, 0, 0], [0, 0, 0], g);
+  for (let k = 0; k < 2; k++) mesh(new THREE.TorusGeometry(2.4, 0.35, 6, 14, Math.PI * 1.5), iron, [4 + k * 5, 31.5 + k * 1.5, 0], [0, 0, k * 1.2], g);
+  for (let i = 0; i < 5; i++) {
+    const x = 5 + i * 4.3, y = 34.6 + i * 0.6;
+    mesh(new THREE.CylinderGeometry(0.15, 0.15, 2, 4), iron, [x, y - 1, 0], [0, 0, 0], g);
+    mesh(new THREE.SphereGeometry(1.8, 14, 10), new THREE.MeshStandardMaterial({ color: "#FAF6EE", emissive: "#FFDCA0", emissiveIntensity: lit ? 2.2 : 0.1, roughness: 0.3 }), [x, y - 3, 0], [0, 0, 0], g);
   }
-  mesh(new THREE.SphereGeometry(1.4, 10, 8), iron, [0, 33, 0], [0, 0, 0], g);
   scene.add(g);
 }
 
