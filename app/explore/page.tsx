@@ -12,6 +12,7 @@ import { DemoBadge, MiniHud, Sheet } from "@/components/ui";
 import { CharacterArt, NpcArt, WalkerArt } from "@/components/Characters";
 import { MAP_BOX } from "@/components/art/OldMap";
 import WorldMap from "@/components/art/WorldMap";
+import { LocationScene } from "@/components/art/LocationArt";
 import { Ico } from "@/components/art/Icons";
 import QrScanner, { verifyQrPayload } from "@/components/QrScanner";
 import NpcDialog from "@/components/NpcDialog";
@@ -333,8 +334,7 @@ export default function Explore() {
         {sel && (
           <div className="px-4 pb-5">
             <div className="relative -mx-1 mb-3 anim-unfold">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/world/loc-${sel.id}.webp`} alt={`${sel.name} 미니어처 (분위기 표현)`} className="w-full aspect-[16/10] object-cover rounded-2xl" />
+              <LocationScene id={sel.id} name={sel.name} />
               {state.visits[sel.id] && <span className="absolute right-3 bottom-3 seal w-16 h-16 text-base rotate-[-10deg] anim-stamp">방문<br />인증</span>}
             </div>
             <div className="flex items-start gap-3">

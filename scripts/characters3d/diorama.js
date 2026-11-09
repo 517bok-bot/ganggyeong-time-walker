@@ -172,7 +172,20 @@ function mountain(scene, x, y, s) {
 }
 function lamp(scene, x, y, lit) {
   const g = new THREE.Group(); g.position.copy(P(x, y));
-  if (lit) { const pl = new THREE.PointLight("#FFC879", 1400, 170, 2); pl.position.set(0, 30, 0); g.add(pl); }
+  if (lit) {
+    const pl = new THREE.PointLight("#FFC879", 1400, 170, 2); pl.position.set(0, 30, 0); g.add(pl);
+    // 고보 조명: 길바닥에 비치는 무늬 빛 (강경근대거리의 밤 풍경)
+    const gobo = canvasTex("gobo", 256, 256, (c, w, h) => {
+      c.clearRect(0, 0, w, h); c.translate(w / 2, h / 2);
+      const gr = c.createRadialGradient(0, 0, 10, 0, 0, w / 2); gr.addColorStop(0, "rgba(255,214,150,.9)"); gr.addColorStop(1, "rgba(255,214,150,0)");
+      c.fillStyle = gr; c.beginPath(); c.arc(0, 0, w / 2, 0, 7); c.fill();
+      c.fillStyle = "rgba(255,245,220,.95)";
+      for (let k = 0; k < 8; k++) { c.rotate(Math.PI / 4); c.beginPath(); c.ellipse(0, 46, 14, 34, 0, 0, 7); c.fill(); }
+      c.beginPath(); c.arc(0, 0, 16, 0, 7); c.fill();
+    });
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(16, 32), new THREE.MeshBasicMaterial({ map: gobo, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    disc.rotation.x = -Math.PI / 2; disc.position.set(-22, 0.8, 4); g.add(disc);
+  }
   mesh(new THREE.CylinderGeometry(1.4, 1.6, 26, 8), flock("#3E4B4D"), [0, 13, 0], [0, 0, 0], g);
   mesh(new THREE.SphereGeometry(4.5, 16, 12), new THREE.MeshStandardMaterial({ color: "#F6D27A", emissive: "#F6C25A", emissiveIntensity: lit ? 1.6 : 0.4 }), [0, 28, 0], [0, 0, 0], g);
   scene.add(g);

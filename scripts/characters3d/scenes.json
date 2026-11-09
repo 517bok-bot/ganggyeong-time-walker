@@ -83,414 +83,6 @@
   ],
   "fov": 46
  },
- "loc-welcome-center": {
-  "mode": "day",
-  "from": [
-   450,
-   1162,
-   125
-  ],
-  "to": [
-   410,
-   952,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "welcome-center"
- },
- "loc-music-library": {
-  "mode": "day",
-  "from": [
-   420,
-   1027,
-   125
-  ],
-  "to": [
-   380,
-   817,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "music-library"
- },
- "loc-tailor": {
-  "mode": "day",
-  "from": [
-   430,
-   890,
-   125
-  ],
-  "to": [
-   390,
-   680,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "tailor"
- },
- "loc-dance-hall": {
-  "mode": "day",
-  "from": [
-   412,
-   748,
-   125
-  ],
-  "to": [
-   372,
-   538,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "dance-hall"
- },
- "loc-memory-lighthouse": {
-  "mode": "day",
-  "from": [
-   430,
-   637,
-   125
-  ],
-  "to": [
-   390,
-   427,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "memory-lighthouse"
- },
- "loc-cinema": {
-  "mode": "day",
-  "from": [
-   430,
-   528,
-   125
-  ],
-  "to": [
-   390,
-   318,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "cinema"
- },
- "loc-photo-studio": {
-  "mode": "day",
-  "from": [
-   465,
-   432,
-   125
-  ],
-  "to": [
-   425,
-   222,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "photo-studio"
- },
- "loc-donkatsu": {
-  "mode": "day",
-  "from": [
-   435,
-   328,
-   125
-  ],
-  "to": [
-   395,
-   118,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "donkatsu"
- },
- "loc-gallery": {
-  "mode": "day",
-  "from": [
-   628,
-   362,
-   125
-  ],
-  "to": [
-   588,
-   152,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "gallery"
- },
- "loc-dammi": {
-  "mode": "day",
-  "from": [
-   700,
-   462,
-   125
-  ],
-  "to": [
-   660,
-   252,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "dammi"
- },
- "loc-milmyeon": {
-  "mode": "day",
-  "from": [
-   612,
-   550,
-   125
-  ],
-  "to": [
-   572,
-   340,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "milmyeon"
- },
- "loc-honggyori": {
-  "mode": "day",
-  "from": [
-   628,
-   648,
-   125
-  ],
-  "to": [
-   588,
-   438,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "honggyori"
- },
- "loc-bookshop": {
-  "mode": "day",
-  "from": [
-   641,
-   791,
-   125
-  ],
-  "to": [
-   601,
-   581,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "bookshop"
- },
- "loc-romance-square": {
-  "mode": "day",
-  "from": [
-   719,
-   890,
-   125
-  ],
-  "to": [
-   679,
-   680,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "romance-square"
- },
- "loc-daecheong": {
-  "mode": "day",
-  "from": [
-   607,
-   916,
-   125
-  ],
-  "to": [
-   567,
-   706,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "daecheong"
- },
- "loc-gwangshin": {
-  "mode": "day",
-  "from": [
-   615,
-   1008,
-   125
-  ],
-  "to": [
-   575,
-   798,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "gwangshin"
- },
- "loc-workation": {
-  "mode": "day",
-  "from": [
-   630,
-   1227,
-   125
-  ],
-  "to": [
-   590,
-   1017,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "workation"
- },
- "loc-ganggyeong-gwan": {
-  "mode": "day",
-  "from": [
-   691,
-   1163,
-   125
-  ],
-  "to": [
-   651,
-   953,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "ganggyeong-gwan"
- },
- "loc-modern-store": {
-  "mode": "day",
-  "from": [
-   900,
-   890,
-   125
-  ],
-  "to": [
-   860,
-   680,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "modern-store"
- },
- "loc-coffee-interview": {
-  "mode": "day",
-  "from": [
-   1148,
-   1062,
-   125
-  ],
-  "to": [
-   1108,
-   852,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "coffee-interview"
- },
- "loc-hotel-west": {
-  "mode": "day",
-  "from": [
-   1056,
-   1014,
-   125
-  ],
-  "to": [
-   1016,
-   804,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "hotel-west"
- },
- "loc-hotel-east": {
-  "mode": "day",
-  "from": [
-   1092,
-   914,
-   125
-  ],
-  "to": [
-   1052,
-   704,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "hotel-east"
- },
- "loc-hotel-family": {
-  "mode": "day",
-  "from": [
-   1181,
-   872,
-   125
-  ],
-  "to": [
-   1141,
-   662,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "hotel-family"
- },
- "loc-hana-donkatsu": {
-  "mode": "day",
-  "from": [
-   1217,
-   955,
-   125
-  ],
-  "to": [
-   1177,
-   745,
-   34
-  ],
-  "fov": 34,
-  "w": 800,
-  "h": 500,
-  "only": "hana-donkatsu"
- },
  "hero-day": {
   "mode": "day",
   "from": [
@@ -638,5 +230,1637 @@
     "ry": -0.45
    }
   ]
+ },
+ "loc-welcome-center-day": {
+  "mode": "day",
+  "from": [
+   450,
+   1162,
+   125
+  ],
+  "to": [
+   410,
+   952,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "welcome-center"
+ },
+ "loc-welcome-center-dawn": {
+  "mode": "dawn",
+  "from": [
+   450,
+   1162,
+   125
+  ],
+  "to": [
+   410,
+   952,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "welcome-center"
+ },
+ "loc-welcome-center-dusk": {
+  "mode": "dusk",
+  "from": [
+   450,
+   1162,
+   125
+  ],
+  "to": [
+   410,
+   952,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "welcome-center"
+ },
+ "loc-welcome-center-night": {
+  "mode": "night",
+  "from": [
+   450,
+   1162,
+   125
+  ],
+  "to": [
+   410,
+   952,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "welcome-center"
+ },
+ "loc-music-library-day": {
+  "mode": "day",
+  "from": [
+   420,
+   1027,
+   125
+  ],
+  "to": [
+   380,
+   817,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "music-library"
+ },
+ "loc-music-library-dawn": {
+  "mode": "dawn",
+  "from": [
+   420,
+   1027,
+   125
+  ],
+  "to": [
+   380,
+   817,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "music-library"
+ },
+ "loc-music-library-dusk": {
+  "mode": "dusk",
+  "from": [
+   420,
+   1027,
+   125
+  ],
+  "to": [
+   380,
+   817,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "music-library"
+ },
+ "loc-music-library-night": {
+  "mode": "night",
+  "from": [
+   420,
+   1027,
+   125
+  ],
+  "to": [
+   380,
+   817,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "music-library"
+ },
+ "loc-tailor-day": {
+  "mode": "day",
+  "from": [
+   430,
+   890,
+   125
+  ],
+  "to": [
+   390,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "tailor"
+ },
+ "loc-tailor-dawn": {
+  "mode": "dawn",
+  "from": [
+   430,
+   890,
+   125
+  ],
+  "to": [
+   390,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "tailor"
+ },
+ "loc-tailor-dusk": {
+  "mode": "dusk",
+  "from": [
+   430,
+   890,
+   125
+  ],
+  "to": [
+   390,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "tailor"
+ },
+ "loc-tailor-night": {
+  "mode": "night",
+  "from": [
+   430,
+   890,
+   125
+  ],
+  "to": [
+   390,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "tailor"
+ },
+ "loc-dance-hall-day": {
+  "mode": "day",
+  "from": [
+   412,
+   748,
+   125
+  ],
+  "to": [
+   372,
+   538,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "dance-hall"
+ },
+ "loc-dance-hall-dawn": {
+  "mode": "dawn",
+  "from": [
+   412,
+   748,
+   125
+  ],
+  "to": [
+   372,
+   538,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "dance-hall"
+ },
+ "loc-dance-hall-dusk": {
+  "mode": "dusk",
+  "from": [
+   412,
+   748,
+   125
+  ],
+  "to": [
+   372,
+   538,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "dance-hall"
+ },
+ "loc-dance-hall-night": {
+  "mode": "night",
+  "from": [
+   412,
+   748,
+   125
+  ],
+  "to": [
+   372,
+   538,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "dance-hall"
+ },
+ "loc-memory-lighthouse-day": {
+  "mode": "day",
+  "from": [
+   430,
+   637,
+   125
+  ],
+  "to": [
+   390,
+   427,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "memory-lighthouse"
+ },
+ "loc-memory-lighthouse-dawn": {
+  "mode": "dawn",
+  "from": [
+   430,
+   637,
+   125
+  ],
+  "to": [
+   390,
+   427,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "memory-lighthouse"
+ },
+ "loc-memory-lighthouse-dusk": {
+  "mode": "dusk",
+  "from": [
+   430,
+   637,
+   125
+  ],
+  "to": [
+   390,
+   427,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "memory-lighthouse"
+ },
+ "loc-memory-lighthouse-night": {
+  "mode": "night",
+  "from": [
+   430,
+   637,
+   125
+  ],
+  "to": [
+   390,
+   427,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "memory-lighthouse"
+ },
+ "loc-cinema-day": {
+  "mode": "day",
+  "from": [
+   430,
+   528,
+   125
+  ],
+  "to": [
+   390,
+   318,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "cinema"
+ },
+ "loc-cinema-dawn": {
+  "mode": "dawn",
+  "from": [
+   430,
+   528,
+   125
+  ],
+  "to": [
+   390,
+   318,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "cinema"
+ },
+ "loc-cinema-dusk": {
+  "mode": "dusk",
+  "from": [
+   430,
+   528,
+   125
+  ],
+  "to": [
+   390,
+   318,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "cinema"
+ },
+ "loc-cinema-night": {
+  "mode": "night",
+  "from": [
+   430,
+   528,
+   125
+  ],
+  "to": [
+   390,
+   318,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "cinema"
+ },
+ "loc-photo-studio-day": {
+  "mode": "day",
+  "from": [
+   465,
+   432,
+   125
+  ],
+  "to": [
+   425,
+   222,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "photo-studio"
+ },
+ "loc-photo-studio-dawn": {
+  "mode": "dawn",
+  "from": [
+   465,
+   432,
+   125
+  ],
+  "to": [
+   425,
+   222,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "photo-studio"
+ },
+ "loc-photo-studio-dusk": {
+  "mode": "dusk",
+  "from": [
+   465,
+   432,
+   125
+  ],
+  "to": [
+   425,
+   222,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "photo-studio"
+ },
+ "loc-photo-studio-night": {
+  "mode": "night",
+  "from": [
+   465,
+   432,
+   125
+  ],
+  "to": [
+   425,
+   222,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "photo-studio"
+ },
+ "loc-donkatsu-day": {
+  "mode": "day",
+  "from": [
+   435,
+   328,
+   125
+  ],
+  "to": [
+   395,
+   118,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "donkatsu"
+ },
+ "loc-donkatsu-dawn": {
+  "mode": "dawn",
+  "from": [
+   435,
+   328,
+   125
+  ],
+  "to": [
+   395,
+   118,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "donkatsu"
+ },
+ "loc-donkatsu-dusk": {
+  "mode": "dusk",
+  "from": [
+   435,
+   328,
+   125
+  ],
+  "to": [
+   395,
+   118,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "donkatsu"
+ },
+ "loc-donkatsu-night": {
+  "mode": "night",
+  "from": [
+   435,
+   328,
+   125
+  ],
+  "to": [
+   395,
+   118,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "donkatsu"
+ },
+ "loc-gallery-day": {
+  "mode": "day",
+  "from": [
+   628,
+   362,
+   125
+  ],
+  "to": [
+   588,
+   152,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "gallery"
+ },
+ "loc-gallery-dawn": {
+  "mode": "dawn",
+  "from": [
+   628,
+   362,
+   125
+  ],
+  "to": [
+   588,
+   152,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "gallery"
+ },
+ "loc-gallery-dusk": {
+  "mode": "dusk",
+  "from": [
+   628,
+   362,
+   125
+  ],
+  "to": [
+   588,
+   152,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "gallery"
+ },
+ "loc-gallery-night": {
+  "mode": "night",
+  "from": [
+   628,
+   362,
+   125
+  ],
+  "to": [
+   588,
+   152,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "gallery"
+ },
+ "loc-dammi-day": {
+  "mode": "day",
+  "from": [
+   700,
+   462,
+   125
+  ],
+  "to": [
+   660,
+   252,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "dammi"
+ },
+ "loc-dammi-dawn": {
+  "mode": "dawn",
+  "from": [
+   700,
+   462,
+   125
+  ],
+  "to": [
+   660,
+   252,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "dammi"
+ },
+ "loc-dammi-dusk": {
+  "mode": "dusk",
+  "from": [
+   700,
+   462,
+   125
+  ],
+  "to": [
+   660,
+   252,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "dammi"
+ },
+ "loc-dammi-night": {
+  "mode": "night",
+  "from": [
+   700,
+   462,
+   125
+  ],
+  "to": [
+   660,
+   252,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "dammi"
+ },
+ "loc-milmyeon-day": {
+  "mode": "day",
+  "from": [
+   612,
+   550,
+   125
+  ],
+  "to": [
+   572,
+   340,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "milmyeon"
+ },
+ "loc-milmyeon-dawn": {
+  "mode": "dawn",
+  "from": [
+   612,
+   550,
+   125
+  ],
+  "to": [
+   572,
+   340,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "milmyeon"
+ },
+ "loc-milmyeon-dusk": {
+  "mode": "dusk",
+  "from": [
+   612,
+   550,
+   125
+  ],
+  "to": [
+   572,
+   340,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "milmyeon"
+ },
+ "loc-milmyeon-night": {
+  "mode": "night",
+  "from": [
+   612,
+   550,
+   125
+  ],
+  "to": [
+   572,
+   340,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "milmyeon"
+ },
+ "loc-honggyori-day": {
+  "mode": "day",
+  "from": [
+   628,
+   648,
+   125
+  ],
+  "to": [
+   588,
+   438,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "honggyori"
+ },
+ "loc-honggyori-dawn": {
+  "mode": "dawn",
+  "from": [
+   628,
+   648,
+   125
+  ],
+  "to": [
+   588,
+   438,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "honggyori"
+ },
+ "loc-honggyori-dusk": {
+  "mode": "dusk",
+  "from": [
+   628,
+   648,
+   125
+  ],
+  "to": [
+   588,
+   438,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "honggyori"
+ },
+ "loc-honggyori-night": {
+  "mode": "night",
+  "from": [
+   628,
+   648,
+   125
+  ],
+  "to": [
+   588,
+   438,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "honggyori"
+ },
+ "loc-bookshop-day": {
+  "mode": "day",
+  "from": [
+   641,
+   791,
+   125
+  ],
+  "to": [
+   601,
+   581,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "bookshop"
+ },
+ "loc-bookshop-dawn": {
+  "mode": "dawn",
+  "from": [
+   641,
+   791,
+   125
+  ],
+  "to": [
+   601,
+   581,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "bookshop"
+ },
+ "loc-bookshop-dusk": {
+  "mode": "dusk",
+  "from": [
+   641,
+   791,
+   125
+  ],
+  "to": [
+   601,
+   581,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "bookshop"
+ },
+ "loc-bookshop-night": {
+  "mode": "night",
+  "from": [
+   641,
+   791,
+   125
+  ],
+  "to": [
+   601,
+   581,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "bookshop"
+ },
+ "loc-romance-square-day": {
+  "mode": "day",
+  "from": [
+   719,
+   890,
+   125
+  ],
+  "to": [
+   679,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "romance-square"
+ },
+ "loc-romance-square-dawn": {
+  "mode": "dawn",
+  "from": [
+   719,
+   890,
+   125
+  ],
+  "to": [
+   679,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "romance-square"
+ },
+ "loc-romance-square-dusk": {
+  "mode": "dusk",
+  "from": [
+   719,
+   890,
+   125
+  ],
+  "to": [
+   679,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "romance-square"
+ },
+ "loc-romance-square-night": {
+  "mode": "night",
+  "from": [
+   719,
+   890,
+   125
+  ],
+  "to": [
+   679,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "romance-square"
+ },
+ "loc-daecheong-day": {
+  "mode": "day",
+  "from": [
+   607,
+   916,
+   125
+  ],
+  "to": [
+   567,
+   706,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "daecheong"
+ },
+ "loc-daecheong-dawn": {
+  "mode": "dawn",
+  "from": [
+   607,
+   916,
+   125
+  ],
+  "to": [
+   567,
+   706,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "daecheong"
+ },
+ "loc-daecheong-dusk": {
+  "mode": "dusk",
+  "from": [
+   607,
+   916,
+   125
+  ],
+  "to": [
+   567,
+   706,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "daecheong"
+ },
+ "loc-daecheong-night": {
+  "mode": "night",
+  "from": [
+   607,
+   916,
+   125
+  ],
+  "to": [
+   567,
+   706,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "daecheong"
+ },
+ "loc-gwangshin-day": {
+  "mode": "day",
+  "from": [
+   615,
+   1008,
+   125
+  ],
+  "to": [
+   575,
+   798,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "gwangshin"
+ },
+ "loc-gwangshin-dawn": {
+  "mode": "dawn",
+  "from": [
+   615,
+   1008,
+   125
+  ],
+  "to": [
+   575,
+   798,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "gwangshin"
+ },
+ "loc-gwangshin-dusk": {
+  "mode": "dusk",
+  "from": [
+   615,
+   1008,
+   125
+  ],
+  "to": [
+   575,
+   798,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "gwangshin"
+ },
+ "loc-gwangshin-night": {
+  "mode": "night",
+  "from": [
+   615,
+   1008,
+   125
+  ],
+  "to": [
+   575,
+   798,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "gwangshin"
+ },
+ "loc-workation-day": {
+  "mode": "day",
+  "from": [
+   630,
+   1227,
+   125
+  ],
+  "to": [
+   590,
+   1017,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "workation"
+ },
+ "loc-workation-dawn": {
+  "mode": "dawn",
+  "from": [
+   630,
+   1227,
+   125
+  ],
+  "to": [
+   590,
+   1017,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "workation"
+ },
+ "loc-workation-dusk": {
+  "mode": "dusk",
+  "from": [
+   630,
+   1227,
+   125
+  ],
+  "to": [
+   590,
+   1017,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "workation"
+ },
+ "loc-workation-night": {
+  "mode": "night",
+  "from": [
+   630,
+   1227,
+   125
+  ],
+  "to": [
+   590,
+   1017,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "workation"
+ },
+ "loc-ganggyeong-gwan-day": {
+  "mode": "day",
+  "from": [
+   691,
+   1163,
+   125
+  ],
+  "to": [
+   651,
+   953,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "ganggyeong-gwan"
+ },
+ "loc-ganggyeong-gwan-dawn": {
+  "mode": "dawn",
+  "from": [
+   691,
+   1163,
+   125
+  ],
+  "to": [
+   651,
+   953,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "ganggyeong-gwan"
+ },
+ "loc-ganggyeong-gwan-dusk": {
+  "mode": "dusk",
+  "from": [
+   691,
+   1163,
+   125
+  ],
+  "to": [
+   651,
+   953,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "ganggyeong-gwan"
+ },
+ "loc-ganggyeong-gwan-night": {
+  "mode": "night",
+  "from": [
+   691,
+   1163,
+   125
+  ],
+  "to": [
+   651,
+   953,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "ganggyeong-gwan"
+ },
+ "loc-modern-store-day": {
+  "mode": "day",
+  "from": [
+   900,
+   890,
+   125
+  ],
+  "to": [
+   860,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "modern-store"
+ },
+ "loc-modern-store-dawn": {
+  "mode": "dawn",
+  "from": [
+   900,
+   890,
+   125
+  ],
+  "to": [
+   860,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "modern-store"
+ },
+ "loc-modern-store-dusk": {
+  "mode": "dusk",
+  "from": [
+   900,
+   890,
+   125
+  ],
+  "to": [
+   860,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "modern-store"
+ },
+ "loc-modern-store-night": {
+  "mode": "night",
+  "from": [
+   900,
+   890,
+   125
+  ],
+  "to": [
+   860,
+   680,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "modern-store"
+ },
+ "loc-coffee-interview-day": {
+  "mode": "day",
+  "from": [
+   1148,
+   1062,
+   125
+  ],
+  "to": [
+   1108,
+   852,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "coffee-interview"
+ },
+ "loc-coffee-interview-dawn": {
+  "mode": "dawn",
+  "from": [
+   1148,
+   1062,
+   125
+  ],
+  "to": [
+   1108,
+   852,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "coffee-interview"
+ },
+ "loc-coffee-interview-dusk": {
+  "mode": "dusk",
+  "from": [
+   1148,
+   1062,
+   125
+  ],
+  "to": [
+   1108,
+   852,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "coffee-interview"
+ },
+ "loc-coffee-interview-night": {
+  "mode": "night",
+  "from": [
+   1148,
+   1062,
+   125
+  ],
+  "to": [
+   1108,
+   852,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "coffee-interview"
+ },
+ "loc-hotel-west-day": {
+  "mode": "day",
+  "from": [
+   1056,
+   1014,
+   125
+  ],
+  "to": [
+   1016,
+   804,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-west"
+ },
+ "loc-hotel-west-dawn": {
+  "mode": "dawn",
+  "from": [
+   1056,
+   1014,
+   125
+  ],
+  "to": [
+   1016,
+   804,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-west"
+ },
+ "loc-hotel-west-dusk": {
+  "mode": "dusk",
+  "from": [
+   1056,
+   1014,
+   125
+  ],
+  "to": [
+   1016,
+   804,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-west"
+ },
+ "loc-hotel-west-night": {
+  "mode": "night",
+  "from": [
+   1056,
+   1014,
+   125
+  ],
+  "to": [
+   1016,
+   804,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-west"
+ },
+ "loc-hotel-east-day": {
+  "mode": "day",
+  "from": [
+   1092,
+   914,
+   125
+  ],
+  "to": [
+   1052,
+   704,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-east"
+ },
+ "loc-hotel-east-dawn": {
+  "mode": "dawn",
+  "from": [
+   1092,
+   914,
+   125
+  ],
+  "to": [
+   1052,
+   704,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-east"
+ },
+ "loc-hotel-east-dusk": {
+  "mode": "dusk",
+  "from": [
+   1092,
+   914,
+   125
+  ],
+  "to": [
+   1052,
+   704,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-east"
+ },
+ "loc-hotel-east-night": {
+  "mode": "night",
+  "from": [
+   1092,
+   914,
+   125
+  ],
+  "to": [
+   1052,
+   704,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-east"
+ },
+ "loc-hotel-family-day": {
+  "mode": "day",
+  "from": [
+   1181,
+   872,
+   125
+  ],
+  "to": [
+   1141,
+   662,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-family"
+ },
+ "loc-hotel-family-dawn": {
+  "mode": "dawn",
+  "from": [
+   1181,
+   872,
+   125
+  ],
+  "to": [
+   1141,
+   662,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-family"
+ },
+ "loc-hotel-family-dusk": {
+  "mode": "dusk",
+  "from": [
+   1181,
+   872,
+   125
+  ],
+  "to": [
+   1141,
+   662,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-family"
+ },
+ "loc-hotel-family-night": {
+  "mode": "night",
+  "from": [
+   1181,
+   872,
+   125
+  ],
+  "to": [
+   1141,
+   662,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hotel-family"
+ },
+ "loc-hana-donkatsu-day": {
+  "mode": "day",
+  "from": [
+   1217,
+   955,
+   125
+  ],
+  "to": [
+   1177,
+   745,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hana-donkatsu"
+ },
+ "loc-hana-donkatsu-dawn": {
+  "mode": "dawn",
+  "from": [
+   1217,
+   955,
+   125
+  ],
+  "to": [
+   1177,
+   745,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hana-donkatsu"
+ },
+ "loc-hana-donkatsu-dusk": {
+  "mode": "dusk",
+  "from": [
+   1217,
+   955,
+   125
+  ],
+  "to": [
+   1177,
+   745,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hana-donkatsu"
+ },
+ "loc-hana-donkatsu-night": {
+  "mode": "night",
+  "from": [
+   1217,
+   955,
+   125
+  ],
+  "to": [
+   1177,
+   745,
+   34
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "hana-donkatsu"
  }
 }

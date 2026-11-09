@@ -1,6 +1,8 @@
+"use client";
 // 장소별 건축 삽화 설정 — 공식 사진 기반 삽화가 준비되면 image 에 경로를 넣어 교체합니다.
 // (안내도에 표시된 장소의 '분위기'를 그린 창작 삽화이며 실제 외관과 다를 수 있습니다)
 import { Building, type BuildingStyle } from "../Building";
+import { useDaytime } from "@/lib/daytime";
 
 export interface LocArt { style: BuildingStyle; wall?: string; roof?: string; w: number; h: number; image?: string }
 
@@ -45,6 +47,19 @@ export function LocationGlyph({ id, scale = 0.42 }: { id: string; scale?: number
 /** 장소 상세 그림: 3D 미니어처로 구운 장소 모습 (분위기 표현, 실제 외관과 다를 수 있음) */
 export function LocationScene({ id, name }: { id: string; name: string }) {
   const a = LOCATION_ART[id];
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={a?.image ?? `/world/loc-${id}.webp`} alt={`${name} 미니어처 (분위기 표현)`} className="w-full aspect-[16/10] object-cover rounded-2xl block" />;
+  const dt = useDaytime(); // 지금 시간대에 맞는 그림
+  if (a?.image) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={a.image} alt={name} className="w-full aspect-[16/10] object-cover rounded-2xl block" />;
+  }
+  return (
+    <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/world/loc-${id}-${dt.phase}.webp`} alt={`${name} 미니어처 (분위기 표현)`} className="absolute inset-0 w-full h-full object-cover" />
+      {dt.t > 0 && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={`/world/loc-${id}-${dt.next}.webp`} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: dt.t }} />
+      )}
+    </div>
+  );
 }

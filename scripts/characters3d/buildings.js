@@ -179,13 +179,68 @@ export function building(a, rand, { night = false } = {}) {
       const s = signboard(name, Math.min(W * 0.75, 54), accent); s.position.set(W * 0.05, H * 0.82 + 7, D * 0.48); g.add(s);
       break;
     }
-    case "lighthouse": {
-      const t = mesh(new THREE.CylinderGeometry(W * 0.2, W * 0.28, H * 1.4, 32), flock("#ffffff", { map: canvasTex("lh", 64, 128, (c, w, h) => { for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? "#C9463D" : "#F7F2E8"; c.fillRect(0, (i * h) / 6, w, h / 6); } }) }), [0, H * 0.7, 0], [0, 0, 0], g);
-      mesh(new THREE.CylinderGeometry(W * 0.24, W * 0.24, 4, 32), flock("#3E4B4D"), [0, H * 1.42, 0], [0, 0, 0], g);
-      mesh(new THREE.CylinderGeometry(W * 0.15, W * 0.15, 10, 24), new THREE.MeshStandardMaterial({ color: "#F6D27A", emissive: "#F6C25A", emissiveIntensity: night ? 2.2 : 0.6 }), [0, H * 1.49, 0], [0, 0, 0], g);
-      mesh(new THREE.ConeGeometry(W * 0.2, 10, 24), flock("#C9463D"), [0, H * 1.6, 0], [0, 0, 0], g);
-      box(g, stone, [W * 0.8, 4, W * 0.8], [0, 2, 0]);
-      if (night) { const l = new THREE.PointLight("#FFD58A", 4000, 300, 2); l.position.set(0, H * 1.5, 0); g.add(l); }
+    case "lighthouse": { // 기억의 등대: 짙은 초록 주물 기둥 + 비늘무늬 양파 돔 + 금빛 글씨 띠 + LED 화면 + 돌 받침
+      const GREEN = "#1F4A3A";
+      const iron = new THREE.MeshPhysicalMaterial({ color: GREEN, roughness: 0.35, metalness: 0.25, clearcoat: 0.6 });
+      const R = 9; // 기둥 반지름
+      // 바닥: 둥근 모자이크 돌바닥
+      const mosaic = canvasTex("mosaic", 512, 512, (c, w, h) => {
+        c.fillStyle = "#E3E1DC"; c.fillRect(0, 0, w, h);
+        for (let r = 20; r < w * 0.7; r += 14) for (let t = 0; t < Math.PI * 2; t += 10 / r) {
+          const x = w / 2 + Math.cos(t) * r, y = h / 2 + Math.sin(t) * r;
+          c.fillStyle = ((r / 14) | 0) % 3 === 0 ? "#3E4148" : (Math.random() < 0.5 ? "#C9C7C2" : "#F2F1EE"); c.fillRect(x - 3, y - 3, 6, 6);
+        }
+      });
+      const plaza = mesh(new THREE.CylinderGeometry(W * 0.62, W * 0.62, 0.8, 48), new THREE.MeshStandardMaterial({ map: mosaic, roughness: 0.9 }), [0, 0.4, 0], [0, 0, 0], g); plaza.receiveShadow = true;
+      // 돌 받침 2단
+      const cobble = canvasTex("cobble", 256, 64, (c, w, h) => { c.fillStyle = "#8C8A86"; c.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 16) for (let x = ((y / 16) % 2) * 12; x < w; x += 24) { c.fillStyle = ["#A29F99", "#7E7B76", "#96938C"][(x + y) % 3]; c.fillRect(x + 1, y + 1, 22, 14); } });
+      const ct = cobble.clone(); ct.wrapS = THREE.RepeatWrapping; ct.repeat.set(4, 1); ct.needsUpdate = true;
+      mesh(new THREE.CylinderGeometry(R * 2.3, R * 2.4, 5, 40), new THREE.MeshStandardMaterial({ map: ct, roughness: 0.95 }), [0, 3.2, 0], [0, 0, 0], g);
+      mesh(new THREE.CylinderGeometry(R * 1.65, R * 1.7, 3, 40), new THREE.MeshStandardMaterial({ map: ct, roughness: 0.95 }), [0, 7, 0], [0, 0, 0], g);
+      // 주물 받침대와 아래 장식 고리
+      mesh(new THREE.CylinderGeometry(R * 1.12, R * 1.2, 4, 40), iron, [0, 10.5, 0], [0, 0, 0], g);
+      mesh(new THREE.TorusGeometry(R * 1.1, 0.8, 8, 40), iron, [0, 12.5, 0], [Math.PI / 2, 0, 0], g);
+      // LED 화면 기둥 (밤에는 노을빛 화면이 빛남)
+      const led = canvasTex("led", 512, 256, (c, w, h) => {
+        const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#C9A9D8"); gr.addColorStop(0.35, "#E26C5C"); gr.addColorStop(0.6, "#2B2E44"); gr.addColorStop(1, "#1B1D2A");
+        c.fillStyle = gr; c.fillRect(0, 0, w, h);
+        c.fillStyle = "rgba(255,255,255,.85)"; c.font = "bold 18px sans-serif";
+        for (let i = 0; i < 4; i++) c.fillText(["기억의 등대", "1846", "강경의 내일", "MEMORY"][i], 30 + i * 120, 80 + (i % 2) * 70);
+        c.fillStyle = "#1F4A3A"; for (let i = 0; i < 4; i++) c.fillRect((i * w) / 4, 0, 10, h);
+      });
+      const colH = 30;
+      mesh(new THREE.CylinderGeometry(R, R, colH, 40), new THREE.MeshStandardMaterial({ map: led, emissiveMap: led, emissive: night ? "#FFFFFF" : "#000000", emissiveIntensity: night ? 0.9 : 0, roughness: 0.4 }), [0, 13 + colH / 2, 0], [0, 0, 0], g);
+      for (let i = 0; i < 2; i++) mesh(new THREE.BoxGeometry(1.8, colH, 1.8), iron, [Math.cos(i * Math.PI + 0.3) * R, 13 + colH / 2, Math.sin(i * Math.PI + 0.3) * R], [0, 0, 0], g);
+      // 금빛 글씨 띠 (처마)
+      const band = canvasTex("lhband", 1024, 64, (c, w, h) => { c.fillStyle = GREEN; c.fillRect(0, 0, w, h); c.fillStyle = "#D9B25E"; c.font = "bold 40px serif"; c.textBaseline = "middle"; c.fillText("THE LIGHTHOUSE OF MEMORY · 기억의 등대 · THE LIGHTHOUSE OF MEMORY", 10, h / 2 + 2); });
+      const bandT = band.clone(); bandT.needsUpdate = true;
+      mesh(new THREE.CylinderGeometry(R * 1.4, R * 1.3, 4.5, 48), new THREE.MeshPhysicalMaterial({ map: bandT, roughness: 0.35, metalness: 0.25, clearcoat: 0.6 }), [0, 13 + colH + 2.2, 0], [0, 0, 0], g);
+      mesh(new THREE.CylinderGeometry(R * 1.42, R * 1.42, 0.8, 48), iron, [0, 13 + colH + 4.8, 0], [0, 0, 0], g);
+      mesh(new THREE.CylinderGeometry(R * 0.85, R * 0.9, 2.5, 8), iron, [0, 13 + colH + 6.3, 0], [0, 0, 0], g);
+      // 비늘무늬 양파 돔
+      const scales = canvasTex("scales", 256, 256, (c, w, h) => { c.fillStyle = "#173A2D"; c.fillRect(0, 0, w, h); for (let y = 0; y < h + 20; y += 18) for (let x = ((y / 18) % 2) * 12; x < w + 24; x += 24) { const gr = c.createRadialGradient(x, y - 4, 2, x, y, 14); gr.addColorStop(0, "#3C7A60"); gr.addColorStop(1, "#173A2D"); c.fillStyle = gr; c.beginPath(); c.arc(x, y, 12, 0, Math.PI); c.fill(); c.strokeStyle = "rgba(0,0,0,.4)"; c.lineWidth = 1.5; c.stroke(); } });
+      const sc = scales.clone(); sc.wrapS = sc.wrapT = THREE.RepeatWrapping; sc.repeat.set(3, 2); sc.needsUpdate = true;
+      const prof = [[0, 0], [R * 0.95, 0], [R * 1.12, 3], [R * 1.08, 7], [R * 0.8, 11], [R * 0.42, 14], [R * 0.22, 15.5], [0, 16]].map(([r, y]) => new THREE.Vector2(r, y));
+      mesh(new THREE.LatheGeometry(new THREE.SplineCurve(prof).getPoints(30), 40), new THREE.MeshPhysicalMaterial({ map: sc, roughness: 0.4, metalness: 0.2, clearcoat: 0.7 }), [0, 13 + colH + 7.5, 0], [0, 0, 0], g);
+      // 꼭대기 장식
+      const fin = [[0, 0], [2.4, 0], [2.6, 1], [1, 2], [1.6, 3.5], [0.6, 5], [1.1, 6.5], [0.3, 9], [0, 9.5]].map(([r, y]) => new THREE.Vector2(r, y));
+      mesh(new THREE.LatheGeometry(fin, 20), iron, [0, 13 + colH + 23, 0], [0, 0, 0], g);
+      // 초록 볼라드 + 쇠사슬
+      const n = 10, br = W * 0.5;
+      for (let i = 0; i < n; i++) {
+        const t0 = (i / n) * Math.PI * 2, x = Math.cos(t0) * br, z = Math.sin(t0) * br;
+        mesh(new THREE.CylinderGeometry(0.9, 1.1, 9, 12), iron, [x, 4.5, z], [0, 0, 0], g);
+        mesh(new THREE.SphereGeometry(1.2, 12, 8), iron, [x, 9.4, z], [0, 0, 0], g);
+        const t1 = ((i + 1) / n) * Math.PI * 2, x1 = Math.cos(t1) * br, z1 = Math.sin(t1) * br;
+        const chain = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 8, z), new THREE.Vector3((x + x1) / 2 * 0.98, 5.5, (z + z1) / 2 * 0.98), new THREE.Vector3(x1, 8, z1)]);
+        mesh(new THREE.TubeGeometry(chain, 10, 0.25, 4), new THREE.MeshStandardMaterial({ color: "#4A3A30", roughness: 0.6, metalness: 0.5 }), [0, 0, 0], [0, 0, 0], g);
+      }
+      // 뒤쪽 나무 울타리 + 측백나무 줄
+      const fence = canvasTex("fence", 256, 64, (c, w, h) => { c.fillStyle = "#B4552A"; c.fillRect(0, 0, w, h); c.strokeStyle = "rgba(60,20,5,.35)"; for (let x = 0; x < w; x += 8) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); } });
+      mesh(new THREE.BoxGeometry(W * 1.5, 22, 2), new THREE.MeshStandardMaterial({ map: fence, roughness: 0.8 }), [0, 11, -W * 0.72], [0, 0, 0], g);
+      for (let i = 0; i < 9; i++) mesh(new THREE.ConeGeometry(3.2, 15, 10), flock(i % 3 === 1 ? "#9A9A4A" : "#3F6B3A"), [-W * 0.62 + i * W * 0.155, 7.5, -W * 0.62], [0, 0, 0], g);
+      if (night) { const l = new THREE.PointLight("#E9A9C8", 1800, 160, 2); l.position.set(0, 30, R * 2.2); g.add(l); }
+      g.scale.setScalar(1.5);
       break;
     }
   }
