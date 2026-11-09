@@ -95,6 +95,23 @@ export default function Village() {
             {Array.from({ length: 9 }).map((_, i) => (
               <g key={i} fill="#E8D8B8" opacity=".55"><ellipse cx={180 + i * 330} cy={60 + (i % 3) * 18} rx={56} ry={14} /><ellipse cx={220 + i * 330} cy={50 + (i % 3) * 18} rx={36} ry={14} /></g>
             ))}
+            {/* 별과 별자리 */}
+            <g fill="#F3E7C4">{Array.from({ length: 70 }).map((_, i) => <circle key={i} cx={(i * 211) % WORLD_W} cy={20 + ((i * 97) % 170)} r={i % 7 === 0 ? 2.2 : 1.2} opacity={0.4 + (i % 5) * 0.12} className={i % 6 === 0 ? "anim-glow" : ""} style={{ animationDelay: `${(i % 9) * 0.4}s` }} />)}</g>
+            {/* 먼 기와 지붕 실루엣 */}
+            <path d={`M0 260 ${Array.from({ length: 29 }).map((_, i) => `L${i * 100 + 20} 260 Q${i * 100 + 50} ${228 - (i % 3) * 10} ${i * 100 + 80} 260`).join(" ")} L2900 260 V300 H0Z`} fill="#2B3F42" opacity=".7" />
+            {/* 초롱 줄 */}
+            {Array.from({ length: 7 }).map((_, k) => {
+              const x0 = 120 + k * 400, x1 = x0 + 360, y0 = 140;
+              return (
+                <g key={k}>
+                  <path d={`M${x0} ${y0} Q${(x0 + x1) / 2} ${y0 + 60} ${x1} ${y0}`} stroke="#1A2B2D" strokeWidth="1.6" fill="none" />
+                  {[0.15, 0.32, 0.5, 0.68, 0.85].map((t, j) => {
+                    const x = x0 + (x1 - x0) * t, y = y0 + 120 * t * (1 - t);
+                    return <g key={j} transform={`translate(${x} ${y})`}><path d="M0 0 v6" stroke="#1A2B2D" strokeWidth="1.2" /><ellipse cy="16" rx="13" ry="14" fill="#F3D896" opacity=".25" className="anim-glow" style={{ animationDelay: `${(j + k) * 0.3}s` }} /><ellipse cy="15" rx="8" ry="10" fill={j % 2 ? "#C83A35" : "#2E5C9A"} stroke="#1A2B2D" strokeWidth="1" /><path d="M-8 15 h16" stroke="#F3D896" strokeWidth=".8" opacity=".6" /></g>;
+                  })}
+                </g>
+              );
+            })}
             <path d={`M0 250 ${Array.from({ length: 30 }).map((_, i) => `Q${i * 100 + 50} ${215 + (i % 2) * 20} ${(i + 1) * 100} 240`).join(" ")} V${GROUND} H0Z`} fill="#65516F" opacity=".6" />
             {/* 강경포구 (가상 재현) */}
             <rect x={2560} y={GROUND - 30} width={WORLD_W - 2560} height={140} fill="#3B5659" />

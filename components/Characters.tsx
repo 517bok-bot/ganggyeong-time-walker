@@ -4,6 +4,7 @@
 import React from "react";
 import { useContent } from "@/lib/content";
 import { useGame } from "@/lib/game";
+import { NPCS } from "@/lib/data/npcs";
 import { PaintedBerry, PaintedCat, PaintedDaechu, PaintedSweetpo } from "./art/Painted";
 
 type Box = { x?: number; y?: number; width?: number; height?: number };
@@ -187,8 +188,17 @@ export function SweetpoArt({ mood = "idle", box }: { mood?: Mood; box?: Box }) {
   );
 }
 
-/** 엽서 등 SVG 합성용: 캐릭터 원본 SVG를 지정 위치·크기로 반환 (민화 채색본) */
+/** 3D 피규어 이미지 경로 (scripts/characters3d/render.mjs 로 미리 구운 그림) */
+export const charImg = (id: string, mood: Mood = "idle") => `/characters/${id}-${mood}.webp`;
+const CHAR3D = new Set(["kangi", "kaengi", "kongi", "berijyu", "daechu-1", "daechu-2", "daechu-3", "sweetpo"]);
+
+/** SVG 합성용(지도·엽서·첫 화면): 지정 위치·크기에 캐릭터를 놓습니다 */
 export function CharacterSvg({ id, mood = "idle", box }: { id: string; mood?: Mood; box?: Box }) {
+  if (CHAR3D.has(id)) {
+    const b = { x: box?.x ?? 0, y: box?.y ?? 0, width: box?.width ?? 120, height: box?.height ?? 130 };
+    const im = <image href={charImg(id, mood)} {...b} preserveAspectRatio="xMidYMax meet" />;
+    return box ? im : <svg viewBox="0 0 120 130" className="w-full h-full overflow-visible">{im}</svg>;
+  }
   if (id === "kangi" || id === "kaengi" || id === "kongi") return <PaintedCat variant={id} mood={mood} box={box} />;
   if (id === "berijyu") return <PaintedBerry mood={mood} box={box} />;
   if (id.startsWith("daechu-")) return <PaintedDaechu n={Number(id.slice(-1)) as 1 | 2 | 3} mood={mood} box={box} />;
@@ -206,7 +216,10 @@ export function CharacterArt({ id, mood = "idle", silhouette = false, className 
       {official
         // eslint-disable-next-line @next/next/no-img-element
         ? <img src={c.imageUrl!} alt="" className="w-full h-full object-contain" style={silhouette ? { filter: "brightness(0) opacity(.28)" } : undefined} />
-        : <CharacterSvg id={id} mood={mood} />}
+        : CHAR3D.has(id)
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={charImg(id, mood)} alt="" draggable={false} className="w-full h-full object-contain object-bottom select-none" />
+          : <CharacterSvg id={id} mood={mood} />}
     </div>
   );
 }
@@ -218,105 +231,27 @@ export const AVATARS: Record<string, { coat: string; hat: string; name: string }
   gold: { coat: "#B58B48", hat: "#39332F", name: "금빛 두루마기" },
   wood: { coat: "#65516F", hat: "#39332F", name: "보랏빛 두루마기" },
 };
+/** 플레이어 3D 피규어: 몸(두루마기·옷) 위에 모자·목·얼굴·소품 그림을 겹칩니다 (scripts/characters3d/player.js) */
+const P3D = new Set(["hat-fedora", "hat-straw", "hat-beret", "hat-cat", "hat-cloche", "hat-gat", "neck-scarf", "neck-bow", "neck-apron", "face-glasses", "face-mono", "prop-parasol", "prop-trunk", "prop-camera", "prop-fan", "prop-lantern", "prop-compass", "outfit-suit", "outfit-dress", "outfit-hanbok", "outfit-academy"]);
 export function WalkerArt({ avatar = "sage", walking = false, flip = false, equipped }: { avatar?: string; walking?: boolean; flip?: boolean; equipped?: { hat?: string; neck?: string; face?: string; outfit?: string; prop?: string } }) {
   const game = useGame();
   const eq = equipped ?? game.state.equipped ?? {};
-  const a = AVATARS[avatar] ?? AVATARS.sage;
-  const hat = eq.hat ?? null;
+  const base = eq.outfit && P3D.has(eq.outfit) ? eq.outfit : `base-${AVATARS[avatar] ? avatar : "sage"}`;
+  const layers = [base, eq.neck, eq.face, eq.hat, eq.prop].filter((x): x is string => !!x && (x === base || P3D.has(x)));
   return (
-    <svg viewBox="0 0 80 110" className="w-full h-full overflow-visible" style={{ transform: flip ? "scaleX(-1)" : undefined }}>
-      <ellipse cx={40} cy={106} rx={20} ry={4} fill="#000" opacity={0.15} />
-      <g className={walking ? "anim-step-l" : ""}><rect x={28} y={86} width={9} height={16} rx={4} fill="#39332F" /></g>
-      <g className={walking ? "anim-step-r" : ""}><rect x={43} y={86} width={9} height={16} rx={4} fill="#39332F" /></g>
-      {/* 소품: 몸 뒤 (양산·트렁크) */}
-      {eq.prop === "prop-parasol" && <g><path d="M62 96 V30" stroke={LINE} strokeWidth={2} /><path d="M36 34 Q62 6 88 34 Q81 30 75 34 Q68 29 62 34 Q56 29 49 34 Q43 30 36 34Z" fill="#F2E7D0" stroke={LINE} strokeWidth={1.8} /><path d="M40 33 q4 3 8 0 M52 33 q5 3 10 0 M66 33 q5 3 10 0" stroke="#D9A79B" strokeWidth={1.2} fill="none" /><path d="M62 96 q4 4 -2 6" stroke={LINE} strokeWidth={2} fill="none" /></g>}
-      {eq.prop === "prop-trunk" && <g><rect x={56} y={84} width={22} height={17} rx={2} fill="#7A4A30" stroke={LINE} strokeWidth={1.8} /><path d="M62 84 v-4 h10 v4" fill="none" stroke={LINE} strokeWidth={1.8} /><path d="M56 92 h22" stroke="#B58B48" strokeWidth={1.6} /><rect x={65} y={90} width={4} height={4} fill="#B58B48" /></g>}
-      {/* 의상 */}
-      {(!eq.outfit) && <path d="M22 92 Q20 62 40 60 Q60 62 58 92 Z" fill={a.coat} stroke={LINE} strokeWidth={2.4} strokeLinejoin="round" />}
-      {eq.outfit === "outfit-suit" && <g>
-        <path d="M22 92 Q20 62 40 60 Q60 62 58 92 Z" fill="#3A3530" stroke={LINE} strokeWidth={2.4} strokeLinejoin="round" />
-        <path d="M33 62 L40 76 L47 62Z" fill="#F2E7D0" stroke={LINE} strokeWidth={1.2} />
-        <path d="M31 66 L40 80 L49 66 V90 H31Z" fill="#6B4A36" stroke={LINE} strokeWidth={1.2} />
-        <path d="M40 66 l-2 4 l2 8 l2 -8z" fill="#963F38" />
-        <circle cx={40} cy={84} r={1.2} fill="#B58B48" /><circle cx={40} cy={88} r={1.2} fill="#B58B48" />
-      </g>}
-      {eq.outfit === "outfit-dress" && <g>
-        <path d="M26 96 Q24 74 30 64 Q40 58 50 64 Q56 74 54 96 Z" fill="#3B5659" stroke={LINE} strokeWidth={2.2} strokeLinejoin="round" />
-        <path d="M30 64 L40 72 L50 64 L46 70 L40 76 L34 70Z" fill="#F2E7D0" stroke={LINE} strokeWidth={1.2} />
-        <path d="M27 84 H53" stroke="#B58B48" strokeWidth={2} />
-        <path d="M30 96 l3 -6 l3 6 l3 -6 l3 6 l3 -6 l3 6 l3 -6 l2 6" fill="none" stroke="#F2E7D0" strokeWidth={1} />
-      </g>}
-      {eq.outfit === "outfit-hanbok" && <g>
-        <path d="M24 98 Q22 80 30 76 H50 Q58 80 56 98Z" fill="#963F38" stroke={LINE} strokeWidth={2} />
-        <path d="M27 76 Q28 62 40 60 Q52 62 53 76 Z" fill="#F2E7D0" stroke={LINE} strokeWidth={2} />
-        {["#C9433A", "#E8B04A", "#6E9A63", "#3E6E8E", "#D9849A"].map((c, i) => <rect key={c} x={18 - i * 0} y={64 + i * 2.6} width={10} height={2.6} fill={c} />)}
-        {["#C9433A", "#E8B04A", "#6E9A63", "#3E6E8E", "#D9849A"].map((c, i) => <rect key={`r${c}`} x={52} y={64 + i * 2.6} width={10} height={2.6} fill={c} />)}
-        <path d="M40 66 l-6 8 M40 66 l3 10" stroke="#963F38" strokeWidth={2.2} strokeLinecap="round" />
-      </g>}
-      {eq.outfit === "outfit-academy" && <g>
-        <path d="M20 98 Q18 62 40 60 Q62 62 60 98 Z" fill="#1F3336" stroke={LINE} strokeWidth={2.4} strokeLinejoin="round" />
-        <path d="M33 62 L40 98 M47 62 L40 98" stroke="#B58B48" strokeWidth={2.2} />
-        <path d="M20 98 H60" stroke="#B58B48" strokeWidth={2.4} />
-        {[[28, 74], [31, 84], [52, 72], [49, 86], [26, 90]].map(([x, y], i) => <path key={i} d={`M${x} ${y - 2} l.8 1.5 l1.7 .3 l-1.2 1.2 l.3 1.7 l-1.6 -.8 l-1.6 .8 l.3 -1.7 l-1.2 -1.2 l1.7 -.3z`} fill="#E6CB8E" />)}
-        <path d="M28 76 L31 84 M52 72 L49 86" stroke="#E6CB8E" strokeWidth={.6} opacity={.7} />
-      </g>}
-      {eq.neck === "neck-apron" && <path d="M28 66 h24 v24 q-12 4 -24 0 z" fill="#F2E7D0" stroke={LINE} strokeWidth={1.8} />}
-      <path d="M40 62 v28" stroke={LINE} strokeWidth={1.5} />
-      <circle cx={40} cy={72} r={1.8} fill="#B58B48" /><circle cx={40} cy={80} r={1.8} fill="#B58B48" />
-      {/* 회중시계 */}
-      <circle cx={52} cy={78} r={5} fill="#B58B48" stroke={LINE} strokeWidth={1.6} />
-      <path d="M52 75.5 v2.5 l1.8 1" stroke={LINE} strokeWidth={1.2} fill="none" />
-      <circle cx={40} cy={38} r={24} fill="#F6D9BE" stroke={LINE} strokeWidth={2.4} />
-      <path d="M17 36 Q18 14 40 13 Q62 14 63 36 Q54 26 40 27 Q26 26 17 36 Z" fill="#5A4030" />
-      {hat === "hat-fedora" && (<g>
-        <ellipse cx={40} cy={18} rx={30} ry={6} fill={a.hat} stroke={LINE} strokeWidth={2.2} />
-        <path d="M24 17 Q26 0 40 0 Q54 0 56 17 Z" fill={a.hat} stroke={LINE} strokeWidth={2.2} />
-        <rect x={25} y={10} width={30} height={4} fill="#B58B48" />
-      </g>)}
-      {hat === "hat-straw" && (<g>
-        <ellipse cx={40} cy={18} rx={36} ry={7} fill="#E8C877" stroke={LINE} strokeWidth={2.2} />
-        <path d="M24 17 Q27 2 40 2 Q53 2 56 17 Z" fill="#E8C877" stroke={LINE} strokeWidth={2.2} />
-        <rect x={25} y={11} width={30} height={4} fill="#963F38" />
-      </g>)}
-      {hat === "hat-beret" && <path d="M14 22 Q14 6 40 6 Q66 6 64 20 Q50 26 14 22 Z M40 6 v-5" fill="#963F38" stroke={LINE} strokeWidth={2.2} />}
-      {hat === "hat-cat" && (<g fill="#B4B3B6" stroke={LINE} strokeWidth={2.2} strokeLinejoin="round">
-        <path d="M16 24 Q16 8 40 8 Q64 8 64 24 Q40 18 16 24 Z" />
-        <path d="M20 14 L22 -2 L34 9 Z" /><path d="M60 14 L58 -2 L46 9 Z" />
-        <path d="M24 9 L24 3 L29 8 Z M56 9 L56 3 L51 8 Z" fill="#F2A1A0" stroke="none" />
-      </g>)}
-      {hat === "hat-cloche" && <g><path d="M15 26 Q14 6 40 6 Q66 6 65 26 Q52 20 40 20 Q28 20 15 26Z" fill="#963F38" stroke={LINE} strokeWidth={2.2} /><path d="M17 20 Q40 12 63 20" stroke="#B58B48" strokeWidth={3} fill="none" /><circle cx={56} cy={17} r={3} fill="#F2E7D0" stroke={LINE} strokeWidth={1} /></g>}
-      {hat === "hat-gat" && <g><ellipse cx={40} cy={20} rx={36} ry={5.5} fill="#26211E" opacity={.85} stroke={LINE} strokeWidth={1.6} /><path d="M28 19 Q28 2 40 2 Q52 2 52 19Z" fill="#26211E" stroke={LINE} strokeWidth={1.6} /><path d="M22 22 Q20 40 26 54 M58 22 Q60 40 54 54" stroke="#B58B48" strokeWidth={1.2} fill="none" opacity={.8} /></g>}
-      {eq.face === "face-glasses" && <g fill="none" stroke={LINE} strokeWidth={1.8}><circle cx={32} cy={40} r={6} /><circle cx={48} cy={40} r={6} /><path d="M38 40 h4" /></g>}
-      {eq.face === "face-mono" && <g fill="none" stroke="#8A6731" strokeWidth={2}><circle cx={48} cy={40} r={6.5} /><path d="M54 42 q6 10 0 20" strokeWidth={1.2} /></g>}
-      <circle cx={32} cy={40} r={2.8} fill={LINE} /><circle cx={48} cy={40} r={2.8} fill={LINE} />
-      <ellipse cx={27} cy={47} rx={4} ry={2.4} fill="#F2A1A0" opacity={0.7} /><ellipse cx={53} cy={47} rx={4} ry={2.4} fill="#F2A1A0" opacity={0.7} />
-      <path d="M36 48 q4 4 8 0" stroke={LINE} strokeWidth={1.8} fill="none" strokeLinecap="round" />
-      {eq.prop === "prop-camera" && <g><path d="M30 62 L48 84" stroke="#5A4033" strokeWidth={1.6} /><rect x={42} y={78} width={18} height={13} rx={1.5} fill="#2A2522" stroke={LINE} strokeWidth={1.4} /><path d="M46 78 l3 -4 h6 l2 4" fill="#5A4033" stroke={LINE} strokeWidth={1} /><circle cx={51} cy={85} r={4} fill="#3B5659" stroke="#B58B48" strokeWidth={1.4} /></g>}
-      {eq.prop === "prop-fan" && <g><path d="M58 82 l6 -2" stroke={LINE} strokeWidth={2} /><circle cx={70} cy={74} r={10} fill="#F2E7D0" stroke={LINE} strokeWidth={1.6} /><path d="M60 74 A10 10 0 0 1 80 74 A5 5 0 0 1 70 74 A5 5 0 0 0 60 74Z" fill="#963F38" /><path d="M60 74 A10 10 0 0 0 80 74 A5 5 0 0 1 70 74 A5 5 0 0 0 60 74Z" fill="#3E6E8E" /></g>}
-      {eq.prop === "prop-lantern" && <g><path d="M60 80 L66 70 V74" stroke={LINE} strokeWidth={1.6} fill="none" /><circle cx={66} cy={84} r={12} fill="#F3D896" opacity={.3} className="anim-glow" /><rect x={60} y={74} width={12} height={2.5} fill="#263D40" /><path d="M60 76.5 Q58 84 60 92 H72 Q74 84 72 76.5Z" fill="#963F38" stroke={LINE} strokeWidth={1.2} /><path d="M59 84 H73" stroke="#263D40" strokeWidth={2.4} /><rect x={60} y={92} width={12} height={2.5} fill="#263D40" /></g>}
-      {eq.prop === "prop-compass" && <g><circle cx={64} cy={82} r={14} fill="#F3D896" opacity={.35} className="anim-glow" /><circle cx={64} cy={82} r={8} fill="#B58B48" stroke={LINE} strokeWidth={1.6} /><circle cx={64} cy={82} r={5.5} fill="#F2E7D0" /><path d="M64 77 l1.6 5 l-1.6 5 l-1.6 -5z" fill="#963F38" /><path d="M58 70 l1 2 M70 70 l-1 2 M64 68 v2" stroke="#E6CB8E" strokeWidth={1.2} /></g>}
-      {eq.neck === "neck-scarf" && <g><path d="M24 60 Q40 68 56 60 L56 66 Q40 74 24 66 Z" fill="#963F38" stroke={LINE} strokeWidth={1.8} /><path d="M48 66 l4 14 l5 -2 l-3 -13" fill="#963F38" stroke={LINE} strokeWidth={1.6} /></g>}
-      {eq.neck === "neck-bow" && <g fill="#963F38" stroke={LINE} strokeWidth={1.6}><path d="M40 64 l-9 -5 v10 z" /><path d="M40 64 l9 -5 v10 z" /><circle cx={40} cy={64} r={2.4} /></g>}
-    </svg>
+    <div className={`relative w-full h-full ${walking ? "anim-walk" : ""}`} style={{ transform: flip ? "scaleX(-1)" : undefined }}>
+      {layers.map((l) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={l} src={`/player/${l}.webp`} alt="" draggable={false} className="absolute inset-0 w-full h-full object-contain object-bottom select-none pointer-events-none" />
+      ))}
+    </div>
   );
 }
 
 /** NPC 초상화 (창작 NPC) */
-export function NpcArt({ look }: { look: { hat: string; outfit: string; skin: string; prop?: string } }) {
-  return (
-    <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
-      <path d="M18 100 Q16 66 50 64 Q84 66 82 100 Z" fill={look.outfit} stroke={LINE} strokeWidth={2.4} />
-      <circle cx={50} cy={42} r={25} fill={look.skin} stroke={LINE} strokeWidth={2.4} />
-      <path d="M25 38 Q28 16 50 16 Q72 16 75 38 Q62 28 50 30 Q38 28 25 38 Z" fill="#39332F" />
-      <path d="M22 26 Q24 8 50 8 Q76 8 78 26 Q50 20 22 26 Z" fill={look.hat} stroke={LINE} strokeWidth={2.2} />
-      <circle cx={41} cy={44} r={2.8} fill={LINE} /><circle cx={59} cy={44} r={2.8} fill={LINE} />
-      <ellipse cx={35} cy={51} rx={4} ry={2.4} fill="#F2A1A0" opacity={0.7} /><ellipse cx={65} cy={51} rx={4} ry={2.4} fill="#F2A1A0" opacity={0.7} />
-      <path d="M45 53 q5 5 10 0" stroke={LINE} strokeWidth={2} fill="none" strokeLinecap="round" />
-      {look.prop === "jar" && <g><path d="M68 80 q-4 -10 6 -12 h10 q10 2 6 12 q-2 14 -11 14 q-9 0 -11 -14z" fill="#5A4033" stroke={LINE} strokeWidth={2} /><rect x={72} y={64} width={14} height={5} rx={2} fill="#39332F" /></g>}
-      {look.prop === "camera" && <g><rect x={62} y={72} width={28} height={18} rx={3} fill="#39332F" /><circle cx={76} cy={81} r={6} fill="#B58B48" stroke="#fff" strokeWidth={1.5} /></g>}
-      {look.prop === "letter" && <g><rect x={64} y={72} width={26} height={18} fill="#F2E7D0" stroke={LINE} strokeWidth={2} /><path d="M64 72 l13 10 l13 -10" fill="none" stroke={LINE} strokeWidth={2} /><circle cx={77} cy={84} r={3} fill="#963F38" /></g>}
-      {look.prop === "map" && <g><path d="M62 72 l10 -3 l10 3 l10 -3 v20 l-10 3 l-10 -3 l-10 3z" fill="#D6C29C" stroke={LINE} strokeWidth={2} /><circle cx={78} cy={80} r={2.5} fill="#963F38" /></g>}
-      {look.prop === "bag" && <g><rect x={64} y={74} width={24} height={20} rx={3} fill="#B58B48" stroke={LINE} strokeWidth={2} /><path d="M70 74 q6 -10 12 0" fill="none" stroke={LINE} strokeWidth={2} /></g>}
-    </svg>
-  );
+/** 마을 사람(NPC) 3D 피규어. look 으로 누구인지 찾습니다. */
+export function NpcArt({ look, id }: { look: { hat: string; outfit: string; skin: string; prop?: string }; id?: string }) {
+  const who = id ?? NPCS.find((n) => n.look.hat === look.hat && n.look.outfit === look.outfit)?.id ?? "guide";
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={`/npc/${who}.webp`} alt="" draggable={false} className="w-full h-full object-contain object-bottom select-none pointer-events-none" />;
 }

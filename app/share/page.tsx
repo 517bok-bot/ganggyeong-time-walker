@@ -22,7 +22,7 @@ export default function Share() {
     <main className="px-3">
       <PageHeader title="함께 플레이" seal="초대" sub="휴대폰 카메라로 QR을 찍으면 바로 강경 타임워커가 열려요" />
       <section className="silk-frame mx-auto max-w-sm"><div className="paper p-5 text-center">
-        <p className="font-story text-2xl text-sumi">시간 학당 초대장</p>
+        <p className="font-story text-2xl text-sumi">까치가 전하는 초대장</p>
         {local ? (
           <div className="mt-3 text-sm text-sumi text-left space-y-2">
             <p className="font-game font-bold text-vermilion">지금은 ‘localhost’ 주소라 다른 휴대폰에서 열 수 없어요.</p>

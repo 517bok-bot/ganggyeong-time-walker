@@ -1,15 +1,15 @@
-// 강경 시간 학당의 네 문(門) — 사신(四神)에서 따온 창작 세계관 (게임 설정)
+// 수호 신수(守護神獸) — 사신(四神)에서 따온 창작 세계관 (게임 설정). 타임워커의 그림자에 깃들어 지켜 줍니다.
 export interface House { id: string; name: string; hanja: string; color: string; light: string; virtue: string; desc: string }
 
 export const HOUSES: House[] = [
-  { id: "cheongryong", name: "청룡문", hanja: "靑龍", color: "#263D40", light: "#748A70", virtue: "지혜 · 탐구", desc: "옛 기록과 지도를 읽어 길을 여는 이들. 탐험과 옛이야기에 강해요." },
-  { id: "jujak", name: "주작문", hanja: "朱雀", color: "#963F38", light: "#D9806F", virtue: "열정 · 축제", desc: "사람을 모으고 잔치를 여는 이들. 축제와 공동 항아리에 앞장서요." },
-  { id: "baekho", name: "백호문", hanja: "白虎", color: "#B58B48", light: "#F2E7D0", virtue: "용기 · 모험", desc: "먼저 길을 나서는 이들. 현장 탐험과 숨은 인연 찾기를 즐겨요." },
-  { id: "hyeonmu", name: "현무문", hanja: "玄武", color: "#65516F", light: "#A08AA9", virtue: "기억 · 끈기", desc: "오래 기다리고 끝까지 지키는 이들. 숙성과 편지, 기록을 아껴요." },
+  { id: "cheongryong", name: "청룡", hanja: "靑龍", color: "#263D40", light: "#748A70", virtue: "지혜 · 탐구", desc: "동쪽 하늘의 푸른 용. 옛 기록과 지도를 읽어 길을 열어 줘요. 탐험과 옛이야기에 강해요." },
+  { id: "jujak", name: "주작", hanja: "朱雀", color: "#963F38", light: "#D9806F", virtue: "열정 · 축제", desc: "남쪽 하늘의 붉은 새. 사람을 모으고 잔치를 밝혀요. 축제와 공동 항아리에 앞장서요." },
+  { id: "baekho", name: "백호", hanja: "白虎", color: "#B58B48", light: "#F2E7D0", virtue: "용기 · 모험", desc: "서쪽 하늘의 흰 범. 누구보다 먼저 길을 나서요. 현장 탐험과 숨은 인연 찾기를 즐겨요." },
+  { id: "hyeonmu", name: "현무", hanja: "玄武", color: "#65516F", light: "#A08AA9", virtue: "기억 · 끈기", desc: "북쪽 하늘의 검은 거북과 뱀. 오래 기다리고 끝까지 지켜요. 숙성과 편지, 기록을 아껴요." },
 ];
 export const HOUSE = Object.fromEntries(HOUSES.map((h) => [h.id, h])) as Record<string, House>;
 
-/** 레벨별 학당 칭호 */
+/** 레벨별 타임워커 칭호 */
 export function rankTitle(level: number) {
   if (level >= 10) return "대(大)타임워커";
   if (level >= 7) return "시간 술사";
@@ -18,7 +18,7 @@ export function rankTitle(level: number) {
   return "견습 나그네";
 }
 
-/** 문(門) 문장: 둥근 패 안의 상징 무늬 */
+/** 수호 신수 문장: 둥근 패 안의 상징 무늬 */
 export function HouseEmblem({ id, size = 40 }: { id: string; size?: number }) {
   const h = HOUSE[id] ?? HOUSES[0];
   const K = "#39332F";

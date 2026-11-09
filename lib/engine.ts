@@ -309,7 +309,7 @@ export function applyAction(state: GameState, a: Action, ctx: EngineCtx): Outcom
       const name = String(a.name ?? "").replace(/[<>]/g, "").trim().slice(0, 12) || "타임워커";
       if (!AVATAR_IDS.includes(a.avatar)) return fail(s, "알 수 없는 의상");
       const houses = ["cheongryong", "jujak", "baekho", "hyeonmu"];
-      if (a.house !== undefined && !houses.includes(a.house)) return fail(s, "알 수 없는 문(門)");
+      if (a.house !== undefined && !houses.includes(a.house)) return fail(s, "알 수 없는 수호 신수");
       r.s = { ...s, player: { ...s.player, name, avatar: a.avatar, house: a.house ?? s.player.house } };
       return r.done();
     }

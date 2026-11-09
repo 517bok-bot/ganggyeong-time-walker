@@ -91,7 +91,7 @@ export const NPCS: Npc[] = [
     id: "postman", name: "포포", title: "까치 우체부",
     look: { hat: "#74302A", outfit: "#B58B48", skin: "#F6D9BE", prop: "letter" },
     locationId: "ganggyeong-gwan",
-    greeting: "까악! 편지 왔어요~ 과거에서도, 미래에서도요. 학당의 편지는 까치들이 날라요.",
+    greeting: "까악! 편지 왔어요~ 과거에서도, 미래에서도요. 시간의 종이 쓴 편지는 까치들이 날라요.",
     dialogue: {
       start: { text: "시간 우체국은 4단계에서 문을 열어요. 미래의 방문객에게 편지를 남길 수 있게 될 거예요!", choices: [
         { label: "기대할게요!", action: "close" },

@@ -76,7 +76,7 @@ export function Envelope({ open = false, sealColor = "#963F38" }: { open?: boole
   );
 }
 
-/** 까치 우체부: 편지를 문 까치 (시간 학당의 전령) */
+/** 까치 우체부: 편지를 문 까치 (시간을 나르는 전령) */
 export function Magpie({ flying = true, nested = false }: { flying?: boolean; nested?: boolean }) {
   return (
     <svg viewBox="0 0 120 90" {...(nested ? { width: 120, height: 90 } : { className: "w-full h-auto block" })} role="img" aria-label="편지를 문 까치">

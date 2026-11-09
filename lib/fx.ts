@@ -28,7 +28,7 @@ export function reducedMotion() {
 }
 
 export function haptic(pattern: number | number[] = 12) {
-  try { if (!reducedMotion()) navigator.vibrate?.(pattern); } catch { /* 지원 안 함 */ }
+  try { if (!reducedMotion() && (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive) navigator.vibrate?.(pattern); } catch { /* 지원 안 함 */ }
 }
 
 export const fx = {

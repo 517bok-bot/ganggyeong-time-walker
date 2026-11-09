@@ -1,0 +1,160 @@
+[
+ {
+  "file": "player/base-sage.webp",
+  "opts": {
+   "avatar": "sage",
+   "layer": "base"
+  }
+ },
+ {
+  "file": "player/base-brick.webp",
+  "opts": {
+   "avatar": "brick",
+   "layer": "base"
+  }
+ },
+ {
+  "file": "player/base-gold.webp",
+  "opts": {
+   "avatar": "gold",
+   "layer": "base"
+  }
+ },
+ {
+  "file": "player/base-wood.webp",
+  "opts": {
+   "avatar": "wood",
+   "layer": "base"
+  }
+ },
+ {
+  "file": "player/outfit-suit.webp",
+  "opts": {
+   "outfit": "outfit-suit",
+   "layer": "base"
+  }
+ },
+ {
+  "file": "player/outfit-dress.webp",
+  "opts": {
+   "outfit": "outfit-dress",
+   "layer": "base"
+  }
+ },
+ {
+  "file": "player/outfit-hanbok.webp",
+  "opts": {
+   "outfit": "outfit-hanbok",
+   "layer": "base"
+  }
+ },
+ {
+  "file": "player/outfit-academy.webp",
+  "opts": {
+   "outfit": "outfit-academy",
+   "layer": "base"
+  }
+ },
+ {
+  "file": "player/hat-fedora.webp",
+  "opts": {
+   "layer": "hat-fedora"
+  }
+ },
+ {
+  "file": "player/hat-straw.webp",
+  "opts": {
+   "layer": "hat-straw"
+  }
+ },
+ {
+  "file": "player/hat-beret.webp",
+  "opts": {
+   "layer": "hat-beret"
+  }
+ },
+ {
+  "file": "player/hat-cat.webp",
+  "opts": {
+   "layer": "hat-cat"
+  }
+ },
+ {
+  "file": "player/hat-cloche.webp",
+  "opts": {
+   "layer": "hat-cloche"
+  }
+ },
+ {
+  "file": "player/hat-gat.webp",
+  "opts": {
+   "layer": "hat-gat"
+  }
+ },
+ {
+  "file": "player/neck-scarf.webp",
+  "opts": {
+   "layer": "neck-scarf"
+  }
+ },
+ {
+  "file": "player/neck-bow.webp",
+  "opts": {
+   "layer": "neck-bow"
+  }
+ },
+ {
+  "file": "player/neck-apron.webp",
+  "opts": {
+   "layer": "neck-apron"
+  }
+ },
+ {
+  "file": "player/face-glasses.webp",
+  "opts": {
+   "layer": "face-glasses"
+  }
+ },
+ {
+  "file": "player/face-mono.webp",
+  "opts": {
+   "layer": "face-mono"
+  }
+ },
+ {
+  "file": "player/prop-parasol.webp",
+  "opts": {
+   "layer": "prop-parasol"
+  }
+ },
+ {
+  "file": "player/prop-trunk.webp",
+  "opts": {
+   "layer": "prop-trunk"
+  }
+ },
+ {
+  "file": "player/prop-camera.webp",
+  "opts": {
+   "layer": "prop-camera"
+  }
+ },
+ {
+  "file": "player/prop-fan.webp",
+  "opts": {
+   "layer": "prop-fan"
+  }
+ },
+ {
+  "file": "player/prop-lantern.webp",
+  "opts": {
+   "layer": "prop-lantern"
+  }
+ },
+ {
+  "file": "player/prop-compass.webp",
+  "opts": {
+   "layer": "prop-compass"
+  }
+ }
+]

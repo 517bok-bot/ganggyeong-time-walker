@@ -12,10 +12,14 @@ const sign = (id) => `GTW1.${id}.` + crypto.createHmac('sha256','test-secret').u
   await p.goto(base); await p.waitForTimeout(1500);
   await p.screenshot({ path: 'home.png', fullPage: true });
   // prologue
-  await p.getByRole('button', { name: '시간 여행 시작' }).click();
-  for (let i=0;i<3;i++) await p.getByText('다음 장으로').click(); await p.getByText('이 문으로 입학하기').click();
+  await p.getByRole('button', { name: '시간 여행 시작' }).click(); await p.waitForTimeout(800);
+  await p.getByRole('button', { name: /건너뛰기/ }).click(); await p.waitForTimeout(400);
+  await p.getByText('이 신수와 함께하기').click();
   await p.getByLabel('이름').fill('테스터');
-  await p.getByText('입학 인장을 찍고 길을 나서다').click(); await p.waitForTimeout(1500);
+  await p.getByText('계약의 인장을 찍고 길을 나서다').click(); await p.waitForTimeout(2500);
+  // 이야기 자동 장면(서장 마무리 → 1장 도입)은 건너뛰기
+  for (let k = 0; k < 3; k++) { const sk = p.getByRole('button', { name: /건너뛰기/ }); if (await sk.count()) { await sk.click(); await p.waitForTimeout(1500); } }
+  console.log('story', JSON.parse(await p.evaluate(() => localStorage.getItem('gtw-save-v1'))).story);
   await p.screenshot({ path: 'explore.png', fullPage: true });
   // QR flow via URL
   await p.goto(`${base}/explore?qr=${sign('gwangshin')}`); await p.waitForTimeout(2000);
@@ -23,6 +27,14 @@ const sign = (id) => `GTW1.${id}.` + crypto.createHmac('sha256','test-secret').u
   await p.getByText('인연을 기록하다').click();
   await p.waitForTimeout(500);
   await p.screenshot({ path: 'loc.png' });
+  // 시간 조각 하나 붙잡기
+  for (let k = 0; k < 3; k++) { const sk = p.getByRole('button', { name: /건너뛰기/ }); if (await sk.count()) { await sk.click(); await p.waitForTimeout(1200); } }
+  await p.keyboard.press('Escape');
+  await p.evaluate(() => document.querySelector('[role=dialog]')?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+  await p.waitForTimeout(400);
+  await p.evaluate(() => document.querySelector('button[aria-label$="붙잡기"]').click()); await p.waitForTimeout(2500);
+  await p.mouse.click(195, 420); await p.waitForTimeout(300); await p.mouse.click(195, 420); await p.waitForTimeout(1500);
+  console.log('spark', JSON.parse(await p.evaluate(() => localStorage.getItem('gtw-save-v1'))).sparkTotal);
   // duplicate
   await p.goto(`${base}/explore?qr=${sign('gwangshin')}`); await p.waitForTimeout(1500);
   const dup = await p.getByText('이미 방문 인증한 장소예요', {exact:false}).count();

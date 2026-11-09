@@ -42,8 +42,8 @@ export default function Home() {
   const start = () => { sfx.fanfare(); if (enrolled) router.push("/explore"); else setIntro(true); };
   const PROLOGUE = [
     "어느 달 밝은 밤, 까치 한 마리가 붉은 인장이 찍힌 편지를 물고 창가에 내려앉았습니다.",
-    "‘그대의 강경 시간 학당(時間學堂) 입학을 허가합니다. 금강 달빛이 가장 밝은 밤, 근대거리로 오시오.’",
-    "학당의 첫 숙제는 거리 안내도에 붙은 ‘특별수배’. 수상한(?) 고양이 세 마리, 강이·갱이·콩이를 찾는 일입니다.",
+    "‘시간의 종이 그대를 부르노라. 금강 달빛이 가장 밝은 밤, 근대거리로 오시오.’",
+    "첫 부탁은 거리 안내도에 붙은 ‘특별수배’. 시간 속으로 흩어진 고양이 세 마리, 강이·갱이·콩이를 찾는 일입니다.",
   ];
 
   return (
@@ -52,14 +52,14 @@ export default function Home() {
       <section className="relative left-1/2 -translate-x-1/2 w-screen h-[100svh] min-h-[560px] overflow-hidden bg-teal-dark -mt-0">
         <HeroPainting />
         <Fireflies count={22} />
-        {/* 상단: 문양 띠 + 학당 현판 로고 */}
+        {/* 상단: 문양 띠 + 현판 로고 */}
         <div className="absolute top-0 inset-x-0">
           <MeanderBand />
           <div className="flex justify-center sm:justify-start pt-4 px-4 sm:pl-12">
             <div className="relative px-7 sm:px-10 pt-3 pb-3 text-center border-2 border-antique bg-teal/85 backdrop-blur-[1px] shadow-card"
               style={{ backgroundImage: "var(--woodgrain)" }}>
               <CloudCorner className="absolute -left-2 -top-2 w-7 h-7" /><CloudCorner flip className="absolute -right-2 -top-2 w-7 h-7" />
-              <p className="font-game font-bold text-[11px] sm:text-xs tracking-[.4em] text-antique-light">時間學堂 · 강경 시간 학당</p>
+              <p className="font-game font-bold text-[11px] sm:text-xs tracking-[.4em] text-antique-light">時間行者 · 멈춘 시간의 포구</p>
               <h1 className="font-story text-hanji-light text-[42px] sm:text-6xl leading-none mt-1 anim-ink">
                 강경 <span className="gold-leaf">타임워커</span>
               </h1>
@@ -205,8 +205,8 @@ export default function Home() {
         <div className="p-6 text-center">
           {page === PROLOGUE.length ? (
             <>
-              <h2 className="font-story text-3xl text-sumi">문(門)을 고르세요</h2>
-              <p className="text-sm text-sumi-light mt-1">학당의 네 문은 사신(四神)의 이름을 따랐어요. 고른 문은 명패에 표시돼요.</p>
+              <h2 className="font-story text-3xl text-sumi">수호 신수를 고르세요</h2>
+              <p className="text-sm text-sumi-light mt-1">하늘의 네 신수 중 하나가 그림자에 깃들어 여행을 지켜 줘요. 고른 신수는 명패에 새겨져요.</p>
               <div className="grid grid-cols-2 gap-2 mt-3">
                 {HOUSES.map((h) => (
                   <button key={h.id} onClick={() => { sfx.tap(); setHouse(h.id); }} aria-pressed={house === h.id}
@@ -216,7 +216,7 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-              <button className="btn-sage w-full mt-4" onClick={() => { sfx.stamp(); setPage(page + 1); }}>이 문으로 입학하기</button>
+              <button className="btn-sage w-full mt-4" onClick={() => { sfx.stamp(); setPage(page + 1); }}>이 신수와 함께하기</button>
             </>
           ) : page < PROLOGUE.length ? (
             <>
@@ -230,8 +230,8 @@ export default function Home() {
             </>
           ) : (
             <>
-              <h2 className="font-story text-3xl text-sumi">학당 명부에 이름을</h2>
-              <div className="flex justify-center items-center gap-2 mt-1"><HouseEmblem id={house} size={26} /><span className="font-game font-bold text-sumi">{HOUSES.find((h) => h.id === house)?.name} · 견습 나그네</span></div>
+              <h2 className="font-story text-3xl text-sumi">계약 두루마리에 이름을</h2>
+              <div className="flex justify-center items-center gap-2 mt-1"><HouseEmblem id={house} size={26} /><span className="font-game font-bold text-sumi">{HOUSES.find((h) => h.id === house)?.name} · 타임워커</span></div>
               <div className="w-24 h-28 mx-auto mt-2 anim-idle"><WalkerArt avatar={avatar} /></div>
               <div className="flex justify-center gap-2 mt-2">
                 {Object.entries(AVATARS).map(([k, a]) => (
@@ -241,7 +241,7 @@ export default function Home() {
               </div>
               <input className="mt-3 w-full border-b-2 border-sumi bg-transparent px-3 py-3 font-story text-xl text-center focus:outline-none focus:border-vermilion" maxLength={12}
                 placeholder={state.player.name} value={name} onChange={(e) => setName(e.target.value)} aria-label="이름" />
-              <button className="btn-brick w-full mt-4" onClick={async () => { await rename(name || state.player.name, avatar, house); setPrologue(false); sfx.stamp(); router.push("/explore"); }}>입학 인장을 찍고 길을 나서다</button>
+              <button className="btn-brick w-full mt-4" onClick={async () => { await rename(name || state.player.name, avatar, house); setPrologue(false); sfx.stamp(); router.push("/explore"); }}>계약의 인장을 찍고 길을 나서다</button>
             </>
           )}
         </div>

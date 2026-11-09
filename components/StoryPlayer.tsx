@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { Chapter, Line, Speaker } from "@/lib/data/story";
 import { SPEAKER_NAME } from "@/lib/data/story";
 import { CharacterArt, NpcArt, WalkerArt } from "./Characters";
-import { Magpie } from "./art/Post";
 import { NPC } from "@/lib/data/npcs";
 import { useGame } from "@/lib/game";
 import { sfx } from "@/lib/sfx";
@@ -62,8 +61,8 @@ function Portrait({ who, mood, active }: { who: Speaker; mood?: Line["mood"]; ac
     <div className={`relative w-[38%] max-w-[180px] aspect-[4/5] ${cls}`} style={{ transitionTimingFunction: "var(--spring)" }}>
       <div className={active ? "anim-idle w-full h-full" : "w-full h-full"}>
         {id ? <CharacterArt id={id} mood={mood ?? "idle"} className="w-full h-full drop-shadow-[0_8px_10px_rgba(0,0,0,.35)]" />
-          : who === "popo" ? <div className="w-full h-full grid place-items-center"><div className="w-full"><Magpie /></div></div>
-          : who === "deokbae" ? <NpcArt look={NPC.artisan.look} />
+          : who === "popo" ? <NpcArt id="postman" look={NPC.postman.look} />
+          : who === "deokbae" ? <NpcArt id="artisan" look={NPC.artisan.look} />
           : who === "me" ? <WalkerArt avatar={state.player.avatar} equipped={state.equipped} /> : null}
       </div>
     </div>

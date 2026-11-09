@@ -102,6 +102,14 @@ export default function PostcardPage() {
     // 전역 텍스처·필터 정의를 함께 넣어 독립 이미지에서도 판화 질감이 유지되게
     const defs = document.getElementById("art-defs")?.querySelector("defs");
     if (defs) clone.insertBefore(defs.cloneNode(true), clone.firstChild);
+    // 3D 캐릭터 같은 외부 이미지는 데이터로 바꿔 넣어야 독립 이미지에 그려집니다
+    await Promise.all([...clone.querySelectorAll("image")].map(async (im) => {
+      const href = im.getAttribute("href") ?? "";
+      if (!href || href.startsWith("data:") || href.startsWith("blob:")) return;
+      const b = await fetch(href).then((r) => r.blob());
+      const data = await new Promise<string>((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result as string); fr.readAsDataURL(b); });
+      im.setAttribute("href", data);
+    }));
     clone.setAttribute("width", String(W)); clone.setAttribute("height", String(H));
     clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     const src = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml" }));
