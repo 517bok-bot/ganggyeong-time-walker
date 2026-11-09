@@ -228,8 +228,10 @@ html[data-motion="reduced"] .atmosphere { display: none; }
 .anim-reveal { animation: reveal 1.6s var(--out) both; }
 @keyframes card-up { 0% { opacity: 0; transform: translateY(60px) rotateX(30deg) } 100% { opacity: 1; transform: none } }
 .anim-card-up { animation: card-up .7s var(--spring) both; }
-@keyframes walk-bob { 0%,100% { transform: translateY(0) rotate(-2deg) } 50% { transform: translateY(-5px) rotate(2deg) } }
-.anim-walk { animation: walk-bob .42s ease-in-out infinite; }
+@keyframes walk-bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+.anim-walk { animation: walk-bob .5s ease-in-out infinite; }
+@keyframes npc-sway { 0%,100% { transform: translateX(0) } 50% { transform: translateX(5px) } }
+.npc-sway { animation: npc-sway 4.5s ease-in-out infinite; }
 @keyframes caret { 50% { opacity: 0 } }
 .anim-caret { animation: caret 1s steps(1) infinite; }
 @keyframes nudge { 0%,100% { transform: translateY(0) } 50% { transform: translateY(4px) } }

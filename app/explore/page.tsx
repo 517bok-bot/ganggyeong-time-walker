@@ -282,7 +282,7 @@ export default function Explore() {
             )}
             <div className="absolute w-16 h-[88px] -translate-x-1/2 -translate-y-full">
               <div className="absolute -inset-3 rounded-full bg-antique-light/40 blur-md anim-glow" />
-              <div className={walker.moving ? "anim-walk w-full h-full" : "w-full h-full"}><WalkerArt avatar={state.player.avatar} walking={walker.moving} flip={walker.flip} /></div>
+              <div className="w-full h-full"><WalkerArt avatar={state.player.avatar} walking={walker.moving} flip={walker.flip} /></div>
             </div>
           </div>
         </div>

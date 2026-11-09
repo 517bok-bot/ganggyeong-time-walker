@@ -239,11 +239,13 @@ export function WalkerArt({ avatar = "sage", walking = false, flip = false, equi
   const base = eq.outfit && P3D.has(eq.outfit) ? eq.outfit : `base-${AVATARS[avatar] ? avatar : "sage"}`;
   const layers = [base, eq.neck, eq.face, eq.hat, eq.prop].filter((x): x is string => !!x && (x === base || P3D.has(x)));
   return (
-    <div className={`relative w-full h-full ${walking ? "anim-walk" : ""}`} style={{ transform: flip ? "scaleX(-1)" : undefined }}>
-      {layers.map((l) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img key={l} src={`/player/${l}.webp`} alt="" draggable={false} className="absolute inset-0 w-full h-full object-contain object-bottom select-none pointer-events-none" />
-      ))}
+    <div className="relative w-full h-full" style={{ transform: flip ? "scaleX(-1)" : undefined }}>
+      <div className={`absolute inset-0 ${walking ? "anim-walk" : ""}`}>
+        {layers.map((l) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={l} src={`/player/${l}.webp`} alt="" draggable={false} className="absolute inset-0 w-full h-full object-contain object-bottom select-none pointer-events-none" />
+        ))}
+      </div>
     </div>
   );
 }

@@ -192,4 +192,19 @@ t("이야기 장: 순서대로 · 목표 달성 후에만 · 1회", () => {
   assert.equal(run(c1.state, { type: "chapter", id: "nope" }).ok, false);
 });
 
+t("이웃 부탁: 조건·재료 차감·하루 1번", () => {
+  let s = initialState();
+  assert.equal(run(s, { type: "errand", id: "nope" }).ok, false);
+  const l = run(s, { type: "errand", id: "letter" });
+  assert.ok(l.ok); assert.equal(run(l.state, { type: "errand", id: "letter" }).ok, false);
+  assert.ok(run(l.state, { type: "errand", id: "letter" }, { now: now + 86400_000, allowDemo: false }).ok);
+  const sh = run(s, { type: "errand", id: "shrimp" }); // 시작 새우 2
+  assert.ok(sh.ok); assert.equal(sh.state.inventory.shrimp, 0); assert.equal(sh.state.inventory.sincerity, 1);
+  assert.equal(run(s, { type: "errand", id: "sparks" }).ok, false);
+  for (let i = 0; i < 3; i++) s = run(s, { type: "spark", index: i }).state;
+  assert.ok(run(s, { type: "errand", id: "sparks" }).ok);
+  assert.equal(run(initialState(), { type: "errand", id: "trade" }).ok, false);
+  assert.equal(run(initialState(), { type: "errand", id: "photo" }).ok, false);
+});
+
 console.log(`\n${passed}개 테스트 통과`);

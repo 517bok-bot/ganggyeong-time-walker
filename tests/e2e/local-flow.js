@@ -45,24 +45,20 @@ const sign = (id) => `GTW1.${id}.` + crypto.createHmac('sha256','test-secret').u
   // village
   await p.goto(`${base}/village`); await p.waitForTimeout(1200);
   await p.screenshot({ path: 'village.png', fullPage: true });
-  // walk right a bit & explore welcome center
-  await p.getByText('살펴보기').click(); await p.waitForTimeout(400);
-  await p.screenshot({ path: 'village-place.png' });
-  await p.getByText('닫기').last().click();
-  // find berijyu: walk to x ~228
-  const right = p.getByLabel('오른쪽으로');
-  await right.dispatchEvent('pointerdown'); await p.waitForTimeout(450); await right.dispatchEvent('pointerup');
-  await p.getByLabel('수상한 기척').first().click(); await p.waitForTimeout(800);
+  // 숨은 베리쥬: 톡 누르면 걸어가서 저절로 발견
+  await p.getByLabel('수상한 기척').first().dispatchEvent('pointerdown'); await p.waitForTimeout(2500);
   console.log('collect modal', await p.getByRole('dialog', { name: '캐릭터 발견' }).count());
-  await p.getByText('인연을 기록하다').click();
-  // npc talk
-  await p.getByLabel('달래와 대화').click({force:true}); await p.waitForTimeout(300);
-  await p.locator('[role=dialog] button').first().click(); // skip typewriter
+  await p.getByText('인연을 기록하다').click(); await p.waitForTimeout(2500);
+  // 이웃 달래: 걸어가서 말 걸기 → 이야기 나누기
+  await p.getByRole('button', { name: '달래에게 가기' }).dispatchEvent('pointerdown'); await p.waitForTimeout(2500);
+  console.log('villager sheet', await p.getByRole('dialog', { name: '이웃' }).count());
+  await p.getByText('이야기 나누기').click(); await p.waitForTimeout(300);
+  await p.locator('[role=dialog] button').first().click(); // 타자기 건너뛰기
   await p.getByText('▶ 계속').click();
   await p.locator('[role=dialog] button').first().click();
   await p.getByText('강경은 어떤 곳이었어요?').click(); await p.waitForTimeout(300);
-  await p.locator('[role=dialog] button').first().click(); await p.waitForTimeout(200);
   await p.screenshot({ path: 'npc.png' });
+  await p.keyboard.press('Escape');
   // jeotgal
   await p.goto(`${base}/jeotgal`); await p.waitForTimeout(800);
   await p.getByText('첫 젓갈 담그기').click();

@@ -47,6 +47,7 @@ export interface GameState {
   sparks?: { day: string; got: number[] };
   sparkTotal?: number;
   story?: string[];
+  errands?: { day: string; done: string[] };
   lastDaily?: string;
   log: { at: number; text: string }[];
 }

@@ -42,7 +42,7 @@ export default function NpcDialog({ npcId, onClose }: { npcId: string | null; on
     <Modal open onClose={onClose} label={`${npc.name}와의 대화`}>
       <div className="p-4">
         <div className="flex items-end gap-3">
-          <div className="w-24 h-24 shrink-0 rounded-2xl bg-gold/40 border-2 border-wood p-1 anim-squish"><NpcArt look={npc.look} /></div>
+          <div className="w-24 h-24 shrink-0 rounded-2xl bg-gold/30 border-2 border-wood p-1"><NpcArt id={npc.id} look={npc.look} /></div>
           <div>
             <span className="chip bg-sage text-cream">{npc.title}</span>
             <h2 className="font-story font-bold text-2xl text-wood-dark">{npc.name}</h2>
@@ -71,7 +71,9 @@ export default function NpcDialog({ npcId, onClose }: { npcId: string | null; on
                 if (ch.knowledgeId) { setKd(ch.knowledgeId); readKnowledge(ch.knowledgeId); return; }
                 setKd(null);
                 if (ch.action === "close") return onClose();
-                if (ch.action === "give-quest" && ch.questId) { toast(`퀘스트 수락: ${QUEST[ch.questId].title}`, "📜"); router.push("/quests"); return onClose(); }
+                if (ch.action === "give-quest" && ch.questId) { toast(`여정 수락: ${QUEST[ch.questId].title}`, "📜"); return onClose(); }
+                if (ch.action === "open-postcard") { router.push("/postcard"); return onClose(); }
+                if (ch.action === "open-post") { router.push("/post"); return onClose(); }
                 if (ch.action === "give-items" && ch.items) {
                   act({ type: "npcGift", npcId: npc.id, node, index: i }); // 선물 내용·1회 제한은 엔진이 판단
                   setNode("start"); return;

@@ -17,6 +17,7 @@ import { WEAR, type Slot } from "./data/wardrobe";
 import { PICNIC, LOCATION_PICNIC, VILLAGE_PICNIC_SPOTS, PICNIC_FOOD_NEED } from "./data/picnic";
 import { SPARKS_PER_DAY, sparkReward } from "./data/sparks";
 import { CHAPTER, CHAPTERS, chapterProgress } from "./data/story";
+import { ERRAND, errandDone, errandReady, tradeFood } from "./data/errands";
 
 export type Action =
   | { type: "visit"; locationId: string; method: VisitMethod }
@@ -38,7 +39,8 @@ export type Action =
   | { type: "letter" }
   | { type: "picnic"; foods: string[] }
   | { type: "spark"; index: number }
-  | { type: "chapter"; id: string };
+  | { type: "chapter"; id: string }
+  | { type: "errand"; id: string };
 
 /** DB 정규화 테이블에 같이 기록할 부수 효과 (중복 방지 UNIQUE 제약·통계용) */
 export interface Effects {
@@ -91,7 +93,7 @@ export function normalize(raw: unknown): GameState {
   const r = raw as Partial<GameState>;
   return { ...base, ...r, player: { ...base.player, ...(r.player ?? {}) }, postcardsMade: r.postcardsMade ?? [],
     wardrobe: r.wardrobe ?? base.wardrobe, equipped: r.equipped ?? base.equipped, companion: r.companion ?? null, lettersSent: r.lettersSent ?? 0,
-    picnic: r.picnic ?? {}, picnicsHeld: r.picnicsHeld ?? 0, sparks: r.sparks ?? { day: "", got: [] }, sparkTotal: r.sparkTotal ?? 0, story: r.story ?? [] };
+    picnic: r.picnic ?? {}, picnicsHeld: r.picnicsHeld ?? 0, sparks: r.sparks ?? { day: "", got: [] }, sparkTotal: r.sparkTotal ?? 0, story: r.story ?? [], errands: r.errands ?? { day: "", done: [] } };
 }
 
 export const expToNext = (level: number) => 100 + (level - 1) * 50;
@@ -391,6 +393,23 @@ export function applyAction(state: GameState, a: Action, ctx: EngineCtx): Outcom
       }
       r.s = log(st, `${c.no} 「${c.title}」을(를) 마쳤어요`, now);
       r.msg(`${c.no} 완료! +${c.reward.exp}EXP · 엽전 ${c.reward.coins}`, "📜");
+      return r.done();
+    }
+    case "errand": {
+      const e = ERRAND[a.id];
+      if (!e) return fail(s, "없는 부탁이에요");
+      const today = dayKey(now);
+      if (errandDone(s, e.id, today)) return fail(s, "오늘은 이미 들어준 부탁이에요. 내일 또 와요!");
+      if (!errandReady(e, s, today)) return fail(s, e.kind === "give" ? "가방에 필요한 재료가 모자라요" : e.kind === "trade" ? "바꿀 소풍 먹을거리가 없어요" : `아직 조건이 안 됐어요 (${e.checkHint ?? ""})`);
+      let st: GameState = s;
+      if (e.kind === "give") st = addItems(st, Object.fromEntries(Object.entries(e.need ?? {}).map(([k, n]) => [k, -n])));
+      if (e.kind === "trade") st = addPicnic(st, tradeFood(st)!, -1);
+      const done = s.errands?.day === today ? s.errands.done : [];
+      st = { ...st, errands: { day: today, done: [...done, e.id] } };
+      st = applyExp(st, e.reward.exp, e.reward.coins);
+      st = addItems(st, e.reward.items);
+      r.s = log(st, `이웃 부탁 완료: ${e.title}`, now);
+      r.msg(`${e.title} 완료! +${e.reward.exp}EXP · 엽전 ${e.reward.coins}`, "🎁");
       return r.done();
     }
     case "letter": {

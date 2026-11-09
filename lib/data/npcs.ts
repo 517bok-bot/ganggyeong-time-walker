@@ -6,7 +6,7 @@ export interface DialogueChoice {
   next?: string;
   /** 대화 노드 대신 승인 자료를 낭독 */
   knowledgeId?: string;
-  action?: "give-quest" | "give-items" | "open-jeotgal" | "close";
+  action?: "give-quest" | "give-items" | "open-jeotgal" | "open-postcard" | "open-post" | "close";
   questId?: string;
   items?: Record<string, number>;
 }
@@ -67,7 +67,8 @@ export const NPCS: Npc[] = [
     locationId: "photo-studio",
     greeting: "찰칵! 오늘의 빛이 아주 좋네요. 기념 엽서 한 장 어때요?",
     dialogue: {
-      start: { text: "엽서 공방은 2단계에서 문을 열어요. 대신 이야기를 들려드릴게요.", choices: [
+      start: { text: "방문 도장을 받은 곳은 제 엽서 공방에서 기념 엽서로 남길 수 있어요. 옛날이야기도 들려드릴까요?", choices: [
+        { label: "엽서 공방 가기", action: "open-postcard" },
         { label: "포구 시절 이야기", knowledgeId: "kd-port" },
         { label: "포구는 어떻게 변했어요?", knowledgeId: "kd-decline" },
         { label: "안녕히 계세요", action: "close" },
@@ -93,8 +94,9 @@ export const NPCS: Npc[] = [
     locationId: "ganggyeong-gwan",
     greeting: "까악! 편지 왔어요~ 과거에서도, 미래에서도요. 시간의 종이 쓴 편지는 까치들이 날라요.",
     dialogue: {
-      start: { text: "시간 우체국은 4단계에서 문을 열어요. 미래의 방문객에게 편지를 남길 수 있게 될 거예요!", choices: [
-        { label: "기대할게요!", action: "close" },
+      start: { text: "시간 우체국에서는 미래의 여행자에게 편지를 남기고, 다른 타임워커의 편지도 받아 볼 수 있어요!", choices: [
+        { label: "우체국으로 가기", action: "open-post" },
+        { label: "다음에 올게요", action: "close" },
         { label: "축제 소식 있어요?", knowledgeId: "kd-festival" },
       ]},
     },

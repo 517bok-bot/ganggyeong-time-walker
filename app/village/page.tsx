@@ -1,245 +1,288 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { Ico } from "@/components/art/Icons";
+// 온라인 강경마을: 화면 가득한 한 줄 거리. 어디든 톡 누르면 걸어가고, 사람·물건에 닿으면 저절로 말을 걸거나 줍습니다.
+// 이웃들은 날마다 작은 부탁(배달·재료·조사·물물교환)을 합니다.
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { Ico } from "@/components/art/Icons";
 import { useGame } from "@/lib/game";
-import { Building } from "@/components/Building";
+import VillageBackdrop from "@/components/VillageBackdrop";
 import { PLACES, WORLD_W, GROUND, TREASURE_X, type Place } from "@/lib/data/village";
-import { VILLAGE_PICNIC_SPOTS } from "@/lib/data/picnic";
+import { VILLAGE_PICNIC_SPOTS, PICNIC } from "@/lib/data/picnic";
 import { CharacterArt, NpcArt, WalkerArt } from "@/components/Characters";
 import { NPC } from "@/lib/data/npcs";
+import { ITEMS } from "@/lib/data/jeotgal";
 import { CAT_FAMILY } from "@/lib/data/characters";
 import { useContent } from "@/lib/content";
-import { MiniHud, Modal } from "@/components/ui";
+import { MiniHud, Modal, Sheet } from "@/components/ui";
 import NpcDialog from "@/components/NpcDialog";
 import { sfx } from "@/lib/sfx";
+import { ERRANDS, errandDone, errandReady, tradeFood, type Errand } from "@/lib/data/errands";
+import { dayKeyKST } from "@/lib/data/sparks";
+import { haptic } from "@/lib/fx";
+
+const H = 440;
+const CROP = 60; // 위쪽 하늘을 조금 잘라 인물을 더 크게
+const SPEED = 240; // 마을 좌표/초
+const CHATTER: Record<string, string[]> = {
+  guide: ["오늘도 강경 날씨 좋네요!", "시간 조각 본 적 있어요?", "길 잃으면 저한테 와요~"],
+  photographer: ["빛이 딱 좋은 시간이에요.", "찰칵! 아, 눈 감았다…", "사진관 앞이 명당이에요."],
+  merchant: ["싸요 싸~ 구경하고 가세요!", "고양이 손님이 또 왔다던데?", "물물교환도 환영이에요!"],
+  artisan: ["항아리는 기다림이 반이여.", "소금은 넉넉히, 마음은 느긋이.", "허허, 냄새 좋지?"],
+  postman: ["까악! 편지 왔어요~", "날개가 좀 아파요…", "미래에서 온 편지도 있어요!"],
+};
+const npcX = (p: Place) => p.x + p.w - 10;
 
 export default function Village() {
-  const { state, findOnline, villageFind, toast } = useGame();
+  const { state, findOnline, villageFind, toast, act } = useGame();
   const { CHAR } = useContent();
-  const [x, setX] = useState(120);
-  const [dir, setDir] = useState(0);
-  const [target, setTarget] = useState<number | null>(null);
-  const [face, setFace] = useState(1);
-  const [vw, setVw] = useState(390);
-  const [npcId, setNpcId] = useState<string | null>(null);
-  const [place, setPlace] = useState<Place | null>(null);
-  const [reunion, setReunion] = useState(false);
-  const wrap = useRef<HTMLDivElement>(null);
-  const xr = useRef(x); xr.current = x;
+  const [day, setDay] = useState("");
+  useEffect(() => { setDay(dayKeyKST(Date.now())); }, []);
 
+  // ── 화면 크기: 마을 높이(440)를 화면 높이에 맞춰 키움 ──
+  const stage = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState({ w: 390, h: 600, k: 1.3 });
   useEffect(() => {
-    const onResize = () => setVw(wrap.current?.clientWidth ?? 390);
-    onResize(); window.addEventListener("resize", onResize);
-    const key = (e: KeyboardEvent, down: boolean) => {
-      if (e.key === "ArrowLeft") { setDir(down ? -1 : 0); setTarget(null); e.preventDefault(); }
-      if (e.key === "ArrowRight") { setDir(down ? 1 : 0); setTarget(null); e.preventDefault(); }
-    };
-    const kd = (e: KeyboardEvent) => key(e, true), ku = (e: KeyboardEvent) => key(e, false);
-    window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
-    return () => { window.removeEventListener("resize", onResize); window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); };
+    const fit = () => { const el = stage.current; if (!el) return; const w = el.clientWidth, h = el.clientHeight; setView({ w, h, k: Math.max(1, Math.min(2.1, h / (H - CROP))) }); };
+    fit(); window.addEventListener("resize", fit); return () => window.removeEventListener("resize", fit);
+  }, []);
+  const viewRef = useRef(view); viewRef.current = view;
+
+  // ── 움직임: React를 매 프레임 다시 그리지 않고 ref로 직접 옮겨 부드럽게 ──
+  const world = useRef<HTMLDivElement>(null);
+  const player = useRef<HTMLDivElement>(null);
+  const buddy = useRef<HTMLDivElement>(null);
+  const pos = useRef({ x: 140, cam: 0, buddy: 90, target: null as number | null, dir: 0, arrive: null as null | (() => void) });
+  const [x, setX] = useState(140);
+  const [walking, setWalking] = useState(false);
+  const [face, setFace] = useState(1);
+
+  const goTo = useCallback((tx: number, arrive?: () => void) => {
+    const p = pos.current;
+    p.target = Math.max(40, Math.min(WORLD_W - 40, tx)); p.dir = 0; p.arrive = arrive ?? null;
+    if (Math.abs(p.target - p.x) < 6) { p.target = null; const f = p.arrive; p.arrive = null; f?.(); }
   }, []);
 
   useEffect(() => {
-    if (!dir && target === null) return;
-    let raf = 0, last = performance.now(), stepAt = 0;
-    const step = (t: number) => {
+    let raf = 0, last = performance.now(), lastSync = 0, stepAt = 0, wasWalking = false, lastFace = 1;
+    const tick = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000); last = t;
-      let d = dir;
-      if (target !== null) { const diff = target - xr.current; if (Math.abs(diff) < 4) { setTarget(null); return; } d = Math.sign(diff); }
-      setFace(d);
-      if (t - stepAt > 280) { stepAt = t; sfx.step(); }
-      setX((v) => Math.max(40, Math.min(WORLD_W - 40, v + d * 260 * dt)));
-      raf = requestAnimationFrame(step);
+      const p = pos.current, v = viewRef.current;
+      let d = p.dir;
+      if (p.target !== null) { const diff = p.target - p.x; if (Math.abs(diff) < 4) { p.target = null; d = 0; const f = p.arrive; p.arrive = null; f?.(); } else d = Math.sign(diff); }
+      if (d) { p.x = Math.max(40, Math.min(WORLD_W - 40, p.x + d * SPEED * dt)); if (t - stepAt > 300) { stepAt = t; sfx.step(); } }
+      if (d && d !== lastFace) { lastFace = d; setFace(d); }
+      if (!!d !== wasWalking) { wasWalking = !!d; setWalking(!!d); }
+      // 카메라: 가운데 40% 안에서는 가만히, 벗어나면 부드럽게 따라감
+      const viewW = v.w / v.k;
+      const lo = p.cam + viewW * 0.3, hi = p.cam + viewW * 0.7;
+      let want = p.cam;
+      if (p.x < lo) want = p.x - viewW * 0.3; else if (p.x > hi) want = p.x - viewW * 0.7;
+      want = Math.max(0, Math.min(WORLD_W - viewW, want));
+      p.cam += (want - p.cam) * (1 - Math.exp(-dt * 7));
+      p.buddy += (p.x - lastFace * 52 - p.buddy) * (1 - Math.exp(-dt * 5));
+      if (world.current) world.current.style.transform = `translate3d(${-p.cam * v.k}px,0,0) scale(${v.k})`;
+      if (player.current) player.current.style.transform = `translate3d(${p.x}px,0,0)`;
+      if (buddy.current) buddy.current.style.transform = `translate3d(${p.buddy}px,0,0)`;
+      if (t - lastSync > 120) { lastSync = t; setX(Math.round(p.x)); }
+      raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [dir, target]);
+    raf = requestAnimationFrame(tick);
+    const key = (e: KeyboardEvent, down: boolean) => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); pos.current.target = null; pos.current.arrive = null; pos.current.dir = down ? (e.key === "ArrowLeft" ? -1 : 1) : 0; }
+    };
+    const kd = (e: KeyboardEvent) => key(e, true), ku = (e: KeyboardEvent) => key(e, false);
+    window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); };
+  }, []);
 
-  const cam = Math.max(0, Math.min(WORLD_W - vw, x - vw / 2));
-  const near = PLACES.find((p) => Math.abs(p.x + p.w / 2 - x) < p.w / 2 + 40) ?? null;
-  const walking = dir !== 0 || target !== null;
-  const nearTreasure = Math.abs(TREASURE_X - x) < 90;
-  const catsAll = CAT_FAMILY.every((c) => state.characters[c]);
-  const onlinePlaces = state.villageFound.filter((v) => v.startsWith("place:")).length;
-
-  const explorePlace = (p: Place) => {
-    sfx.tap(); setPlace(p);
-    villageFind(`place:${p.key}`); // 보상은 엔진의 VILLAGE_REWARDS 표에서 결정
+  const tapGround = (e: React.PointerEvent) => {
+    const r = stage.current!.getBoundingClientRect();
+    goTo(pos.current.cam + (e.clientX - r.left) / view.k);
   };
 
+  // ── 이웃 부탁 ──
+  const [carry, setCarry] = useState(false); // 포포의 편지를 들고 있는지
+  useEffect(() => { try { setCarry(localStorage.getItem("gtw-carry") === dayKeyKST(Date.now())); } catch { /* ignore */ } }, []);
+  const setCarrying = (v: boolean) => { setCarry(v); try { if (v) localStorage.setItem("gtw-carry", day); else localStorage.removeItem("gtw-carry"); } catch { /* ignore */ } };
+  const errandsFor = (npcId: string) => ERRANDS.filter((e) => e.npc === npcId || (e.to === npcId && carry && !errandDone(state, e.id, day)));
+  const badge = (npcId: string) => {
+    const mine = ERRANDS.filter((e) => e.npc === npcId);
+    if (ERRANDS.some((e) => e.to === npcId && carry && !errandDone(state, e.id, day))) return "deliver";
+    if (!mine.length) return null;
+    return mine.every((e) => errandDone(state, e.id, day)) ? "done" : "ask";
+  };
+  const doneCount = ERRANDS.filter((e) => errandDone(state, e.id, day)).length;
+
+  const [villager, setVillager] = useState<string | null>(null);
+  const [npcId, setNpcId] = useState<string | null>(null);
+  const [place, setPlace] = useState<Place | null>(null);
+  const [reunion, setReunion] = useState(false);
+
+  const meet = (id: string) => { sfx.talk(); haptic(8); setVillager(id); };
+  const finishErrand = async (e: Errand) => {
+    const r = await act({ type: "errand", id: e.id });
+    if (r.ok) { sfx.quest(); if (e.kind === "deliver") setCarrying(false); }
+  };
+
+  const near = PLACES.find((p) => Math.abs(p.x + p.w / 2 - x) < p.w / 2 + 30) ?? null;
+  const catsAll = CAT_FAMILY.every((c) => state.characters[c]);
+  const chatty = useMemo(() => PLACES.filter((p) => p.npcId && Math.abs(npcX(p) - x) < 150).map((p) => p.npcId!), [x]);
+
   return (
-    <main className="px-3">
-      <header className="flex items-center gap-2 pt-[max(12px,env(safe-area-inset-top))] pr-12">
-        <MiniHud />
-        <div className="min-w-0">
-          <h1 className="font-story text-2xl text-sumi leading-none">온라인 강경마을</h1>
-          <p className="text-[12px] text-sumi-light mt-1 leading-tight">땅을 톡 누르면 걸어가요 · 반짝이는 것을 찾아요</p>
-        </div>
-      </header>
+    <main className="fixed inset-0 overflow-hidden bg-[#1A2B2D]">
+      {/* ── 마을 무대 ── */}
+      <div ref={stage} className="absolute inset-x-0 top-0 bottom-[86px] overflow-hidden select-none touch-none" onPointerDown={tapGround}>
+        <div ref={world} className="absolute left-0 origin-top-left will-change-transform" style={{ width: WORLD_W, height: H, top: Math.max(0, view.h - H * view.k) }}>
+          <VillageBackdrop />
 
-      <div ref={wrap} className="paper mt-3 overflow-hidden relative select-none touch-none" style={{ height: 440 }}
-        onPointerDown={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const yy = e.clientY - rect.top;
-          if (yy > GROUND - 10 && (e.target as HTMLElement).dataset.ground) setTarget(cam + (e.clientX - rect.left));
-        }}>
-        <div className="absolute top-0 left-0 h-full" style={{ width: WORLD_W, transform: `translateX(${-cam}px)`, transition: "transform 60ms linear" }}>
-          <svg width={WORLD_W} height={440} className="absolute inset-0">
-            <defs>
-              <linearGradient id="vsky" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#1A2B2D" /><stop offset=".55" stopColor="#3B5659" /><stop offset="1" stopColor="#B5A787" /></linearGradient>
-              <filter id="vwc"><feTurbulence baseFrequency=".025" numOctaves="2" seed="7" /><feDisplacementMap in="SourceGraphic" scale="4" /></filter>
-            </defs>
-            <rect width={WORLD_W} height={440} fill="url(#vsky)" />
-            {[400, 1500, 2500].map((mx) => <g key={mx}><circle cx={mx} cy={80} r={70} fill="#EFE2C2" opacity=".1" /><circle cx={mx} cy={80} r={30} fill="#EFE2C2" /></g>)}
-            {Array.from({ length: 9 }).map((_, i) => (
-              <g key={i} fill="#E8D8B8" opacity=".55"><ellipse cx={180 + i * 330} cy={60 + (i % 3) * 18} rx={56} ry={14} /><ellipse cx={220 + i * 330} cy={50 + (i % 3) * 18} rx={36} ry={14} /></g>
-            ))}
-            {/* 별과 별자리 */}
-            <g fill="#F3E7C4">{Array.from({ length: 70 }).map((_, i) => <circle key={i} cx={(i * 211) % WORLD_W} cy={20 + ((i * 97) % 170)} r={i % 7 === 0 ? 2.2 : 1.2} opacity={0.4 + (i % 5) * 0.12} className={i % 6 === 0 ? "anim-glow" : ""} style={{ animationDelay: `${(i % 9) * 0.4}s` }} />)}</g>
-            {/* 먼 기와 지붕 실루엣 */}
-            <path d={`M0 260 ${Array.from({ length: 29 }).map((_, i) => `L${i * 100 + 20} 260 Q${i * 100 + 50} ${228 - (i % 3) * 10} ${i * 100 + 80} 260`).join(" ")} L2900 260 V300 H0Z`} fill="#2B3F42" opacity=".7" />
-            {/* 초롱 줄 */}
-            {Array.from({ length: 7 }).map((_, k) => {
-              const x0 = 120 + k * 400, x1 = x0 + 360, y0 = 140;
-              return (
-                <g key={k}>
-                  <path d={`M${x0} ${y0} Q${(x0 + x1) / 2} ${y0 + 60} ${x1} ${y0}`} stroke="#1A2B2D" strokeWidth="1.6" fill="none" />
-                  {[0.15, 0.32, 0.5, 0.68, 0.85].map((t, j) => {
-                    const x = x0 + (x1 - x0) * t, y = y0 + 120 * t * (1 - t);
-                    return <g key={j} transform={`translate(${x} ${y})`}><path d="M0 0 v6" stroke="#1A2B2D" strokeWidth="1.2" /><ellipse cy="16" rx="13" ry="14" fill="#F3D896" opacity=".25" className="anim-glow" style={{ animationDelay: `${(j + k) * 0.3}s` }} /><ellipse cy="15" rx="8" ry="10" fill={j % 2 ? "#C83A35" : "#2E5C9A"} stroke="#1A2B2D" strokeWidth="1" /><path d="M-8 15 h16" stroke="#F3D896" strokeWidth=".8" opacity=".6" /></g>;
-                  })}
-                </g>
-              );
-            })}
-            <path d={`M0 250 ${Array.from({ length: 30 }).map((_, i) => `Q${i * 100 + 50} ${215 + (i % 2) * 20} ${(i + 1) * 100} 240`).join(" ")} V${GROUND} H0Z`} fill="#65516F" opacity=".6" />
-            {/* 강경포구 (가상 재현) */}
-            <rect x={2560} y={GROUND - 30} width={WORLD_W - 2560} height={140} fill="#3B5659" />
-            <g className="anim-idle"><path d="M2640 300 h120 l-20 22 h-80z" fill="#5A4033" stroke="#39332F" strokeWidth="2.4" /><path d="M2700 300 v-70 l40 60z" fill="#F2E7D0" stroke="#39332F" strokeWidth="2" /></g>
-            <g filter="url(#vwc)">
-              {PLACES.map((p) => <Building key={p.key} x={p.x} y={GROUND - p.h} w={p.w} h={p.h} style={p.style} wall={p.wall} roof={p.roof} sign={p.label} />)}
-            </g>
-            <rect y={GROUND} width={2560} height={140} fill="#C4AC80" />
-            <rect y={GROUND} width={2560} height={140} fill="url(#pt-grain)" />
-            <path d={`M0 ${GROUND} H2560`} stroke="#39332F" strokeWidth="2.4" />
-            <g stroke="#8A6731" strokeWidth="2" opacity=".55">{Array.from({ length: 60 }).map((_, i) => <path key={i} d={`M${i * 44} ${GROUND + 60} h26`} />)}</g>
-            {/* 장소 이름표: 실제/가상 구분 */}
-            {PLACES.map((p) => (
-              <g key={`t${p.key}`} transform={`translate(${p.x + p.w / 2} ${GROUND + 22})`}>
-                <rect x={-34} y={-12} width={68} height={20} rx={2} fill={p.real ? "#263D40" : "#65516F"} stroke="#B58B48" strokeWidth={1} />
-                <text textAnchor="middle" y={3} fontSize="12" fill="#E8D8B8" fontFamily="'Nanum Myeongjo', serif" fontWeight={700}>{p.real ? "실제 장소" : "가상 장소"}</text>
-              </g>
-            ))}
-            {[230, 600, 1000, 1440, 1850, 2310].map((lx) => (
-              <g key={lx}><path d={`M${lx} ${GROUND} v-80`} stroke="#39332F" strokeWidth="3" /><circle cx={lx} cy={GROUND - 84} r={9} fill="#F3D896" stroke="#39332F" strokeWidth="2" /></g>
-            ))}
-            <text x={2700} y={GROUND + 60} textAnchor="middle" fontFamily="'Nanum Myeongjo', serif" fontWeight={700} fontSize="18" fill="#1A2B2D">강경포구 (가상 재현)</text>
-          </svg>
-          {/* 땅 터치 영역 */}
-          <div data-ground="1" className="absolute left-0 right-0" style={{ top: GROUND - 10, height: 440 - GROUND + 10 }} />
-
-          {/* 숨은 캐릭터 */}
+          {/* 숨은 친구 */}
           {PLACES.filter((p) => p.hidden).map((p) => {
             const h = p.hidden!; const got = !!state.characters[h.charId];
-            const cx = p.x + h.dx, cy = GROUND - p.h + h.dy;
-            const isNear = Math.abs(cx - x) < 140;
-            if (got) return <div key={p.key} className="absolute w-12 h-14 anim-idle pointer-events-none" style={{ left: cx - 24, top: Math.max(56, cy - 20) }}><CharacterArt id={h.charId} mood="happy" className="w-full h-full" /></div>;
+            const cx = p.x + h.dx, cy = Math.max(CROP + 50, GROUND - p.h + h.dy);
+            if (got) return <div key={p.key} className="absolute w-14 h-16 pointer-events-none anim-idle" style={{ left: cx - 28, top: cy - 30 }}><CharacterArt id={h.charId} mood="happy" className="w-full h-full" /></div>;
+            const isNear = Math.abs(cx - x) < 130;
             return (
-              <button key={p.key} aria-label="수상한 기척" className="absolute z-10 w-12 h-12 grid place-items-center" style={{ left: cx - 24, top: cy - 12 }}
-                onClick={() => {
-                  if (!isNear) { toast("조금 더 가까이 가 보세요!", "🐾"); return; }
-                  findOnline(h.charId);
-                }}>
-                {isNear ? <span className="anim-shake inline-block"><Ico name="plum" size={34} /></span> : <span className="opacity-50 anim-idle inline-block"><Ico name="paw" size={24} /></span>}
+              <button key={p.key} aria-label="수상한 기척" className="absolute z-10 w-14 h-14 grid place-items-center" style={{ left: cx - 28, top: cy - 16 }}
+                onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); goTo(cx - 30, () => findOnline(h.charId)); }}>
+                <span className="absolute inset-1 rounded-full anim-glow" style={{ background: "radial-gradient(circle, rgba(243,216,150,.6), transparent 70%)" }} />
+                <span className={isNear ? "anim-shake inline-block relative" : "anim-idle inline-block relative opacity-80"}><Ico name={isNear ? "plum" : "paw"} size={isNear ? 32 : 26} /></span>
               </button>
             );
           })}
 
-          {/* NPC */}
+          {/* 이웃 */}
           {PLACES.filter((p) => p.npcId).map((p) => {
-            const n = NPC[p.npcId!];
+            const n = NPC[p.npcId!]; const b = badge(n.id); const talking = chatty.includes(n.id);
+            const line = CHATTER[n.id]?.[Math.floor(x / 140) % (CHATTER[n.id]?.length ?? 1)];
             return (
-              <button key={`n${p.key}`} className="absolute w-14 h-16 anim-squish" style={{ left: p.x + p.w - 20, top: GROUND - 58 }}
-                aria-label={`${n.name}와 대화`} onClick={() => { if (Math.abs(p.x + p.w - x) > 200) { setTarget(p.x + p.w - 40); return; } setNpcId(n.id); }}>
-                <NpcArt look={n.look} />
-                <span className="absolute -top-6 left-1/2 -translate-x-1/2 anim-idle pointer-events-none"><Ico name="lantern" size={22} /></span>
+              <button key={`n${p.key}`} className="absolute z-10 w-[72px] h-[84px]" style={{ left: npcX(p) - 36, top: GROUND - 82 }} aria-label={`${n.name}에게 가기`}
+                onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); goTo(npcX(p) - (pos.current.x < npcX(p) ? 56 : -56), () => meet(n.id)); }}>
+                <span className="absolute inset-0 npc-sway"><NpcArt id={n.id} look={n.look} /></span>
+                {b && (
+                  <span className={`absolute -top-6 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full grid place-items-center font-game font-bold text-sm border-2 ${b === "done" ? "bg-jade text-hanji-light border-hanji-light" : "bg-vermilion text-hanji-light border-antique-light anim-idle"}`}>
+                    {b === "done" ? "✓" : b === "deliver" ? <Ico name="letter" size={16} /> : "!"}
+                  </span>
+                )}
+                {talking && line && (
+                  <span className="absolute -top-14 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 rounded-xl bg-hanji-light text-sumi text-[11px] font-game font-bold border border-sumi/40 shadow-card anim-pop pointer-events-none">{line}</span>
+                )}
               </button>
             );
           })}
 
           {/* 반짝이는 소풍 보따리 */}
           {VILLAGE_PICNIC_SPOTS.filter((sp) => !state.villageFound.includes(sp.key)).map((sp) => (
-            <button key={sp.key} className="absolute z-10 w-10 h-10 grid place-items-center" style={{ left: sp.x - 20, top: GROUND - 2 }} aria-label="반짝이는 보따리"
-              onClick={() => { if (Math.abs(sp.x - x) > 110) { setTarget(sp.x - 30); return; } villageFind(sp.key).then((ok) => ok && sfx.coin()); }}>
+            <button key={sp.key} className="absolute z-10 w-12 h-12 grid place-items-center" style={{ left: sp.x - 24, top: GROUND - 6 }} aria-label="반짝이는 보따리"
+              onPointerDown={(e) => { e.stopPropagation(); sfx.tap(); goTo(sp.x - 26, () => villageFind(sp.key).then((ok) => { if (ok) { sfx.coin(); toast(`소풍 보따리에서 ${PICNIC[sp.item]?.name ?? "선물"}을(를) 찾았어요`, "🧺"); } })); }}>
               <span className="absolute inset-0 rounded-full anim-glow" style={{ background: "radial-gradient(circle, rgba(243,216,150,.75), transparent 70%)" }} />
-              <span className="relative anim-idle"><Ico name="gift" size={28} /></span>
+              <span className="relative anim-idle"><Ico name="basket" size={30} /></span>
             </button>
           ))}
-          {/* 보물 */}
           {!state.villageFound.includes("treasure:port") && (
-            <button className="absolute text-3xl anim-idle" style={{ left: TREASURE_X - 16, top: GROUND - 6 }} aria-label="숨겨진 보물"
-              onClick={() => {
-                if (!nearTreasure) { setTarget(TREASURE_X - 40); return; }
-                villageFind("treasure:port").then((ok) => ok && sfx.collect());
-              }}><Ico name="gift" size={34} /></button>
+            <button className="absolute z-10 w-12 h-12 grid place-items-center anim-idle" style={{ left: TREASURE_X - 24, top: GROUND - 8 }} aria-label="숨겨진 보물"
+              onPointerDown={(e) => { e.stopPropagation(); goTo(TREASURE_X - 30, () => villageFind("treasure:port").then((ok) => ok && sfx.collect())); }}><Ico name="gift" size={34} /></button>
           )}
 
-          {/* 동행 친구 (3단계) */}
+          {/* 동행 친구 */}
           {state.companion && (
-            <div className="absolute w-12 h-14 pointer-events-none" style={{ left: x - 24 - face * 52, top: GROUND - 54, transition: "left 220ms ease-out" }}>
-              <CharacterArt id={state.companion} mood={walking ? "happy" : "idle"} className={`w-full h-full ${walking ? "anim-jump" : "anim-idle"}`} />
+            <div ref={buddy} className="absolute left-0 pointer-events-none" style={{ top: GROUND - 56 }}>
+              <div className="w-12 h-14 -ml-6"><CharacterArt id={state.companion} mood={walking ? "happy" : "idle"} className={`w-full h-full ${walking ? "anim-walk" : "anim-idle"}`} /></div>
             </div>
           )}
-          {/* 플레이어 */}
-          <div className="absolute w-16 h-24 pointer-events-none" style={{ left: x - 32, top: GROUND - 82 }}>
-            <WalkerArt avatar={state.player.avatar} walking={walking} flip={face < 0} />
-            <p className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-game bg-cream-light/90 rounded-full px-2 border border-wood/40">{state.player.name}</p>
+          {/* 나 */}
+          <div ref={player} className="absolute left-0 pointer-events-none" style={{ top: GROUND - 86 }}>
+            <div className="w-[68px] h-[88px] -ml-[34px] relative">
+              {carry && <span className="absolute -top-5 left-1/2 -translate-x-1/2 anim-idle"><Ico name="letter" size={22} /></span>}
+              <WalkerArt avatar={state.player.avatar} walking={walking} flip={face < 0} />
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* 근처 행동 */}
+      {/* ── 위: 명패 + 마을 이름 + 부탁 수 ── */}
+      <div className="absolute top-0 inset-x-0 p-3 pt-[max(12px,env(safe-area-inset-top))] pr-14 flex items-start gap-2 pointer-events-none">
+        <div className="pointer-events-auto"><MiniHud /></div>
+        <div className="min-w-0 mt-1">
+          <h1 className="font-story text-xl text-hanji-light leading-none drop-shadow">온라인 강경마을</h1>
+          <p className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/30 text-[12px] font-game font-bold text-hanji">이웃 부탁 {doneCount}/{ERRANDS.length}</p>
+        </div>
+      </div>
+
+      {/* ── 아래: 가까운 장소 ── */}
+      <div className="absolute inset-x-0 bottom-[96px] px-3 flex flex-col items-center gap-2 pointer-events-none">
         {near && (
-          <div className="absolute top-3 left-3 right-3 flex justify-center pointer-events-none">
-            <div className="paper px-3 py-2 flex items-center gap-2 pointer-events-auto anim-rise">
-              <span className="font-game text-wood-dark">{near.label}</span>
-              <span className={`chip ${near.real ? "bg-teal" : "bg-dream"} text-cream`}>{near.real ? "실제" : "가상"}</span>
-              <button className="btn-gold btn-sm !py-1" onClick={() => explorePlace(near)}>살펴보기</button>
-              {near.key === "modern-store" && catsAll && <button className="btn-brick btn-sm !py-1" onClick={() => { setReunion(true); villageFind("reunion").then((ok) => ok && sfx.collect()); }}>가족 재회</button>}
-            </div>
+          <div key={near.key} className="paper px-3 py-2 flex items-center gap-2 pointer-events-auto anim-rise">
+            <span className="font-story text-lg text-sumi">{near.label}</span>
+            <span className={`chip ${near.real ? "bg-teal" : "bg-dream"} text-cream`}>{near.real ? "실제" : "가상"}</span>
+            <button className="btn-gold btn-sm !py-1" onClick={() => { sfx.tap(); setPlace(near); villageFind(`place:${near.key}`); }}>살펴보기</button>
+            {near.key === "modern-store" && catsAll && <button className="btn-brick btn-sm !py-1" onClick={() => { setReunion(true); villageFind("reunion").then((ok) => ok && sfx.collect()); }}>가족 재회</button>}
           </div>
         )}
-        {/* 미니맵 */}
-        <div className="absolute bottom-2 left-3 right-3 h-2 rounded-full bg-cream-dark/90 border border-wood/40">
-          {PLACES.map((p) => <span key={p.key} className={`absolute top-0 h-full w-1 ${p.real ? "bg-teal" : "bg-dream"}`} style={{ left: `${((p.x + p.w / 2) / WORLD_W) * 100}%` }} />)}
-          <span className="absolute -top-1 w-4 h-4 rounded-full bg-gold border-2 border-wood-dark" style={{ left: `calc(${(x / WORLD_W) * 100}% - 8px)` }} />
+        <div className="w-full max-w-md h-1.5 rounded-full bg-black/30 relative">
+          {PLACES.map((p) => <span key={p.key} className={`absolute top-0 h-full w-1 ${p.npcId && badge(p.npcId) === "ask" ? "bg-vermilion" : "bg-hanji/50"}`} style={{ left: `${((p.x + p.w / 2) / WORLD_W) * 100}%` }} />)}
+          <span className="absolute -top-1 w-3.5 h-3.5 rounded-full bg-antique-light border-2 border-sumi" style={{ left: `calc(${(x / WORLD_W) * 100}% - 7px)` }} />
         </div>
       </div>
 
-      <div className="flex gap-2 mt-3">
-        {[-1, 1].map((d) => (
-          <button key={d} className="btn-sage flex-1 text-2xl py-4"
-            onPointerDown={() => { setTarget(null); setDir(d); }} onPointerUp={() => setDir(0)} onPointerLeave={() => setDir(0)} onPointerCancel={() => setDir(0)}
-            aria-label={d < 0 ? "왼쪽으로" : "오른쪽으로"}>{d < 0 ? "◀" : "▶"}</button>
-        ))}
-      </div>
-
-      <section className="paper p-4 mt-3 text-sm">
-        <p className="font-game text-wood-dark">온라인 발견 장소 {onlinePlaces}/{PLACES.length} · 발견한 캐릭터 {Object.values(state.characters).filter((c) => c.method === "online").length}명 (온라인)</p>
-        <p className="text-wood mt-1">발자국에 가까이 가면 매화로 바뀌어요. 눌러서 숨은 친구를 찾아보세요! 온라인 보상은 실제 방문 보상과 구분돼요 (온라인: 장소당 +10EXP / 현장: 장소당 +30EXP 이상).</p>
-        <p className="text-[11px] text-wood/80 mt-2">※ 마을 건물은 안내도의 장소를 분위기로 표현한 창작 일러스트이며 실제 외관과 다를 수 있습니다. ‘가상 장소’는 게임 전용 공간입니다.</p>
-        <div className="flex gap-2 mt-2"><Link href="/explore" className="btn-cream btn-sm"><Ico name="map" size={20} />실제 탐험 지도</Link><Link href="/jeotgal" className="btn-gold btn-sm"><Ico name="jar" size={20} />젓갈 공방</Link></div>
-      </section>
+      {/* ── 이웃과 이야기 ── */}
+      <Sheet open={!!villager} onClose={() => setVillager(null)} label="이웃">
+        {villager && (() => {
+          const n = NPC[villager];
+          const list = errandsFor(villager);
+          return (
+            <div className="px-4 pb-5">
+              <div className="flex items-end gap-3">
+                <div className="w-24 h-28 shrink-0"><NpcArt id={n.id} look={n.look} /></div>
+                <div className="flex-1 min-w-0 pb-2">
+                  <span className="chip bg-teal text-hanji-light">{n.title}</span>
+                  <h2 className="font-story text-2xl text-sumi">{n.name}</h2>
+                  <p className="text-sm font-game text-sumi-light">“{n.greeting}”</p>
+                </div>
+              </div>
+              {list.map((e) => {
+                const done = errandDone(state, e.id, day);
+                const isRecipient = e.to === villager;
+                const ready = errandReady(e, state, day);
+                return (
+                  <div key={e.id} className="mt-3 p-3 border-[1.5px] border-vermilion/60 bg-hanji-light" style={{ borderRadius: 8 }}>
+                    <p className="font-game font-bold text-vermilion text-sm flex items-center gap-1"><Ico name="scroll" size={18} />이웃 부탁 · {e.title}</p>
+                    <p className="text-[15px] text-sumi mt-1 leading-relaxed">{done ? e.thanks : isRecipient ? "어? 그 편지… 혹시 포포가 보낸 거예요?" : e.ask}</p>
+                    {!done && e.kind === "give" && <p className="text-xs text-sumi-light mt-1">필요: {Object.entries(e.need ?? {}).map(([k, v]) => `${ITEMS[k]?.name ?? k} ${v} (가진 것 ${state.inventory[k] ?? 0})`).join(", ")}</p>}
+                    {!done && e.kind === "trade" && <p className="text-xs text-sumi-light mt-1">{tradeFood(state) ? `내줄 것: ${PICNIC[tradeFood(state)!].name} 1개` : "소풍 먹을거리가 없어요. 탐험 지도나 마을의 보따리에서 모아요."}</p>}
+                    {!done && e.kind === "check" && <p className="text-xs text-sumi-light mt-1">조건: {e.checkHint} {ready ? "✓" : ""}</p>}
+                    <p className="text-xs font-game text-antique-dark mt-1">보상: +{e.reward.exp} EXP · 엽전 {e.reward.coins}{e.reward.items ? ` · ${Object.entries(e.reward.items).map(([k, v]) => `${ITEMS[k]?.name ?? k}×${v}`).join(", ")}` : ""}</p>
+                    <div className="mt-2">
+                      {done ? <p className="text-sm font-game font-bold text-jade">오늘 부탁 완료! 내일 또 와요</p>
+                        : e.kind === "deliver" && !isRecipient ? (carry ? <p className="text-sm font-game text-sumi">편지를 들고 있어요. {NPC[e.to!].name}에게 가져다주세요!</p>
+                          : <button className="btn-brick btn-sm w-full" onClick={() => { setCarrying(true); sfx.equip(); toast(`편지를 받았어요. ${NPC[e.to!].name}에게 전해 주세요!`, "💌"); setVillager(null); }}>편지 받아 들기</button>)
+                        : e.kind === "deliver" ? <button className="btn-brick btn-sm w-full" onClick={() => finishErrand(e)}>편지 전하기</button>
+                        : e.kind === "check" && e.id === "sparks" && !ready ? <Link href="/explore" className="btn-sage btn-sm w-full">탐험 지도로 조각 모으러 가기</Link>
+                        : e.kind === "check" && e.id === "photo" && !ready ? <Link href="/wardrobe" className="btn-sage btn-sm w-full">옷장에서 동행 친구 고르기</Link>
+                        : <button className="btn-brick btn-sm w-full" disabled={!ready} onClick={() => finishErrand(e)}>{e.kind === "give" ? "재료 건네기" : e.kind === "trade" ? "바꾸기" : "보여 주기"}</button>}
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <button className="btn-cream btn-sm" onClick={() => { setNpcId(villager); setVillager(null); }}><Ico name="lantern" size={18} />이야기 나누기</button>
+                <button className="btn-cream btn-sm" onClick={() => setVillager(null)}>또 봐요</button>
+              </div>
+            </div>
+          );
+        })()}
+      </Sheet>
 
       <Modal open={!!place} onClose={() => setPlace(null)} label="장소 살펴보기">
         {place && (
           <div className="p-4">
             <span className={`chip ${place.real ? "bg-teal" : "bg-dream"} text-cream`}>{place.real ? "실제 장소 (안내도 표기)" : "가상 장소 (게임 전용)"}</span>
-            <h2 className="font-story font-bold text-2xl text-wood-dark mt-1">{place.label}</h2>
-            <p className="text-wood mt-1">{place.desc}</p>
-            {place.hidden && !state.characters[place.hidden.charId] && <p className="mt-2 text-sm text-brick font-game">단서 · {CHAR[place.hidden.charId].onlineHint}</p>}
-            <div className="flex gap-2 mt-4">
-              {place.npcId && <button className="btn-sage btn-sm flex-1" onClick={() => { setNpcId(place.npcId!); setPlace(null); }}><Ico name="lantern" size={20} />{NPC[place.npcId].name}와 대화</button>}
-              {place.key === "v-market" && <Link href="/jeotgal" className="btn-gold btn-sm flex-1"><Ico name="jar" size={20} />공방 입장</Link>}
+            <h2 className="font-story text-2xl text-sumi mt-1">{place.label}</h2>
+            <p className="text-sumi-light mt-1">{place.desc}</p>
+            {place.hidden && !state.characters[place.hidden.charId] && <p className="mt-2 text-sm text-vermilion font-game">단서 · {CHAR[place.hidden.charId].onlineHint}</p>}
+            <p className="text-[11px] text-sumi-light/80 mt-3">※ 마을 건물은 안내도 장소의 분위기를 옮긴 창작 그림이에요. 실제 방문 도장은 탐험 지도에서 QR·GPS로 받아요.</p>
+            <div className="flex gap-2 mt-3">
+              {place.key === "v-market" && <Link href="/jeotgal" className="btn-gold btn-sm flex-1"><Ico name="jar" size={20} />젓갈 공방</Link>}
+              {place.key === "v-post" && <Link href="/post" className="btn-gold btn-sm flex-1"><Ico name="letter" size={20} />시간 우체국</Link>}
               <button className="btn-cream btn-sm flex-1" onClick={() => setPlace(null)}>닫기</button>
             </div>
           </div>
@@ -248,15 +291,15 @@ export default function Village() {
 
       <Modal open={reunion} onClose={() => setReunion(false)} label="가족 재회">
         <div className="p-5 text-center">
-          <p className="font-game text-brick">강경모던상회</p>
-          <h2 className="font-story font-bold text-2xl text-wood-dark">고양이 가족이 다시 모였어요!</h2>
+          <p className="font-game text-vermilion">강경모던상회</p>
+          <h2 className="font-story text-2xl text-sumi">고양이 가족이 다시 모였어요!</h2>
           <div className="flex justify-center items-end gap-1 mt-3">
             <div className="w-24 h-28 anim-idle"><CharacterArt id="kangi" mood="happy" className="w-full h-full" /></div>
-            <div className="w-16 h-20 anim-jump"><CharacterArt id="kongi" mood="happy" className="w-full h-full" /></div>
+            <div className="w-16 h-20 anim-idle"><CharacterArt id="kongi" mood="happy" className="w-full h-full" /></div>
             <div className="w-24 h-28 anim-idle" style={{ animationDelay: ".3s" }}><CharacterArt id="kaengi" mood="wave" className="w-full h-full" /></div>
           </div>
-          <p className="mt-3 text-wood">“강경에 살다 보니 여기가 제일 좋다냥” — 갱이</p>
-          <Link href="/quests" className="btn-brick w-full mt-4">퀘스트 보상 받으러 가기</Link>
+          <p className="mt-3 text-sumi-light">“강경에 살다 보니 여기가 제일 좋다냥” — 갱이</p>
+          <button className="btn-brick w-full mt-4" onClick={() => setReunion(false)}>좋아요!</button>
         </div>
       </Modal>
 
