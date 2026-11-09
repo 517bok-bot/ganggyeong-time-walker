@@ -1,0 +1,29 @@
+{
+  "name": "강경 타임워커",
+  "short_name": "타임워커",
+  "description": "시간을 걷는 곳, 강경으로!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E8D8B8",
+  "theme_color": "#263D40",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "orientation": "portrait"
+}
