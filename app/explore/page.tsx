@@ -62,12 +62,13 @@ export default function Explore() {
   const clamp = (v: View): View => {
     const b = box.current; if (!b) return v;
     const vw = b.clientWidth, vh = b.clientHeight;
-    const minK = Math.max(vw / W, vh / H);
+    // 그림은 지도 둘레로 200만큼 더 그려져 있어요. 그 안에서만 움직이고 축소되게
+    const M = 200;
+    const minK = Math.max(vw / (W + 2 * M), vh / (H + 2 * M), 0.35);
     const k = Math.min(2.4, Math.max(minK, v.k));
-    // 위·아래 겹쳐진 버튼 밑의 장소도 끌어내려 누를 수 있도록 여유를 둠
-    const padT = 150, padB = 120, padX = 40;
-    const x = Math.min(padX, Math.max(vw - W * k - padX, v.x));
-    const y = Math.min(padT, Math.max(vh - H * k - padB, v.y));
+    const pad = M * k;
+    const x = Math.min(pad, Math.max(vw - W * k - pad, v.x));
+    const y = Math.min(pad, Math.max(vh - H * k - pad, v.y));
     return { x, y, k };
   };
   const centerOn = useCallback((mx: number, my: number, animate = true, k?: number) => {

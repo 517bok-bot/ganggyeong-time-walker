@@ -134,7 +134,7 @@ function ground(scene) {
     for (let t = 0; t < 1; t += 0.012) { const y = 1010 - t * 780, x = 315 + Math.sin(t * 9) * 12; c.beginPath(); c.ellipse((x - BOX.x) * k, (y - BOX.y) * k, 5, 3.5, 0, 0, 7); c.fill(); }
   });
   tex.anisotropy = 8;
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(BOX.w + 400, (BOX.h + 400) / S), flock("#ffffff", { map: null }));
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(BOX.w + 1200, (BOX.h + 1200) / S), flock("#ffffff", { map: null }));
   plane.material = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 });
   // 텍스처는 지도 범위에만 맞추고 바깥은 같은 풀빛으로
   const inner = new THREE.Mesh(new THREE.PlaneGeometry(BOX.w, BOX.h / S), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 }));
@@ -145,7 +145,7 @@ function ground(scene) {
 }
 function river(scene) {
   const shape = new THREE.Shape();
-  const pts = [[1350, 880], [1250, 960], [1150, 1010], [1040, 1070], [960, 1140], [1350, 1140]];
+  const pts = [[1700, 700], [1350, 880], [1250, 960], [1150, 1010], [1040, 1070], [960, 1140], [880, 1400], [1700, 1400]];
   pts.forEach(([x, y], i) => { const v = [x, y / S]; i ? shape.lineTo(...v) : shape.moveTo(...v); });
   const geo = new THREE.ShapeGeometry(shape);
   const water = new THREE.Mesh(geo, new THREE.MeshPhysicalMaterial({ color: "#5E9DA6", roughness: 0.15, clearcoat: 1, side: THREE.DoubleSide }));
@@ -271,9 +271,10 @@ export function buildDiorama(scene, locs, { night = false, only = null } = {}) {
   for (const a of locs) { if (only && a.id !== only) continue; const b = building2(a, r, { night }); b.position.copy(P(a.x, a.y - 4)); scene.add(b); }
   // 산 (지도 위쪽 가장자리)
   for (let x = 250; x < 1360; x += 85) mountain(scene, x + r() * 30, 52 + r() * 18, 0.8 + r() * 0.5);
+  for (let x = -20; x < 1600; x += 95) mountain(scene, x + r() * 30, -40 + r() * 30, 1 + r() * 0.6);
   // 나무: 장소·길을 피해서
   const free = (x, y) => locs.every((l) => Math.hypot(l.x - x, l.y - y) > 70) && Math.abs(x - (508 - (y - 40) * 0.0236)) > 34 && !(x > 950 && y > 900);
-  for (let i = 0; i < 260; i++) { const x = 250 + r() * 1090, y = 110 + r() * 1020; if (free(x, y)) tree(scene, x, y, 0.7 + r() * 0.5, r() < 0.3 ? "pine" : "round"); }
+  for (let i = 0; i < 520; i++) { const x = 20 + r() * 1540, y = -120 + r() * 1440; const outside = x < 240 || x > 1340 || y < 50 || y > 1130; if ((outside && !(x > 900 && y > 900)) || (!outside && free(x, y))) tree(scene, x, y, 0.7 + r() * 0.5, r() < 0.3 ? "pine" : "round"); }
   // 감성산책로: 옛 포구 장터의 고양이 이야기 — 산책로 곳곳의 고양이 가족 조형물
   if (!only) for (const [v, y, ry] of [["kangi", 330, 0.9], ["kaengi", 640, 0.6], ["kongi", 905, 1.1]]) { const c = makeCat(v, "idle"); c.scale.setScalar(7); c.position.copy(P(332, y)); c.rotation.y = ry; scene.add(c); }
   if (!only || ["coffee-interview", "hotel-west", "hotel-east", "hotel-family", "hana-donkatsu"].includes(only)) clubSquare(scene, night);

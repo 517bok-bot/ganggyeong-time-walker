@@ -49,7 +49,7 @@ window.renderNpc = (id) => shoot(id === "postman" ? makeMagpie() : makeNpc(id), 
 // 지도 배경: 비스듬한 정사영. 지도 좌표 1 = 그림 2픽셀
 window.renderMap = async (mode = "day") => {
   const locs = await (await fetch("./locations.json")).json();
-  const k = 2, w = BOX.w * k, h = BOX.h * k;
+  const M = 200, k = 2, w = (BOX.w + 2 * M) * k, h = (BOX.h + 2 * M) * k; // 가장자리 여백까지 그려서 축소해도 빈 곳이 없게
   renderer.setSize(w, h);
   const scene = new THREE.Scene(); scene.environment = envTex; scene.environmentIntensity = { night: 0.06, dusk: 0.18, dawn: 0.25 }[mode] ?? 0.35;
   renderer.toneMappingExposure = { night: 0.85, dusk: 0.9 }[mode] ?? 0.92;
@@ -58,7 +58,7 @@ window.renderMap = async (mode = "day") => {
   lights(scene, mode);
   const S = Math.sin(PITCH), C = Math.cos(PITCH);
   const target = new THREE.Vector3(BOX.x + BOX.w / 2, 0, (BOX.y + BOX.h / 2) / S);
-  const cam = new THREE.OrthographicCamera(-BOX.w / 2, BOX.w / 2, BOX.h / 2, -BOX.h / 2, 1, 5000);
+  const cam = new THREE.OrthographicCamera(-BOX.w / 2 - M, BOX.w / 2 + M, BOX.h / 2 + M, -BOX.h / 2 - M, 1, 5000);
   cam.position.copy(target).add(new THREE.Vector3(0, S, C).multiplyScalar(2000)); cam.up.set(0, 1, 0); cam.lookAt(target);
   renderer.render(scene, cam);
   const url = renderer.domElement.toDataURL("image/webp", 0.86);

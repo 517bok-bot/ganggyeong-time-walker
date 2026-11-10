@@ -13,10 +13,10 @@ export default function WorldMap({ locations, state, selId, onSelect, className,
   const dt = useDaytime();
   const night = dt.phase === "night" || (dt.phase === "dusk" && dt.t > 0.5);
   return (
-    <svg viewBox="230 40 1120 1100" className={className} style={style} role="img" aria-label="강경근대거리 미니어처 지도">
+    <svg viewBox="230 40 1120 1100" className={className} style={{ overflow: "visible", ...style }} role="img" aria-label="강경근대거리 미니어처 지도">
       {/* 실제 시간대 그림 + 다음 시간대가 서서히 겹쳐짐 */}
-      <image href={`/world/map-${dt.phase}.webp`} x="230" y="40" width="1120" height="1100" preserveAspectRatio="none" />
-      {dt.t > 0 && <image href={`/world/map-${dt.next}.webp`} x="230" y="40" width="1120" height="1100" preserveAspectRatio="none" opacity={dt.t} style={{ transition: "opacity 2s" }} />}
+      <image href={`/world/map-${dt.phase}.webp`} x="30" y="-160" width="1520" height="1500" preserveAspectRatio="none" />
+      {dt.t > 0 && <image href={`/world/map-${dt.next}.webp`} x="30" y="-160" width="1520" height="1500" preserveAspectRatio="none" opacity={dt.t} style={{ transition: "opacity 2s" }} />}
       {locations.map((l) => {
         const v = !!state.visits[l.id];
         const sel = selId === l.id;
