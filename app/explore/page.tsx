@@ -23,6 +23,7 @@ import { dayKeyKST, sparkSpots, SPARKS_PER_DAY, type SparkInfo } from "@/lib/dat
 import { CHAPTERS, chapterProgress, currentChapter, fogCleared, objectiveLine, type Chapter } from "@/lib/data/story";
 import { haptic } from "@/lib/fx";
 import { useDaytime, PHASE_LABEL, PHASE_BG } from "@/lib/daytime";
+import { inDistrict, latLngToMap, metersToMapDelta, toMeters, metersPerUnit, distanceM } from "@/lib/geomap";
 
 const RealMap = dynamic(() => import("@/components/RealMap"), { ssr: false, loading: () => <div className="h-[50vh] grid place-items-center font-game text-wood">지도를 불러오는 중…</div> });
 
@@ -226,6 +227,64 @@ export default function Explore() {
     if (v.ok) sfx.success(); else sfx.error();
   };
 
+  // ── 실제 걸음 모드: 휴대폰 위치를 따라 캐릭터가 걸어요 (피크민처럼) ─────────────
+  // 강경근대거리 안에서는 실제 위치에 맞춰 서고, 밖에서는 내가 걸은 만큼만 지도 위에서 움직여요.
+  const [walkMode, setWalkMode] = useState(false);
+  const [walkInfo, setWalkInfo] = useState<{ acc: number; absolute: boolean; meters: number } | null>(null);
+  const lastFix = useRef<{ lat: number; lng: number } | null>(null);
+  const smooth = useRef<{ x: number; y: number } | null>(null);
+  const walkedM = useRef(0);
+  const arrived = useRef(new Set<string>());
+  const sparkNear = useRef(new Set<number>());
+  useEffect(() => { try { walkedM.current = Number(localStorage.getItem("gtw-walked-" + dayKeyKST(Date.now())) ?? 0); } catch { /* ignore */ } }, []);
+  useEffect(() => {
+    if (!walkMode) return;
+    if (!navigator.geolocation) { toast("이 기기는 위치 기능을 지원하지 않아요", "📡"); setWalkMode(false); return; }
+    toast("실제 걸음 모드! 걸으면 캐릭터도 함께 걸어요", "🐾");
+    { const w = walkerRef.current; LOCATIONS.forEach((l) => { if (Math.hypot(l.mapX - w.x, l.mapY - w.y) * metersPerUnit() < 18) arrived.current.add(l.id); }); }
+    const id = navigator.geolocation.watchPosition((pos) => {
+      const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+      if (accuracy > 60) { setWalkInfo((w) => ({ acc: accuracy, absolute: w?.absolute ?? false, meters: walkedM.current })); return; }
+      const here = { lat, lng };
+      const absolute = inDistrict(here);
+      const w = walkerRef.current;
+      let target: { x: number; y: number };
+      if (absolute) target = latLngToMap(here);
+      else if (lastFix.current) { const m = toMeters(here, lastFix.current); const d = metersToMapDelta(m.e, m.n); target = { x: w.x + d.dx, y: w.y + d.dy }; }
+      else target = { x: w.x, y: w.y };
+      if (lastFix.current) {
+        const step = distanceM(here, lastFix.current);
+        if (step < Math.max(3, accuracy * 0.4)) { setWalkInfo({ acc: accuracy, absolute, meters: walkedM.current }); if (!absolute) return; } // 제자리 흔들림 무시
+        else { walkedM.current += step; try { localStorage.setItem("gtw-walked-" + dayKeyKST(Date.now()), String(Math.round(walkedM.current))); } catch { /* ignore */ } }
+      }
+      lastFix.current = here;
+      // 부드럽게: 이전 위치와 섞음
+      const sm = smooth.current ?? target;
+      const k = absolute ? 0.55 : 1;
+      const nx = sm.x + (target.x - sm.x) * k, ny = sm.y + (target.y - sm.y) * k;
+      smooth.current = { x: nx, y: ny };
+      setWalkInfo({ acc: accuracy, absolute, meters: walkedM.current });
+      if (Math.hypot(nx - w.x, ny - w.y) > 2) walkTo(nx, ny);
+    }, () => { toast("위치 권한이 필요해요. 설정에서 허용해 주세요", "📡"); setWalkMode(false); }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
+    return () => { navigator.geolocation.clearWatch(id); lastFix.current = null; smooth.current = null; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walkMode]);
+
+  // 걸어서 가까이 가면: 장소 도착 알림 · 시간 조각 붙잡기
+  useEffect(() => {
+    if (!walkMode || !walkInfo || catching || story || sel) return; // 첫 위치를 받은 뒤부터
+    const near = (x: number, y: number, m: number) => Math.hypot(walker.x - x, walker.y - y) * metersPerUnit() < m;
+    const spark = left.find((s) => near(s.x, s.y, 15) && !sparkNear.current.has(s.index));
+    if (spark) { sparkNear.current.add(spark.index); haptic([20, 30, 20]); sfx.open(); setCatching({ index: spark.index, info: spark.info }); return; }
+    const loc = LOCATIONS.find((l) => near(l.mapX, l.mapY, 18) && !arrived.current.has(l.id));
+    if (loc) {
+      arrived.current.add(loc.id); haptic([30, 40, 30]); sfx.success();
+      toast(state.visits[loc.id] ? `${loc.name}에 다시 왔어요!` : `${loc.name} 도착! 장소의 QR을 찍어 도장을 받아요`, "📍");
+      setSel(loc);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walker.x, walker.y, walkMode, walkInfo?.meters]);
+
   // ── 이야기 ─────────────────────────
   const cur = currentChapter(state);
   const prog = cur ? chapterProgress(cur, state) : null;
@@ -310,18 +369,28 @@ export default function Explore() {
         <span className="min-w-0 truncate text-[13px] font-game font-bold">{cur ? (prog?.complete ? "이야기 이어보기 ▶" : objectiveLine(cur, state)) : "시간 조각은 매일 새로 떨어져요"}</span>
       </button>
 
+      {walkMode && (
+        <div className="absolute left-3 top-[calc(max(12px,env(safe-area-inset-top))+112px)] px-3 py-1.5 rounded-full bg-vermilion text-white text-[12px] font-game font-bold shadow-card flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-white anim-glow" />
+          {walkInfo ? (walkInfo.acc > 60 ? `위치 잡는 중… (±${Math.round(walkInfo.acc)}m)` : `${walkInfo.absolute ? "강경근대거리" : "내가 걸은 만큼"} · 오늘 ${Math.round(walkInfo.meters)}m`) : "위치 찾는 중…"}
+        </div>
+      )}
       {/* ── 오른쪽: 확대/축소 · 내 위치 · 실제 지도 ── */}
       <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2">
         {[["+", () => zoom(1.25), "확대"], ["−", () => zoom(0.8), "축소"]].map(([t, f, l]) => (
           <button key={l as string} onClick={f as () => void} aria-label={l as string} className="w-11 h-11 rounded-full bg-[#FFFDF8]/95 shadow-card font-game text-2xl text-sumi active:scale-90 transition-transform">{t as string}</button>
         ))}
         <button onClick={() => centerOn(walker.x, walker.y)} aria-label="내 캐릭터로" className="w-11 h-11 rounded-full grid place-items-center bg-[#FFFDF8]/95 shadow-card active:scale-90 transition-transform"><Ico name="person" size={24} /></button>
+        <button onClick={() => { sfx.tap(); setWalkMode((v) => !v); }} aria-label={walkMode ? "실제 걸음 모드 끄기" : "실제 걸음 모드 켜기"} aria-pressed={walkMode}
+          className={`w-11 h-11 rounded-full grid place-items-center shadow-card active:scale-90 transition-transform ${walkMode ? "bg-vermilion text-white" : "bg-[#FFFDF8]/95"}`}>
+          <Ico name="paw" size={24} />
+        </button>
         <button onClick={() => setRealOpen(true)} aria-label="실제 지도와 GPS" className="w-11 h-11 rounded-full grid place-items-center bg-[#FFFDF8]/95 shadow-card active:scale-90 transition-transform"><Ico name="compass" size={24} /></button>
       </div>
 
       {/* ── 아래: QR 큰 버튼 + 온라인 마을 ── */}
       <div className="absolute inset-x-0 bottom-[calc(96px+env(safe-area-inset-bottom))] flex items-end justify-between px-4 pointer-events-none">
-        <span />
+        <Link href={sel ? `/postcard?loc=${sel.id}` : "/postcard"} className="pointer-events-auto flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl bg-[#FFFDF8]/95 shadow-card text-[12px] font-game font-bold text-sumi active:scale-95 transition-transform"><Ico name="camera" size={26} />캐릭터 엽서</Link>
         <button onClick={() => setQrOpen(true)} aria-label="QR로 현장 인증" className="pointer-events-auto relative w-[74px] h-[74px] rounded-full grid place-items-center text-white active:scale-90 transition-transform"
           style={{ background: "linear-gradient(#C35A4F, #963F38)", boxShadow: "inset 0 3px 0 rgba(255,255,255,.28), 0 5px 0 #6E2A24, 0 12px 22px -6px rgba(150,63,56,.6)" }}>
           <span className="flex flex-col items-center"><Ico name="qr" size={30} /><span className="text-[11px] font-game font-bold -mt-0.5">현장 인증</span></span>
@@ -388,6 +457,7 @@ export default function Explore() {
               </button>
             </div>
             {geoMsg && <p className="text-sm text-wood-dark mt-2">{geoMsg}</p>}
+            <Link href={`/postcard?loc=${sel.id}`} className="btn-gold btn-sm w-full mt-2"><Ico name="camera" size={20} />이 장소에서 캐릭터 엽서 찍기</Link>
             {demoTools && (
               <div className="mt-2 flex items-center gap-2">
                 <button className="btn-cream btn-sm flex-1" disabled={!!state.visits[sel.id]}
@@ -406,6 +476,7 @@ export default function Explore() {
           <div className="mt-2 border-2 border-sumi overflow-hidden"><RealMap me={me} /></div>
           <button className="btn-sage btn-sm w-full mt-2" onClick={locate}><Ico name="compass" size={20} />내 위치 확인</button>
           {geoMsg && <p className="text-sm text-wood-dark mt-2">{geoMsg}</p>}
+          <Link href="/calibrate" className="btn-soft btn-sm w-full mt-2">현장 위치 보정 (운영자용)</Link>
           <p className="text-xs text-wood mt-2">※ 붉은 점선 원은 강경읍 일대의 근사 위치예요. 장소별 공식 좌표가 등록되기 전에는 QR로 인증하세요.</p>
           <p className="text-sm text-wood-dark mt-3">{DISTRICT_INFO.address} · {DISTRICT_INFO.parking}<br />관광안내: {DISTRICT_INFO.guideReservation}</p>
         </div>

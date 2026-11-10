@@ -60,6 +60,7 @@ export default function Me() {
       <section className="grid grid-cols-2 gap-2 mt-3">
         <Link href="/wardrobe" className="btn-soft"><Ico name="gat" size={22} />옷장</Link>
         <Link href="/share" className="btn-soft"><Ico name="qr" size={22} />친구 초대 QR</Link>
+        <Link href="/postcard" className="btn-gold col-span-2"><Ico name="camera" size={22} />캐릭터 엽서 찍기</Link>
       </section>
 
       <section className="card p-4 mt-3 text-sm">
