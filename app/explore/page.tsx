@@ -20,7 +20,7 @@ import CatchGame, { SparkGem } from "@/components/CatchGame";
 import StoryPlayer from "@/components/StoryPlayer";
 import { sfx } from "@/lib/sfx";
 import { dayKeyKST, sparkSpots, SPARKS_PER_DAY, type SparkInfo } from "@/lib/data/sparks";
-import { CHAPTERS, chapterProgress, currentChapter, fogCleared, objectiveLine, type Chapter } from "@/lib/data/story";
+import { CHAPTERS, MISSION, chapterProgress, currentChapter, fogCleared, objectiveLine, type Chapter } from "@/lib/data/story";
 import { haptic } from "@/lib/fx";
 import { useDaytime, PHASE_LABEL, PHASE_BG } from "@/lib/daytime";
 import { inDistrict, latLngToMap, metersToMapDelta, toMeters, metersPerUnit, distanceM } from "@/lib/geomap";
@@ -34,6 +34,10 @@ const toPx = (x: number, y: number) => ({ x: x - MAP_BOX.x, y: y - MAP_BOX.y });
 const SEEN_KEY = "gtw-intro-seen";
 const seenIntros = (): string[] => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]"); } catch { return []; } };
 const markIntro = (id: string) => { try { localStorage.setItem(SEEN_KEY, JSON.stringify([...new Set([...seenIntros(), id])])); } catch { /* ignore */ } };
+/** 플레이 방식: 현장(강경에 있음) · 집(온라인). 같은 앱, 도장 받는 방법만 달라요 */
+type PlayMode = "onsite" | "online";
+const MODE_KEY = "gtw-play-mode";
+const loadMode = (): PlayMode | null => { try { const v = localStorage.getItem(MODE_KEY); return v === "onsite" || v === "online" ? v : null; } catch { return null; } };
 
 export default function Explore() {
   const { state, visit, toast, mode, demoTools, act, ready } = useGame();
@@ -46,7 +50,12 @@ export default function Explore() {
   const [geoMsg, setGeoMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [catching, setCatching] = useState<{ index: number; info: SparkInfo } | null>(null);
-  const [story, setStory] = useState<{ ch: Chapter; part: "intro" | "outro" } | null>(null);
+  const [story, setStory] = useState<{ ch: Chapter; part: "intro" | "arrive" | "outro" } | null>(null);
+  const [missionId, setMissionId] = useState<string | null>(null);
+  const [playMode, setPlayModeState] = useState<PlayMode | null>(null);
+  const [askMode, setAskMode] = useState(false);
+  useEffect(() => { const m = loadMode(); setPlayModeState(m); if (!m) setAskMode(true); }, []);
+  const setPlayMode = (m: PlayMode) => { setPlayModeState(m); setAskMode(false); try { localStorage.setItem(MODE_KEY, m); } catch { /* ignore */ } };
   const [chapterOpen, setChapterOpen] = useState(false);
 
   // ── 지도 카메라 (밀기·벌리기·휠) ─────────────────────────
@@ -199,8 +208,11 @@ export default function Explore() {
   }, [visit, toast, LOC, centerOn]);
 
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get("qr");
+    const sp = new URLSearchParams(window.location.search);
+    const q = sp.get("qr");
     if (q) { handleQr(q); window.history.replaceState(null, "", "/explore"); }
+    const lid = sp.get("loc");
+    if (lid && LOC[lid]) { const l = LOC[lid]; setTimeout(() => { centerOn(l.mapX, l.mapY); setSel(l); }, 400); window.history.replaceState(null, "", "/explore"); }
   }, [handleQr]);
 
   const locate = () => new Promise<Me | null>((resolve) => {
@@ -293,26 +305,58 @@ export default function Explore() {
     if (!ready || !cur || story || catching || sel || heading) return;
     const seen = seenIntros();
     // 목표를 다 이뤘으면 마무리 장면을 한 번 자동으로, 새 장이 열렸으면 도입 장면을 한 번 자동으로
+    if (askMode || missionId) return;
     if (prog?.complete && !seen.includes(`${cur.id}:outro`)) { markIntro(`${cur.id}:outro`); const t = setTimeout(() => setStory({ ch: cur, part: "outro" }), 600); return () => clearTimeout(t); }
+    // 이야기 장소에 도착(도장)하면 본 장면 → 미션
+    if (cur.place && state.visits[cur.place] && cur.arrive && !seen.includes(`${cur.id}:arrive`)) { const t = setTimeout(() => setStory({ ch: cur, part: "arrive" }), 600); return () => clearTimeout(t); }
     if (cur.id !== "ch0" && !seen.includes(cur.id)) { const t = setTimeout(() => setStory({ ch: cur, part: "intro" }), 700); return () => clearTimeout(t); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, cur?.id, prog?.complete, story, catching, sel, heading]);
+  }, [ready, cur?.id, prog?.complete, story, catching, sel, heading, askMode, missionId, cur?.place ? state.visits[cur.place]?.method : null]);
+
+  // 이야기 장소에서 도장을 받으면 잠시 뒤 시트를 닫고 본 장면으로
+  const placeVisit = cur?.place ? state.visits[cur.place]?.method : undefined;
+  useEffect(() => {
+    if (!cur?.place || !placeVisit || sel?.id !== cur.place || !cur.arrive || seenIntros().includes(`${cur.id}:arrive`)) return;
+    const t = setTimeout(() => setSel(null), 1800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placeVisit, sel?.id, cur?.id]);
 
   const finishStory = async () => {
     if (!story) return;
     const { ch, part } = story;
     setStory(null);
     if (part === "intro") { markIntro(ch.id); return; }
+    if (part === "arrive") { markIntro(`${ch.id}:arrive`); if (ch.mission && !(state.missions ?? []).includes(ch.mission)) setTimeout(() => setMissionId(ch.mission!), 300); return; }
     const r = await act({ type: "chapter", id: ch.id });
     if (r.ok) { sfx.quest(); haptic([20, 40, 60]); }
   };
   const openChapter = () => {
     if (!cur) { setChapterOpen(true); return; }
     if (prog?.complete) { sfx.open(); setStory({ ch: cur, part: "outro" }); return; }
+    if (cur.place && state.visits[cur.place] && cur.mission && !(state.missions ?? []).includes(cur.mission)) {
+      sfx.open();
+      if (cur.arrive && !seenIntros().includes(`${cur.id}:arrive`)) setStory({ ch: cur, part: "arrive" }); else setMissionId(cur.mission);
+      return;
+    }
     setChapterOpen(true);
   };
 
   const visitedCount = Object.keys(state.visits).length;
+  const answerMission = async (idx: number) => {
+    if (!missionId) return;
+    const m = MISSION[missionId];
+    const r = await act({ type: "mission", id: missionId, answer: idx });
+    if (r.ok && r.data?.correct) { sfx.success(); haptic([20, 40, 20]); setMissionId(null); }
+    else if (r.ok) { sfx.error(); haptic(60); toast(`아쉬워요! 힌트: ${m.hint}`, "💡"); }
+  };
+  const onlineVisit = async (loc: GameLocation) => {
+    setBusy(true);
+    await walkTo(loc.mapX + 26, loc.mapY + 40);
+    const v = await visit(loc.id, "online");
+    setBusy(false);
+    if (v.ok) sfx.success(); else sfx.error();
+  };
   const companion = state.companion;
   const dt = useDaytime();
   const wp = toPx(walker.x, walker.y);
@@ -403,7 +447,9 @@ export default function Explore() {
           <div className="px-4 pb-5">
             <div className="relative -mx-1 mb-3 anim-unfold">
               <LocationScene id={sel.id} name={sel.name} />
-              {state.visits[sel.id] && <span className="absolute right-3 bottom-3 seal w-16 h-16 text-base rotate-[-10deg] anim-stamp">방문<br />인증</span>}
+              {state.visits[sel.id] && (state.visits[sel.id].method === "online"
+                ? <span className="absolute right-3 bottom-3 w-16 h-16 rounded-full grid place-items-center text-center text-[13px] leading-tight font-game font-bold text-vermilion bg-white/70 border-[3px] border-dashed border-vermilion/70 rotate-[-10deg] anim-stamp">흐린<br />도장</span>
+                : <span className="absolute right-3 bottom-3 seal w-16 h-16 text-base rotate-[-10deg] anim-stamp">방문<br />인증</span>)}
             </div>
             <div className="flex items-start gap-3">
               <div className="seal w-12 h-12 text-2xl shrink-0">{sel.no}</div>
@@ -411,7 +457,9 @@ export default function Explore() {
                 <div className="flex flex-wrap gap-1">
                   <span className="chip bg-sage text-cream">실제 장소</span>
                   <span className="chip bg-cream-dark text-wood">{sel.zone === "street" ? "강경근대거리" : "강경구락부"}</span>
-                  {state.visits[sel.id] && <span className="chip bg-gold text-wood-dark">방문 완료 ({state.visits[sel.id].method.toUpperCase()})</span>}
+                  {state.visits[sel.id] && (state.visits[sel.id].method === "online"
+                    ? <span className="chip bg-white text-vermilion border border-dashed border-vermilion">흐린 도장 · 집에서 방문</span>
+                    : <span className="chip bg-gold text-wood-dark">진한 도장 ({state.visits[sel.id].method.toUpperCase()})</span>)}
                 </div>
                 <h2 className="font-story text-3xl text-sumi mt-1">{sel.name}</h2>
                 {sel.note && <p className="text-sm text-wood">안내도 표기: {sel.note}</p>}
@@ -449,13 +497,30 @@ export default function Explore() {
               방문 보상: +{sel.reward.exp} EXP · 엽전 {sel.reward.coins}
               {sel.reward.items && Object.entries(sel.reward.items).map(([k, v]) => ` · ${ITEMS[k].name}×${v}`)}
             </p>
-            {!state.visits[sel.id] && <p className="text-xs text-sumi-light mt-1">현장에 가서 장소의 QR을 찍거나 GPS로 인증하면 도장을 받고 숨은 친구를 만나요.</p>}
-            <div className="grid grid-cols-2 gap-2 mt-3">
-              <button className="btn-brick btn-sm" disabled={busy || !!state.visits[sel.id]} onClick={() => setQrOpen(true)}><Ico name="qr" size={18} />QR 인증</button>
-              <button className="btn-sage btn-sm flex-wrap !gap-1" disabled={busy || !!state.visits[sel.id]} onClick={() => gpsVerify(sel)}>
-                <Ico name="compass" size={18} />GPS 인증{!sel.gps && <span className="text-[10px] basis-full text-center">(좌표 등록 전)</span>}
-              </button>
-            </div>
+            {(() => {
+              const v = state.visits[sel.id];
+              const real = !!v && v.method !== "online";
+              const onsiteBtns = (
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  <button className="btn-brick btn-sm" disabled={busy || real} onClick={() => setQrOpen(true)}><Ico name="qr" size={18} />{v ? "QR로 진한 도장" : "QR 인증"}</button>
+                  <button className="btn-sage btn-sm flex-wrap !gap-1" disabled={busy || real} onClick={() => gpsVerify(sel)}>
+                    <Ico name="compass" size={18} />GPS 인증{!sel.gps && <span className="text-[10px] basis-full text-center">(좌표 등록 전)</span>}
+                  </button>
+                </div>
+              );
+              const onlineBtn = !v && (
+                <button className={`${playMode === "online" ? "btn-primary" : "btn-soft"} btn-sm w-full mt-2`} disabled={busy} onClick={() => onlineVisit(sel)}>
+                  <Ico name="person" size={18} />집에서 방문하기 (흐린 도장)
+                </button>
+              );
+              return (
+                <>
+                  {!v && <p className="text-xs text-sumi-light mt-1">{playMode === "online" ? "집에서 방문하면 흐린 도장을 받아요. 강경에 와서 QR·GPS로 다시 찍으면 진한 도장과 현장 한정 이야기가 열려요." : "현장에서 장소의 QR을 찍거나 GPS로 인증하면 진한 도장을 받고 숨은 친구를 만나요."}</p>}
+                  {v?.method === "online" && <p className="text-xs text-vermilion mt-1">강경에 와서 이 장소의 QR을 찍으면 진한 도장으로 바뀌어요. 실물 엽서는 진한 도장 5개부터!</p>}
+                  {playMode === "online" ? <>{onlineBtn}{onsiteBtns}</> : <>{onsiteBtns}{onlineBtn}</>}
+                </>
+              );
+            })()}
             {geoMsg && <p className="text-sm text-wood-dark mt-2">{geoMsg}</p>}
             <Link href={`/postcard?loc=${sel.id}`} className="btn-gold btn-sm w-full mt-2"><Ico name="camera" size={20} />이 장소에서 캐릭터 엽서 찍기</Link>
             {demoTools && (
@@ -485,8 +550,9 @@ export default function Explore() {
       {/* ── 이야기 목록 시트 ── */}
       <Sheet open={chapterOpen} onClose={() => setChapterOpen(false)} label="이야기">
         <div className="px-4 pb-5">
-          <h2 className="font-story text-2xl text-sumi">멈춘 시간의 포구</h2>
-          <p className="text-sm text-sumi-light">시간의 종을 고치고, 흩어진 고양이 가족을 다시 만나게 해 주세요.</p>
+          <h2 className="font-story text-2xl text-sumi">다시 울리는 종</h2>
+          <p className="text-sm text-sumi-light">1시간 · 6곳. 흩어진 고양이 가족을 찾고 시간의 종을 다시 울려 주세요.</p>
+          <button className="text-xs text-vermilion underline mt-1" onClick={() => { setChapterOpen(false); setAskMode(true); }}>{playMode === "online" ? "지금 집에서 하는 중 · 바꾸기" : "지금 강경 현장에서 하는 중 · 바꾸기"}</button>
           <ol className="mt-3 space-y-2">
             {CHAPTERS.map((c) => {
               const p = chapterProgress(c, state);
@@ -510,6 +576,44 @@ export default function Explore() {
               );
             })}
           </ol>
+        </div>
+      </Sheet>
+
+      {/* ── 이야기 미션 ── */}
+      <Sheet open={!!missionId} onClose={() => setMissionId(null)} label="미션">
+        {missionId && MISSION[missionId] && (() => { const m = MISSION[missionId]; return (
+          <div className="px-4 pb-5">
+            <p className="text-[12px] font-game font-bold text-vermilion tracking-widest">🎯 이야기 미션</p>
+            <h2 className="font-story text-2xl text-sumi">{m.title}</h2>
+            {m.photo && (
+              <div className="relative mt-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={m.photo} alt={`${m.title} 실제 모습`} className="w-full max-h-56 object-cover rounded-2xl" />
+                <span className="absolute left-2 top-2 chip bg-white/95 text-sumi !text-[11px]">📷 실제 모습</span>
+              </div>
+            )}
+            <p className="mt-3 font-game font-bold text-sumi text-lg">{m.q}</p>
+            <div className="mt-2 grid gap-2">
+              {m.choices.map((c, i) => <button key={c} className="btn-soft !justify-start text-left" onClick={() => answerMission(i)}>{c}</button>)}
+            </div>
+            <p className="text-xs text-sumi-light mt-2">힌트가 필요하면 한 번 틀려 봐도 괜찮아요.</p>
+          </div>
+        ); })()}
+      </Sheet>
+
+      {/* ── 처음: 어디서 하나요? ── */}
+      <Sheet open={askMode && ready} onClose={() => setPlayMode(playMode ?? "onsite")} label="플레이 방식">
+        <div className="px-4 pb-6">
+          <h2 className="font-story text-2xl text-sumi">지금 어디에서 하나요?</h2>
+          <p className="text-sm text-sumi-light mt-1">같은 이야기를 어디서든 할 수 있어요. 도장 받는 방법만 달라요.</p>
+          <div className="grid gap-2 mt-3">
+            <button className="btn-primary !justify-start text-left !py-3" onClick={() => setPlayMode("onsite")}>
+              <span><span className="block text-lg">📍 강경근대거리에 있어요</span><span className="block text-xs font-normal opacity-90">걸어서 QR·GPS로 진한 도장 · 실물 엽서 무료 인쇄</span></span>
+            </button>
+            <button className="btn-soft !justify-start text-left !py-3" onClick={() => setPlayMode("online")}>
+              <span><span className="block text-lg">🏠 집에서 둘러볼래요</span><span className="block text-xs font-normal text-sumi-light">지도로 걸어 흐린 도장 · 강경에 오면 진한 도장으로</span></span>
+            </button>
+          </div>
         </div>
       </Sheet>
 

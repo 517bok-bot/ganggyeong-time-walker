@@ -38,7 +38,9 @@ export default function Postcard() {
   const fileIn = useRef<HTMLInputElement>(null);
 
   const met = Object.keys(state.characters).filter((id) => CHAR[id]);
-  const stamps = Object.keys(state.visits).length;
+  // 실물 엽서는 현장 도장(진한 도장)만 셉니다. 집에서 받은 흐린 도장은 디지털 엽서까지.
+  const stamps = Object.values(state.visits).filter((v) => v.method !== "online").length;
+  const faint = Object.values(state.visits).filter((v) => v.method === "online").length;
   const loc = locId ? LOC[locId] : null;
 
   const inited = useRef(false);
@@ -252,7 +254,7 @@ export default function Postcard() {
                 <p className="mt-2 inline-block px-3 py-1 rounded-full bg-vermilion text-white font-game font-bold">도장 {stamps}개 · {state.player.name} · {new Date().toLocaleDateString("ko-KR")}</p>
               </>
             ) : (
-              <p className="text-sumi">도장을 <b>{FREE_PRINT_STAMPS - stamps}개</b> 더 모으면 강경모던상회에서 <b>실물 엽서로 무료 인쇄</b>할 수 있어요. (지금 {stamps}/{FREE_PRINT_STAMPS})</p>
+              <p className="text-sumi">현장 도장을 <b>{FREE_PRINT_STAMPS - stamps}개</b> 더 모으면 강경모던상회에서 <b>실물 엽서로 무료 인쇄</b>할 수 있어요. (지금 {stamps}/{FREE_PRINT_STAMPS}){faint > 0 && <> 집에서 받은 흐린 도장 {faint}개는 강경에 와서 QR을 찍으면 진한 도장이 돼요.</>}</p>
             )}
           </div>
           <div className="grid grid-cols-2 gap-2 mt-3">

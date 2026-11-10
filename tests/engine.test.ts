@@ -185,8 +185,9 @@ t("이야기 장: 순서대로 · 목표 달성 후에만 · 1회", () => {
   const c0 = run(s, { type: "chapter", id: "ch0" });
   assert.ok(c0.ok); s = c0.state;
   assert.equal(run(s, { type: "chapter", id: "ch0" }).ok, false);
-  assert.equal(run(s, { type: "chapter", id: "ch1" }).ok, false); // 조각 0개
-  for (let i = 0; i < 3; i++) s = run(s, { type: "spark", index: i }).state;
+  assert.equal(run(s, { type: "chapter", id: "ch1" }).ok, false); // 장소·미션 전
+  s = run(s, { type: "visit", locationId: "welcome-center", method: "qr" }).state;
+  s = run(s, { type: "mission", id: "m-market", answer: 0 }).state;
   const c1 = run(s, { type: "chapter", id: "ch1" });
   assert.ok(c1.ok); assert.deepEqual(c1.state.story, ["ch0", "ch1"]);
   assert.equal(run(c1.state, { type: "chapter", id: "nope" }).ok, false);
@@ -205,6 +206,41 @@ t("이웃 부탁: 조건·재료 차감·하루 1번", () => {
   assert.ok(run(s, { type: "errand", id: "sparks" }).ok);
   assert.equal(run(initialState(), { type: "errand", id: "trade" }).ok, false);
   assert.equal(run(initialState(), { type: "errand", id: "photo" }).ok, false);
+});
+
+t("온라인 방문: 흐린 도장 → 현장 방문 시 진한 도장으로", () => {
+  const o = run(initialState(), { type: "visit", locationId: "gwangshin", method: "online" });
+  assert.ok(o.ok); assert.equal(o.state.visits.gwangshin.method, "online");
+  assert.equal(o.state.characters.kaengi.method, "online");
+  assert.equal(o.effects.visit, undefined); // 온라인 방문은 현장 방문 기록(DB)에 남지 않음
+  assert.equal(run(o.state, { type: "visit", locationId: "gwangshin", method: "online" }).ok, false);
+  const up = run(o.state, { type: "visit", locationId: "gwangshin", method: "qr" });
+  assert.ok(up.ok); assert.equal(up.state.visits.gwangshin.method, "qr");
+  assert.equal(up.state.characters.kaengi.method, "real");
+  assert.equal(up.effects.visit?.method, "qr");
+  assert.ok(up.state.player.coins > o.state.player.coins);
+  assert.equal(run(up.state, { type: "visit", locationId: "gwangshin", method: "gps" }).ok, false);
+});
+
+t("미션: 정답만 기록, 중복 없음", () => {
+  const w = run(initialState(), { type: "mission", id: "m-sign", answer: 2 });
+  assert.ok(w.ok); assert.equal(w.data?.correct, false); assert.deepEqual(w.state.missions ?? [], []);
+  const c = run(initialState(), { type: "mission", id: "m-sign", answer: 0 });
+  assert.equal(c.data?.correct, true); assert.deepEqual(c.state.missions, ["m-sign"]);
+  assert.equal(run(c.state, { type: "mission", id: "m-sign", answer: 0 }).ok, false);
+  assert.equal(run(initialState(), { type: "mission", id: "nope", answer: 0 }).ok, false);
+});
+
+t("메인 이야기: 장소 방문 + 미션을 마쳐야 다음 장", () => {
+  let s = run(initialState(), { type: "profile", name: "테스트", avatar: "sage", house: "cheongryong" }).state;
+  s = run(s, { type: "chapter", id: "ch0" }).state;
+  assert.equal(run(s, { type: "chapter", id: "ch1" }).ok, false);
+  s = run(s, { type: "visit", locationId: "welcome-center", method: "online" }).state;
+  assert.equal(run(s, { type: "chapter", id: "ch1" }).ok, false);
+  s = run(s, { type: "mission", id: "m-market", answer: 0 }).state;
+  const c1 = run(s, { type: "chapter", id: "ch1" });
+  assert.ok(c1.ok); assert.ok(c1.state.story?.includes("ch1"));
+  assert.equal(run(c1.state, { type: "chapter", id: "ch3" }).ok, false);
 });
 
 console.log(`\n${passed}개 테스트 통과`);

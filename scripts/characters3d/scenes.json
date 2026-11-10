@@ -1862,5 +1862,73 @@
   "w": 800,
   "h": 500,
   "only": "hana-donkatsu"
+ },
+ "loc-old-bank-day": {
+  "mode": "day",
+  "from": [
+   952,
+   1075,
+   80
+  ],
+  "to": [
+   925,
+   945,
+   26
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "old-bank"
+ },
+ "loc-old-bank-dawn": {
+  "mode": "dawn",
+  "from": [
+   952,
+   1075,
+   80
+  ],
+  "to": [
+   925,
+   945,
+   26
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "old-bank"
+ },
+ "loc-old-bank-dusk": {
+  "mode": "dusk",
+  "from": [
+   952,
+   1075,
+   80
+  ],
+  "to": [
+   925,
+   945,
+   26
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "old-bank"
+ },
+ "loc-old-bank-night": {
+  "mode": "night",
+  "from": [
+   952,
+   1075,
+   80
+  ],
+  "to": [
+   925,
+   945,
+   26
+  ],
+  "fov": 34,
+  "w": 800,
+  "h": 500,
+  "only": "old-bank"
  }
 }

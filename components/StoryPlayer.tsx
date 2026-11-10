@@ -40,12 +40,14 @@ function Portrait({ who, mood, active }: { who: Speaker; mood?: Line["mood"]; ac
   );
 }
 
-export default function StoryPlayer({ chapter, part, onDone }: { chapter: Chapter | null; part: "intro" | "outro"; onDone: () => void }) {
-  const lines = useMemo(() => (chapter ? chapter[part] : []), [chapter, part]);
+export default function StoryPlayer({ chapter, part, onDone }: { chapter: Chapter | null; part: "intro" | "arrive" | "outro"; onDone: () => void }) {
+  const { state } = useGame();
+  const how = chapter?.place ? state.visits[chapter.place]?.method : undefined;
+  const where = how ? (how === "online" ? "online" : "onsite") : undefined;
+  const lines = useMemo(() => (chapter ? (chapter[part] ?? []).filter((l) => !l.only || l.only === where) : []), [chapter, part, where]);
   const [i, setI] = useState(0);
   const [shown, setShown] = useState(0);
   const line = lines[i];
-  const { state } = useGame();
   const text = line ? (line.who === "me" ? line.text : line.text.replaceAll("견습생", state.player.name)) : "";
 
   useEffect(() => { setI(0); setShown(0); }, [chapter, part]);

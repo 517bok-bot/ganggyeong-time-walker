@@ -45,7 +45,7 @@ export default function Home() {
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(15,25,35,.55), transparent 30%, transparent 55%, rgba(15,25,35,.75))" }} />
         {(dt.phase === "night" || dt.phase === "dusk") && <Fireflies count={18} />}
         <div className="absolute top-[max(28px,env(safe-area-inset-top))] inset-x-0 text-center px-6">
-          <p className="font-game font-bold text-[12px] tracking-[.35em] text-antique-light">時間行者 · 멈춘 시간의 포구</p>
+          <p className="font-game font-bold text-[12px] tracking-[.35em] text-antique-light">時間行者 · 다시 울리는 종</p>
           <h1 className="font-story text-hanji-light text-[46px] leading-none mt-2 anim-ink" style={{ textShadow: "0 3px 12px rgba(0,0,0,.45)" }}>강경 타임워커</h1>
           <p className="font-game font-bold text-hanji/90 text-sm mt-2">강경근대거리를 걸으며 흩어진 시간을 모아요</p>
           <p className="inline-block mt-2 px-3 py-0.5 rounded-full bg-black/30 text-hanji-light text-[12px] font-game font-bold">지금 강경은 {PHASE_LABEL[dt.phase]} · {dt.clock}</p>

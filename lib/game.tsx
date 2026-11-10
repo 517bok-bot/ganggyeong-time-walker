@@ -30,8 +30,10 @@ export function buildShowcase(): GameState {
   const run = (a: Action) => { t += 600_000; const o = applyAction(s, a, { now: t, allowDemo: true }); if (o.ok) s = o.state; return o; };
   run({ type: "profile", name: "강경탐험가", avatar: "sage", house: "cheongryong" });
   for (let i = 0; i < 6; i++) run({ type: "spark", index: i });
-  for (const id of ["welcome-center", "gwangshin", "memory-lighthouse", "photo-studio", "gallery", "honggyori", "coffee-interview", "modern-store"])
+  for (const id of ["welcome-center", "gwangshin", "daecheong", "photo-studio", "gallery", "honggyori", "coffee-interview"])
     run({ type: "visit", locationId: id, method: "demo" });
+  run({ type: "visit", locationId: "memory-lighthouse", method: "online" }); // 집에서 미리 둘러본 흐린 도장
+  for (const m of ["m-market", "m-sign", "m-jeotgal"]) run({ type: "mission", id: m, answer: 0 });
   for (const k of ["place:welcome-center", "place:music-library", "place:v-market", "place:romance-square"]) run({ type: "villageFind", key: k });
   for (const n of ["guide", "artisan", "merchant"]) run({ type: "talkNpc", npcId: n });
   for (const k of ["kd-port", "kd-jeotgal", "kd-cats"]) run({ type: "readKnowledge", id: k });

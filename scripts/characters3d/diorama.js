@@ -278,7 +278,8 @@ export function buildDiorama(scene, locs, { night = false, only = null } = {}) {
   // 감성산책로: 옛 포구 장터의 고양이 이야기 — 산책로 곳곳의 고양이 가족 조형물
   if (!only) for (const [v, y, ry] of [["kangi", 330, 0.9], ["kaengi", 640, 0.6], ["kongi", 905, 1.1]]) { const c = makeCat(v, "idle"); c.scale.setScalar(7); c.position.copy(P(332, y)); c.rotation.y = ry; scene.add(c); }
   if (!only || ["coffee-interview", "hotel-west", "hotel-east", "hotel-family", "hana-donkatsu"].includes(only)) clubSquare(scene, night);
-  if (!only) { oldBank(scene, night); for (let y = 160; y < 1100; y += 190) pole(scene, 460 - (y - 40) * 0.0236, y); for (const [px, py] of [[700, 670], [820, 820], [1000, 690]]) pole(scene, px, py); phoneBooth(scene, 540, 860); phoneBooth(scene, 470, 1010); }
+  if (!only || only === "old-bank") oldBank(scene, night);
+  if (!only) { for (let y = 160; y < 1100; y += 190) pole(scene, 460 - (y - 40) * 0.0236, y); for (const [px, py] of [[700, 670], [820, 820], [1000, 690]]) pole(scene, px, py); phoneBooth(scene, 540, 860); phoneBooth(scene, 470, 1010); }
   // 길가 가로등
   for (let y = 120; y < 1100; y += 95) lamp(scene, 530 - (y - 40) * 0.0236, y, night);
 }

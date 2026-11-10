@@ -42,7 +42,7 @@ export const LOCATIONS: GameLocation[] = [
   { id: "tailor", no: 3, name: "양장점", zone: "street", real: true, mapX: 390, mapY: 690, gps: null, historyStatus: "pending", reward: R() },
   { id: "dance-hall", no: 4, name: "딴스홀", zone: "street", real: true, mapX: 372, mapY: 548, gps: null, historyStatus: "pending", reward: R() },
   { id: "memory-lighthouse", no: 5, name: "기억의 등대", zone: "street", real: true, mapX: 390, mapY: 437, gps: null, historyStatus: "pending",
-    gameRole: "수수께끼의 아빠 고양이 강이가 머무는 곳 (게임 설정)", characterIds: ["kangi"], reward: R(50, 15) },
+    gameRole: "시간의 종이 걸려 있던 곳. 금이 간 종을 고쳐야 해요 (게임 설정)", reward: R(50, 15) },
   { id: "cinema", no: 6, name: "강경씨네마", zone: "street", real: true, mapX: 390, mapY: 328, gps: null, historyStatus: "pending", reward: R() },
   { id: "photo-studio", no: 7, name: "갱갱사진관", zone: "street", real: true, mapX: 425, mapY: 232, gps: null, historyStatus: "pending",
     gameRole: "옛날 사진사 NPC 은솔이 기다리는 곳 (게임 설정)", npcId: "photographer", reward: R() },
@@ -71,6 +71,9 @@ export const LOCATIONS: GameLocation[] = [
   { id: "hotel-east", no: 22, name: "강경호텔", note: "동양식", zone: "club", real: true, mapX: 1052, mapY: 714, gps: null, historyStatus: "pending", reward: R() },
   { id: "hotel-family", no: 23, name: "강경호텔", note: "가족실", zone: "club", real: true, mapX: 1141, mapY: 672, gps: null, historyStatus: "pending", reward: R() },
   { id: "hana-donkatsu", no: 24, name: "하나네돈까스", zone: "club", real: true, mapX: 1177, mapY: 755, gps: null, historyStatus: "pending", reward: R() },
+  // 안내도 번호 밖의 실제 국가등록문화유산 (메인 이야기 5장)
+  { id: "old-bank", no: 25, name: "강경역사관", zone: "club", real: true, mapX: 925, mapY: 945, gps: null, historyStatus: "pending",
+    gameRole: "기억을 모아 두는 금고. 아빠 고양이 강이가 숨어 있는 곳 (게임 설정)", characterIds: ["kangi"], reward: R(60, 20) },
 ];
 
 /** 언론 보도(2025~2026 강경근대거리 개관·스탬프투어 기사)와 현장 사진으로 확인한 실제 정보.
@@ -90,6 +93,7 @@ const FACTS: Record<string, string> = {
   "hotel-west": "붉은 벽돌과 크림 석재가 어우러진 2층 건물에 전구를 두른 화려한 ‘강경호텔’ 간판이 걸려 있어요. 앞에는 강경구락부의 분수가 물을 뿜어요.",
   "hotel-east": "둥근 창과 기둥 현관이 있는 크림빛 석재 건물. 강경구락부 광장을 유럽의 작은 광장처럼 만들어 줘요.",
   "hotel-family": "검은 돔 지붕을 얹은 유리 정자. 강경구락부 광장 한쪽에서 반짝여요.",
+  "old-bank": "강경구락부 정문 옆, 쇠창살 창문이 달린 붉은 벽돌 건물. 국가등록문화유산 옛 한일은행 강경지점으로, 1905년 한호농공은행 강경지점으로 문을 열어 일제강점기에는 조선식산은행 강경지점으로 쓰였어요. 지금은 강경의 옛 사진과 유물을 전시하는 강경역사관이에요.",
   "hana-donkatsu": "붉은 벽돌에 회녹색 금속 지붕, 청록 격자 문. ‘江景俱樂部 하나네 수제 돈-가스’ 간판이 걸려 있어요.",
   milmyeon: "기와 지붕을 얹은 목조 단층 건물들에 ‘小谷製麵所’·‘백년가야밀면’, 큰 현판 ‘太昌商會’와 ‘園道食’ 간판이 이어져 있어요.",
   bookshop: "황토빛 미장 2층에 ‘홍인책방’ 돋을 글씨와 ‘三樣堂製菓店’ 금빛 간판이 걸린 건물. 1층에는 스콘 카페 ‘멜랑이’가 있어요.",

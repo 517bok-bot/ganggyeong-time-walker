@@ -16,7 +16,7 @@ import { PLACES, VILLAGE_REWARDS, VILLAGE_TREASURES, ONLINE_CHARACTERS } from ".
 import { WEAR, type Slot } from "./data/wardrobe";
 import { PICNIC, LOCATION_PICNIC, VILLAGE_PICNIC_SPOTS, PICNIC_FOOD_NEED } from "./data/picnic";
 import { SPARKS_PER_DAY, sparkReward } from "./data/sparks";
-import { CHAPTER, CHAPTERS, chapterProgress } from "./data/story";
+import { CHAPTER, CHAPTERS, chapterProgress, MISSION } from "./data/story";
 import { ERRAND, errandDone, errandReady, tradeFood } from "./data/errands";
 
 export type Action =
@@ -40,6 +40,7 @@ export type Action =
   | { type: "picnic"; foods: string[] }
   | { type: "spark"; index: number }
   | { type: "chapter"; id: string }
+  | { type: "mission"; id: string; answer: number }
   | { type: "errand"; id: string };
 
 /** DB 정규화 테이블에 같이 기록할 부수 효과 (중복 방지 UNIQUE 제약·통계용) */
@@ -93,7 +94,7 @@ export function normalize(raw: unknown): GameState {
   const r = raw as Partial<GameState>;
   return { ...base, ...r, player: { ...base.player, ...(r.player ?? {}) }, postcardsMade: r.postcardsMade ?? [],
     wardrobe: r.wardrobe ?? base.wardrobe, equipped: r.equipped ?? base.equipped, companion: r.companion ?? null, lettersSent: r.lettersSent ?? 0,
-    picnic: r.picnic ?? {}, picnicsHeld: r.picnicsHeld ?? 0, sparks: r.sparks ?? { day: "", got: [] }, sparkTotal: r.sparkTotal ?? 0, story: r.story ?? [], errands: r.errands ?? { day: "", done: [] } };
+    picnic: r.picnic ?? {}, picnicsHeld: r.picnicsHeld ?? 0, sparks: r.sparks ?? { day: "", got: [] }, sparkTotal: r.sparkTotal ?? 0, story: r.story ?? [], missions: r.missions ?? [], errands: r.errands ?? { day: "", done: [] } };
 }
 
 export const expToNext = (level: number) => 100 + (level - 1) * 50;
@@ -154,9 +155,34 @@ export function applyAction(state: GameState, a: Action, ctx: EngineCtx): Outcom
     case "visit": {
       const loc = LOC[a.locationId];
       if (!loc) return fail(s, "알 수 없는 장소예요");
-      if (!["gps", "qr", "demo"].includes(a.method)) return fail(s, "잘못된 인증 방식");
+      if (!["gps", "qr", "demo", "online"].includes(a.method)) return fail(s, "잘못된 인증 방식");
       if (a.method === "demo" && !ctx.allowDemo) return fail(s, "시뮬레이션은 비활성화되어 있어요");
-      if (s.visits[a.locationId]) return fail(s, "이미 방문 인증한 장소예요 (중복 보상 없음)");
+      const prev = s.visits[a.locationId];
+      const online = a.method === "online";
+      if (prev && (online || prev.method !== "online")) return fail(s, online ? "이미 도장을 받은 장소예요" : "이미 방문 인증한 장소예요 (중복 보상 없음)");
+      if (prev) {
+        // 흐린 도장 → 진한 도장: 현장에 직접 와서 다시 찍으면 남은 보상과 현장 친구를 받아요
+        let n: GameState = { ...s, visits: { ...s.visits, [a.locationId]: { method: a.method, at: now } } };
+        n = applyExp(n, loc.reward.exp - Math.floor(loc.reward.exp / 2), loc.reward.coins - Math.floor(loc.reward.coins / 2));
+        n = addItems(n, loc.reward.items);
+        r.s = log(n, `${locLabel(loc)} 현장 방문! 흐린 도장이 진한 도장으로 바뀌었어요`, now);
+        r.effects.visit = { location_id: loc.id, method: a.method };
+        for (const c of loc.characterIds ?? []) {
+          if (r.s.characters[c]?.method === "online") r.s = { ...r.s, characters: { ...r.s.characters, [c]: { ...r.s.characters[c], method: "real", place: locLabel(loc) } } };
+          else r.discover(c, "real", locLabel(loc));
+        }
+        r.msg(`${locLabel(loc)} 진한 도장 완성! 직접 와 줘서 고마워요`, "📍");
+        return r.done();
+      }
+      if (online) {
+        let n: GameState = { ...s, visits: { ...s.visits, [a.locationId]: { method: "online", at: now } } };
+        n = applyExp(n, Math.floor(loc.reward.exp / 2), Math.floor(loc.reward.coins / 2));
+        r.s = log(n, `${locLabel(loc)} 온라인 방문 (흐린 도장)`, now);
+        r.effects.collections.push({ item_type: "online_visit", item_id: loc.id });
+        for (const c of loc.characterIds ?? []) r.discover(c, "online", `${locLabel(loc)} (온라인)`);
+        r.msg(`${locLabel(loc)} 흐린 도장! 강경에 오면 진한 도장으로 바꿀 수 있어요`, "🏠");
+        return r.done();
+      }
       let n: GameState = { ...s, visits: { ...s.visits, [a.locationId]: { method: a.method, at: now } } };
       n = applyExp(n, loc.reward.exp, loc.reward.coins);
       n = addItems(n, loc.reward.items);
@@ -393,6 +419,20 @@ export function applyAction(state: GameState, a: Action, ctx: EngineCtx): Outcom
       }
       r.s = log(st, `${c.no} 「${c.title}」을(를) 마쳤어요`, now);
       r.msg(`${c.no} 완료! +${c.reward.exp}EXP · 엽전 ${c.reward.coins}`, "📜");
+      return r.done();
+    }
+    case "mission": {
+      const m = MISSION[a.id];
+      if (!m) return fail(s, "없는 미션이에요");
+      const done = s.missions ?? [];
+      if (done.includes(m.id)) return fail(s, "이미 푼 미션이에요");
+      if (!Number.isInteger(a.answer) || a.answer < 0 || a.answer >= m.choices.length) return fail(s, "잘못된 답");
+      if (a.answer !== m.answer) { r.data = { correct: false }; return r.done(); }
+      let st: GameState = { ...s, missions: [...done, m.id] };
+      st = applyExp(st, 20, 10);
+      r.s = log(st, `미션 「${m.title}」 성공`, now);
+      r.data = { correct: true };
+      r.msg(`미션 성공! +20EXP · 엽전 10`, "🎯");
       return r.done();
     }
     case "errand": {

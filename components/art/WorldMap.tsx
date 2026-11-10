@@ -18,21 +18,22 @@ export default function WorldMap({ locations, state, selId, onSelect, className,
       <image href={`/world/map-${dt.phase}.webp`} x="30" y="-160" width="1520" height="1500" preserveAspectRatio="none" />
       {dt.t > 0 && <image href={`/world/map-${dt.next}.webp`} x="30" y="-160" width="1520" height="1500" preserveAspectRatio="none" opacity={dt.t} style={{ transition: "opacity 2s" }} />}
       {locations.map((l) => {
-        const v = !!state.visits[l.id];
+        const v = !!state.visits[l.id] && state.visits[l.id].method !== "online";
+        const faint = state.visits[l.id]?.method === "online";
         const sel = selId === l.id;
         const friend = (l.characterIds ?? []).find((c) => !state.characters[c]) ?? (l.characterIds ?? [])[0];
         const met = friend ? !!state.characters[friend] : false;
         return (
           <g key={l.id} transform={`translate(${l.mapX} ${l.mapY})`} className="cursor-pointer" onClick={() => onSelect(l)}
-            role="button" tabIndex={0} aria-label={`${l.no}번 ${l.name} ${v ? "방문 완료" : "미방문"}`}
+            role="button" tabIndex={0} aria-label={`${l.no}번 ${l.name} ${v ? "방문 완료" : faint ? "흐린 도장" : "미방문"}`}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onSelect(l); }}>
             <rect x="-46" y="-96" width="92" height="132" fill="transparent" />
             {sel && <ellipse cx="0" cy="4" rx="56" ry="20" fill="none" stroke="#F3D896" strokeWidth="5" className="anim-ring" style={{ transformOrigin: "0px 4px" }} />}
             {/* 핀 */}
             <g transform="translate(0 -88)">
               <path d="M0 26 L-7 12 H7 Z" fill={v ? "#963F38" : "#FFFFFF"} stroke="#963F38" strokeWidth="2.5" strokeLinejoin="round" />
-              <circle r="16" fill={v ? "#963F38" : "#FFFFFF"} stroke="#963F38" strokeWidth="3" />
-              <text y="6" textAnchor="middle" fontSize="16" fontWeight="800" fontFamily="'Gowun Dodum', sans-serif" fill={v ? "#FFFFFF" : "#963F38"}>{v ? "✓" : l.no}</text>
+              <circle r="16" fill={v ? "#963F38" : faint ? "#F3DCD6" : "#FFFFFF"} stroke="#963F38" strokeWidth="3" strokeDasharray={faint ? "5 4" : undefined} />
+              <text y="6" textAnchor="middle" fontSize="16" fontWeight="800" fontFamily="'Gowun Dodum', sans-serif" fill={v ? "#FFFFFF" : "#963F38"}>{v || faint ? "✓" : l.no}</text>
             </g>
             {/* 만날 친구 */}
             {friend && met && (

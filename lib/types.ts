@@ -1,4 +1,5 @@
-export type VisitMethod = "gps" | "qr" | "demo";
+/** online = 집에서 둘러본 흐린 도장 (현장 QR·GPS로 다시 찍으면 진한 도장으로 바뀜) */
+export type VisitMethod = "gps" | "qr" | "demo" | "online";
 export type Proof = { qr?: string; gps?: { lat: number; lng: number; accuracy: number } };
 export type FoundMethod = "real" | "online";
 
@@ -34,6 +35,8 @@ export interface GameState {
   quizCorrect: string[];
   /** 엽서를 만든 장소 (장소당 1회 보상) */
   postcardsMade: string[];
+  /** 메인 이야기 미션을 푼 목록 */
+  missions?: string[];
   /** 3단계: 보유 의상, 착용 중인 의상, 동행 캐릭터 */
   wardrobe: string[];
   equipped: { hat?: string; neck?: string; face?: string; outfit?: string; prop?: string };
