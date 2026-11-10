@@ -105,6 +105,12 @@ const FACTS: Record<string, string> = {
   "ganggyeong-gwan": "‘江景舘’ 글씨와 손그림 영화 간판, 청록 창틀이 눈에 띄는 근대풍 극장 건물이에요.",
 };
 for (const l of LOCATIONS) if (!l.description && FACTS[l.id]) l.description = FACTS[l.id];
+/** 현장 사진 (장소 시트에 '실제 모습'으로 표시) */
+const PHOTOS: Record<string, string> = {
+  "welcome-center": "/story/welcome-center.webp", gwangshin: "/story/gwangshin.webp", daecheong: "/story/daecheong.webp",
+  "memory-lighthouse": "/story/memory-lighthouse.webp", "old-bank": "/story/old-bank.webp", "modern-store": "/story/modern-store.webp",
+};
+for (const l of LOCATIONS) if (!l.photoUrl && PHOTOS[l.id]) l.photoUrl = PHOTOS[l.id];
 
 
 export const LOC = Object.fromEntries(LOCATIONS.map((l) => [l.id, l])) as Record<string, GameLocation>;

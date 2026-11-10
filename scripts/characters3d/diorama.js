@@ -223,12 +223,7 @@ function clubSquare(scene, night) {
     mesh(new THREE.CylinderGeometry(4, 4, 0.8, 16), flock("#4A4F52"), [0, 6, 0], [0, 0, 0], u);
     for (let k = 0; k < 3; k++) { const a0 = (k / 3) * Math.PI * 2; mesh(new THREE.BoxGeometry(3.4, 6, 3.4), flock("#8FA8A0"), [Math.cos(a0) * 6.5, 3, Math.sin(a0) * 6.5], [0, -a0, 0], u); }
   }
-  // 아치 정문 '강경구락부': 붉은 벽돌 기둥 + 철제 아치 + 마름모 글자판
-  const gt = new THREE.Group(); gt.position.copy(P(965, 905)); gt.rotation.y = 0.5; scene.add(gt);
-  for (const sx of [-1, 1]) { mesh(new THREE.BoxGeometry(6, 26, 6), flock("#8E4A3A"), [sx * 22, 13, 0], [0, 0, 0], gt); mesh(new THREE.BoxGeometry(7.5, 2, 7.5), flock("#BFBAB0"), [sx * 22, 27, 0], [0, 0, 0], gt); }
-  mesh(new THREE.TorusGeometry(19, 0.8, 8, 32, Math.PI), flock("#3E4448"), [0, 26, 0], [0, 0, 0], gt);
-  mesh(new THREE.BoxGeometry(46, 0.8, 0.8), flock("#3E4448"), [0, 44, 0], [0, 0, 0], gt);
-  ["강", "경", "구", "락", "부"].forEach((ch, i) => { const t = canvasTex(`club-${ch}`, 64, 64, (cx, w, h) => { cx.fillStyle = "#4A5054"; cx.fillRect(0, 0, w, h); cx.fillStyle = "#F2F2F2"; cx.font = "bold 40px sans-serif"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(ch, w / 2, h / 2 + 2); }); const d = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ map: t, side: THREE.DoubleSide })); d.rotation.z = Math.PI / 4; d.position.set(-14 + i * 7, 37 + Math.sin((i / 4) * Math.PI) * 4, 0.6); gt.add(d); });
+
 }
 
 /** 옛 한일은행 강경지점(강경역사관, 국가등록문화유산) — 현장 사진 기준
@@ -299,6 +294,22 @@ function oldBank(scene, night) {
   mesh(new THREE.PlaneGeometry(7, 4.6), new THREE.MeshStandardMaterial({ map: flag, side: THREE.DoubleSide }), [-20.5, 30.5, F + 2.4], [0, 0.2, 0.05], g);
   // 옆면 창 (작게)
   for (const sx of [-1, 1]) for (const z of [-0.2, 0.2]) mesh(new THREE.BoxGeometry(0.6, 18, 8), new THREE.MeshStandardMaterial({ map: grille, emissive: night ? "#FFB55A" : "#000", emissiveIntensity: night ? 0.35 : 0 }), [sx * (W / 2 + 0.3), 18, z * D], [0, 0, 0], g);
+  // 아치 정문 '강경구락부': 은행 왼쪽(정면에서 볼 때), 정면과 나란히 — 안쪽이 강경구락부 광장
+  const gt = new THREE.Group(); gt.position.set(-W / 2 - 26, 0, F - 2); g.add(gt);
+  for (const sx of [-1, 1]) { mesh(new THREE.BoxGeometry(6, 26, 6), flock("#8E4A3A"), [sx * 22, 13, 0], [0, 0, 0], gt); mesh(new THREE.BoxGeometry(7.5, 2, 7.5), flock("#BFBAB0"), [sx * 22, 27, 0], [0, 0, 0], gt); }
+  mesh(new THREE.TorusGeometry(19, 0.8, 8, 32, Math.PI), flock("#3E4448"), [0, 26, 0], [0, 0, 0], gt);
+  mesh(new THREE.BoxGeometry(46, 0.8, 0.8), flock("#3E4448"), [0, 44, 0], [0, 0, 0], gt);
+  ["강", "경", "구", "락", "부"].forEach((ch, i) => { const t = canvasTex(`club-${ch}`, 64, 64, (cx, w, h) => { cx.fillStyle = "#4A5054"; cx.fillRect(0, 0, w, h); cx.fillStyle = "#F2F2F2"; cx.font = "bold 40px sans-serif"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(ch, w / 2, h / 2 + 2); }); const d = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ map: t, side: THREE.DoubleSide })); d.rotation.z = Math.PI / 4; d.position.set(-14 + i * 7, 37 + Math.sin((i / 4) * Math.PI) * 4, 0.6); gt.add(d); });
+
+  // 정문 오른쪽 기둥 ~ 은행 모서리를 잇는 낮은 벽돌 담
+  mesh(new THREE.BoxGeometry(5, 9, 3), brickMat(0.5, 1), [-W / 2 - 1.5, 4.5, F - 2], [0, 0, 0], g);
+  // 앞 화단 울타리: 돌기둥 + 쇠 난간 두 줄 (계단 앞은 비움) · 화단 관목
+  for (const side of [-1, 1]) {
+    const x0 = side * 9.5, x1 = side * (W / 2 + 1);
+    for (let k = 0; k <= 4; k++) { const x = x0 + ((x1 - x0) * k) / 4; mesh(new THREE.BoxGeometry(1.8, 4.5, 1.8), stone, [x, 2.25, F + 7], [0, 0, 0], g); }
+    for (const y of [2, 3.6]) mesh(new THREE.BoxGeometry(Math.abs(x1 - x0), 0.35, 0.35), flock("#C8C6C0"), [(x0 + x1) / 2, y, F + 7], [0, 0, 0], g);
+    for (let k = 0; k < 4; k++) mesh(new THREE.SphereGeometry(3.2, 10, 8), flock(k % 2 ? "#5E8A4A" : "#6E9A55"), [x0 + ((x1 - x0) * (k + 0.5)) / 4, 2.4, F + 3.6], [0, 0, 0], g);
+  }
   // 짙은 슬레이트 우진각 지붕 + 환기 지붕창 둘
   const roof = hipRoof(W + 1, D + 1, 20, "#4A4E55"); roof.position.y = H + 1.7; g.add(roof);
   for (const sx of [-1, 1]) {

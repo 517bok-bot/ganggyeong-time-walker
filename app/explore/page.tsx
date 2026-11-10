@@ -469,7 +469,7 @@ export default function Explore() {
             </div>
             {sel.photoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={sel.photoUrl} alt={`${sel.name} 사진`} className="mt-3 w-full rounded-xl border-2 border-wood object-cover max-h-56" />
+              <div className="relative mt-3"><img src={sel.photoUrl} alt={`${sel.name} 실제 모습`} className="w-full rounded-xl object-cover max-h-56" /><span className="absolute left-2 top-2 chip bg-white/95 text-sumi !text-[11px]">📷 실제 모습</span></div>
             )}
             {sel.description && <p className="mt-2 text-sm text-wood-dark">{sel.description}</p>}
             {sel.historyStatus === "approved" && sel.history && (
