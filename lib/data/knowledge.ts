@@ -89,11 +89,23 @@ export const KNOWLEDGE: KnowledgeDoc[] = [
   {
     id: "kd-bank",
     title: "옛 한일은행 강경지점",
-    body: "강경구락부 정문 옆 붉은 벽돌 건물은 국가등록문화유산인 옛 한일은행 강경지점이에요. 1905년 한호농공은행 강경지점으로 세워졌고, 이후 조선식산은행 강경지점으로 쓰였어요. 지금은 강경역사관으로 쓰이고 있어요.",
+    body: "강경구락부 정문 옆 붉은 벽돌 건물은 국가등록문화유산인 옛 한일은행 강경지점이에요. 1905년 한호농공은행 강경지점으로 세워졌고, 이후 조선식산은행 강경지점으로 쓰였어요. 조선식산은행은 일제강점기 조선의 주요 금융기관으로, 일제의 식민지 경제 지배를 뒷받침한 곳이기도 해요. 그래서 이 건물엔 번성한 기억과 아픈 기억이 함께 담겨 있어요. 지금은 강경역사관으로 쓰이고 있어요.",
     caveat: "건립 연도는 자료에 따라 1905년(개업)·1913년(건물)으로 다르게 적혀 있어요.",
     sources: [
       { label: "머니투데이 기사", url: "https://www.mt.co.kr/article/2010012914048110093" },
+      { label: "위키백과 · Chōsen Industrial Bank", url: "https://en.wikipedia.org/wiki/Ch%C5%8Dsen_Industrial_Bank" },
       { label: "논산시청 강경읍 국가유산", url: "https://www.nonsan.go.kr/kor/html/sub06/06020202.html?mode=V&mng_no=157&GotoPage=1" },
+    ],
+    status: "review",
+  },
+  {
+    id: "kd-colonial",
+    title: "번성과 그늘: 일제강점기의 강경",
+    body: "강경이 근대 도시로 북적이던 시기는 일제강점기와 겹쳐요. 1911년 호남선이 놓이며 상업이 더 발달했지만, 은행의 특혜를 받은 일본 상인들이 군산·강경 상권을 넓혀 가는 동안 조선 상인과 주민들은 어려움을 겪었다고 해요. 근대거리의 화려한 간판 뒤에는 이런 아픈 기억도 함께 있어요.",
+    caveat: "강경 지역 상권의 구체적인 규모와 변화는 학술 자료(정연태 2007 등)와 강경역사관 전시를 함께 확인해 주세요.",
+    sources: [
+      { label: "전북일보 기사 (군산 옛 조선은행)", url: "https://www.jjan.kr/article/20140403506112" },
+      { label: "강경의 도시화 과정 논문 (KoreaScience)", url: "https://koreascience.kr/article/JAKO201911563200772.do" },
     ],
     status: "review",
   },
