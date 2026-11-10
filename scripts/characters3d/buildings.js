@@ -127,7 +127,7 @@ function plate(text, w, h, { bg = "#F1D66A", fg = "#1F3C88", border = "#7A5A2A",
 
 /** 회녹색 금속 판 지붕(모임지붕) — 강경구락부 건물들 */
 /** 진짜 우진각(모임) 지붕: 용마루가 있는 네 경사면 */
-function hipRoof(Wr, Dr, Hr, color = "#6E7A80") {
+export function hipRoof(Wr, Dr, Hr, color = "#6E7A80") {
   const w = Wr / 2, d = Dr / 2, r = Math.max(0, w - d);
   const v = [-w, 0, d, w, 0, d, w, 0, -d, -w, 0, -d, -r, Hr, 0, r, Hr, 0];
   const idx = [0, 1, 5, 0, 5, 4, 1, 2, 5, 2, 3, 4, 2, 4, 5, 3, 0, 4];

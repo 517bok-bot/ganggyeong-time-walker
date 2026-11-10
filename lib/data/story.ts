@@ -249,6 +249,6 @@ export const MISSIONS: Mission[] = [
   { id: "m-sign", title: "간판 속 한자", q: "광신석유 간판에서 ‘석유’를 뜻하는 한자는?", choices: ["石油", "商會", "寫眞"], answer: 0, photo: "/story/gwangshin.webp", hint: "간판의 光信 다음 두 글자예요" },
   { id: "m-jeotgal", title: "강경 젓갈의 시작", q: "강경에서 젓갈이 발달한 까닭은?", choices: ["팔고 남은 생선을 소금에 절여 오래 두려고", "겨울 김장에 쓰려고 일부러 만들어서", "멀리 바다 건너로 팔려고"], answer: 0, photo: "/story/daecheong.webp", hint: "덕배 장인이 항아리 이야기를 했어요" },
   { id: "m-tail", title: "화면 속 단서", q: "등대 화면 속, 강이 꼬리가 보인 건물은?", choices: ["붉은 벽돌에 쇠창살 창문이 달린 은행", "초록 간판의 사진관", "기와 차양을 두른 석유 가게"], answer: 0, photo: "/story/memory-lighthouse.webp", hint: "강이는 늘 기억을 ‘보관’하고 싶어 했어요" },
-  { id: "m-vault", title: "금고 비밀번호", q: "이 은행이 한호농공은행 강경지점으로 처음 문을 연 해는?", choices: ["1905년", "1945년", "1988년"], answer: 0, hint: "건물 앞 안내판이나 ‘더 듣기’ 카드에 있어요" },
+  { id: "m-vault", title: "금고 비밀번호", q: "이 은행이 한호농공은행 강경지점으로 처음 문을 연 해는?", choices: ["1905년", "1945년", "1988년"], answer: 0, photo: "/story/old-bank.webp", hint: "건물 앞 안내판이나 ‘더 듣기’ 카드에 있어요" },
 ];
 export const MISSION = Object.fromEntries(MISSIONS.map((m) => [m.id, m])) as Record<string, Mission>;

@@ -9,16 +9,16 @@ export function Portal({ children }: { children: React.ReactNode }) {
   useEffect(() => setEl(document.body), []);
   return el ? createPortal(children, el) : null;
 }
-import { useGame, expToNext } from "@/lib/game";
+import { useGame, realStamps, FREE_PRINT_STAMPS } from "@/lib/game";
 import { WalkerArt } from "./Characters";
 import { Ico } from "./art/Icons";
-import { HouseEmblem, HOUSE, rankTitle } from "./art/Houses";
+import { HouseEmblem, HOUSE } from "./art/Houses";
 
 /** 여행자 명패: 달 모양 초상 + 이름 + 먹 붓질 경험치 + 엽전 */
 export function Hud() {
   const { state } = useGame();
   const p = state.player;
-  const need = expToNext(p.level);
+  const st = realStamps(state);
   return (
     <div className="silk-frame"><div className="paper flex items-center gap-3 px-4 py-2.5">
       <Link href="/wardrobe" className="relative w-12 h-12 shrink-0 rounded-full border-2 border-sumi bg-hanji overflow-hidden" aria-label="옷장">
@@ -28,15 +28,14 @@ export function Hud() {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 min-w-0">
           {p.house && <HouseEmblem id={p.house} size={22} />}
-          <span className="seal px-1.5 h-6 text-[13px] shrink-0">Lv.{p.level}</span>
           <span className="truncate font-story text-lg text-sumi">{p.name}</span>
-          <span className="hidden sm:inline text-xs font-game font-bold text-antique-dark truncate">{p.house ? `${HOUSE[p.house]?.name} · ` : ""}{rankTitle(p.level)}</span>
+          <span className="hidden sm:inline text-xs font-game font-bold text-antique-dark truncate">{p.house ? HOUSE[p.house]?.name : ""}</span>
         </div>
-        <div className="mt-1 h-2.5 relative" title={`${p.exp}/${need} 경험`}>
+        <div className="mt-1 h-2.5 relative" title={`현장 도장 ${st}/${FREE_PRINT_STAMPS}`}>
           <svg viewBox="0 0 200 10" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
             <path d="M2 5 Q50 3 100 5 T198 5" stroke="#D6C29C" strokeWidth="6" strokeLinecap="round" fill="none" />
           </svg>
-          <svg viewBox="0 0 200 10" preserveAspectRatio="none" className="absolute inset-0 h-full transition-all" style={{ width: `${Math.max(4, (p.exp / need) * 100)}%` }}>
+          <svg viewBox="0 0 200 10" preserveAspectRatio="none" className="absolute inset-0 h-full transition-all" style={{ width: `${Math.max(4, Math.min(1, st / FREE_PRINT_STAMPS) * 100)}%` }}>
             <path d="M2 5 Q50 2.5 100 5 T198 5" stroke="#263D40" strokeWidth="6.5" strokeLinecap="round" fill="none" filter="url(#ink-bleed)" />
           </svg>
         </div>
@@ -107,16 +106,16 @@ export function Sheet({ open, onClose, children, label }: { open: boolean; onClo
 export function MiniHud() {
   const { state } = useGame();
   const p = state.player;
-  const need = expToNext(p.level);
-  const pct = Math.min(1, p.exp / need);
+  const st = realStamps(state);
+  const pct = Math.min(1, st / FREE_PRINT_STAMPS);
   const C = 2 * Math.PI * 25;
   return (
     <div className="flex items-center gap-2 pr-3 pl-1 py-1 rounded-full bg-[#FFFDF8]/95 shadow-card">
-      <Link href="/me" className="relative w-14 h-14 shrink-0" aria-label={`내 공간 · Lv.${p.level}`}>
+      <Link href="/me" className="relative w-14 h-14 shrink-0" aria-label={`내 공간 · 현장 도장 ${st}/${FREE_PRINT_STAMPS}`}>
         <svg viewBox="0 0 56 56" className="absolute inset-0 -rotate-90"><circle cx="28" cy="28" r="25" fill="#E8D8B8" stroke="#D6C29C" strokeWidth="4" />
           <circle cx="28" cy="28" r="25" fill="none" stroke="#263D40" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${C * pct} ${C}`} style={{ transition: "stroke-dasharray .8s var(--out)" }} /></svg>
         <span className="absolute inset-[5px] rounded-full overflow-hidden"><span className="absolute inset-x-0 -bottom-1 h-[52px]"><WalkerArt avatar={p.avatar} /></span></span>
-        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 seal px-1.5 h-5 text-[11px] whitespace-nowrap">Lv.{p.level}</span>
+        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 seal px-1.5 h-5 text-[11px] whitespace-nowrap" title="실물 엽서까지 현장 도장">{Math.min(st, FREE_PRINT_STAMPS)}/{FREE_PRINT_STAMPS}</span>
       </Link>
       <div className="min-w-0">
         <p className="font-story text-[15px] text-sumi leading-none truncate max-w-[96px]">{p.name}</p>

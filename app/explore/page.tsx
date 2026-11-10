@@ -55,7 +55,9 @@ export default function Explore() {
   const [playMode, setPlayModeState] = useState<PlayMode | null>(null);
   const [askMode, setAskMode] = useState(false);
   useEffect(() => { const m = loadMode(); setPlayModeState(m); if (!m) setAskMode(true); }, []);
-  const setPlayMode = (m: PlayMode) => { setPlayModeState(m); setAskMode(false); try { localStorage.setItem(MODE_KEY, m); } catch { /* ignore */ } };
+  const [safety, setSafety] = useState<null | "walk" | "mode">(null);
+  const safetySeen = () => { try { return !!localStorage.getItem("gtw-safety"); } catch { return true; } };
+  const setPlayMode = (m: PlayMode) => { setPlayModeState(m); setAskMode(false); try { localStorage.setItem(MODE_KEY, m); } catch { /* ignore */ } if (m === "onsite" && !safetySeen()) setSafety("mode"); };
   const [chapterOpen, setChapterOpen] = useState(false);
 
   // ── 지도 카메라 (밀기·벌리기·휠) ─────────────────────────
@@ -425,7 +427,7 @@ export default function Explore() {
           <button key={l as string} onClick={f as () => void} aria-label={l as string} className="w-11 h-11 rounded-full bg-[#FFFDF8]/95 shadow-card font-game text-2xl text-sumi active:scale-90 transition-transform">{t as string}</button>
         ))}
         <button onClick={() => centerOn(walker.x, walker.y)} aria-label="내 캐릭터로" className="w-11 h-11 rounded-full grid place-items-center bg-[#FFFDF8]/95 shadow-card active:scale-90 transition-transform"><Ico name="person" size={24} /></button>
-        <button onClick={() => { sfx.tap(); setWalkMode((v) => !v); }} aria-label={walkMode ? "실제 걸음 모드 끄기" : "실제 걸음 모드 켜기"} aria-pressed={walkMode}
+        <button onClick={() => { sfx.tap(); if (!walkMode && !safetySeen()) { setSafety("walk"); return; } setWalkMode((v) => !v); }} aria-label={walkMode ? "실제 걸음 모드 끄기" : "실제 걸음 모드 켜기"} aria-pressed={walkMode}
           className={`w-11 h-11 rounded-full grid place-items-center shadow-card active:scale-90 transition-transform ${walkMode ? "bg-vermilion text-white" : "bg-[#FFFDF8]/95"}`}>
           <Ico name="paw" size={24} />
         </button>
@@ -601,11 +603,26 @@ export default function Explore() {
         ); })()}
       </Sheet>
 
+      {/* ── 안전 안내 (현장 모드·걸음 모드를 처음 켤 때 한 번) ── */}
+      <Sheet open={!!safety} onClose={() => setSafety(null)} label="안전 안내">
+        <div className="px-4 pb-6">
+          <h2 className="font-story text-2xl text-sumi">⚠️ 걷기 전에 약속해요</h2>
+          <ul className="mt-3 space-y-2 text-sumi">
+            <li className="flex gap-2"><span>👀</span><span><b>걸으면서 화면을 보지 않아요.</b> 도착하면 진동으로 알려 줘요.</span></li>
+            <li className="flex gap-2"><span>🚗</span><span><b>차도·골목에서는 멈춰서</b> 화면을 확인해요.</span></li>
+            <li className="flex gap-2"><span>👨‍👩‍👧</span><span><b>어린이는 보호자와 함께</b> 다녀요.</span></li>
+            <li className="flex gap-2"><span>🏪</span><span>상점 안에서는 <b>영업에 방해되지 않게</b> 조용히 둘러봐요.</span></li>
+          </ul>
+          <button className="btn-primary w-full mt-4" onClick={() => { try { localStorage.setItem("gtw-safety", "1"); } catch { /* ignore */ } const w = safety === "walk"; setSafety(null); if (w) setWalkMode(true); }}>약속할게요</button>
+        </div>
+      </Sheet>
+
       {/* ── 처음: 어디서 하나요? ── */}
       <Sheet open={askMode && ready} onClose={() => setPlayMode(playMode ?? "onsite")} label="플레이 방식">
         <div className="px-4 pb-6">
           <h2 className="font-story text-2xl text-sumi">지금 어디에서 하나요?</h2>
           <p className="text-sm text-sumi-light mt-1">같은 이야기를 어디서든 할 수 있어요. 도장 받는 방법만 달라요.</p>
+          <p className="text-[11px] text-sumi-light mt-1">위치·카메라는 쓰는 순간에만, 휴대폰 안에서만 써요. <Link href="/privacy" className="underline">개인정보처리방침</Link></p>
           <div className="grid gap-2 mt-3">
             <button className="btn-primary !justify-start text-left !py-3" onClick={() => setPlayMode("onsite")}>
               <span><span className="block text-lg">📍 강경근대거리에 있어요</span><span className="block text-xs font-normal opacity-90">걸어서 QR·GPS로 진한 도장 · 실물 엽서 무료 인쇄</span></span>

@@ -41,6 +41,8 @@ export type Action =
   | { type: "spark"; index: number }
   | { type: "chapter"; id: string }
   | { type: "mission"; id: string; answer: number }
+  | { type: "couponIssue" }
+  | { type: "couponUsed"; code: string }
   | { type: "errand"; id: string };
 
 /** DB 정규화 테이블에 같이 기록할 부수 효과 (중복 방지 UNIQUE 제약·통계용) */
@@ -98,6 +100,9 @@ export function normalize(raw: unknown): GameState {
 }
 
 export const expToNext = (level: number) => 100 + (level - 1) * 50;
+/** 현장에서 받은 진한 도장 수 (실물 엽서 쿠폰 기준) */
+export const realStamps = (s: GameState) => Object.values(s.visits).filter((v) => v.method !== "online").length;
+export const FREE_PRINT_STAMPS = 5;
 
 function applyExp(s: GameState, exp: number, coins: number): GameState {
   let { level, exp: e } = s.player;
@@ -345,7 +350,6 @@ export function applyAction(state: GameState, a: Action, ctx: EngineCtx): Outcom
       const w = WEAR[a.wearId];
       if (!w) return fail(s, "알 수 없는 아이템");
       if (s.wardrobe.includes(w.id)) return fail(s, "이미 가지고 있어요");
-      if (s.player.level < w.level) return fail(s, `레벨 ${w.level}부터 살 수 있어요`);
       if (s.player.coins < w.price) return fail(s, "코인이 부족해요");
       const n: GameState = { ...s, wardrobe: [...s.wardrobe, w.id], player: { ...s.player, coins: s.player.coins - w.price },
         equipped: { ...s.equipped, [w.slot]: w.id } };
@@ -433,6 +437,23 @@ export function applyAction(state: GameState, a: Action, ctx: EngineCtx): Outcom
       r.s = log(st, `미션 「${m.title}」 성공`, now);
       r.data = { correct: true };
       r.msg(`미션 성공! +20EXP · 엽전 10`, "🎯");
+      return r.done();
+    }
+    case "couponIssue": {
+      if (s.coupon) return fail(s, "이미 쿠폰을 받았어요");
+      if (realStamps(s) < FREE_PRINT_STAMPS) return fail(s, `현장 도장 ${FREE_PRINT_STAMPS}개가 필요해요`);
+      // 1회용 번호 6자리 (헷갈리는 글자 0·O·1·I 제외)
+      const ABC = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+      let h = 2166136261 >>> 0; for (const ch of `${now}|${s.player.name}|${Object.keys(s.visits).join(",")}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
+      let code = ""; for (let i = 0; i < 6; i++) { code += ABC[h % ABC.length]; h = Math.imul(h ^ (h >>> 13), 2654435761) >>> 0; }
+      r.s = log({ ...s, coupon: { code, issuedAt: now } }, `엽서 무료 인쇄 쿠폰을 받았어요 (${code})`, now);
+      r.msg("엽서 무료 인쇄 쿠폰이 열렸어요!", "🎟️");
+      return r.done();
+    }
+    case "couponUsed": {
+      if (!s.coupon || s.coupon.code !== a.code) return fail(s, "쿠폰 정보가 맞지 않아요");
+      if (s.coupon.usedAt) return fail(s, "이미 사용한 쿠폰이에요");
+      r.s = log({ ...s, coupon: { ...s.coupon, usedAt: now } }, "엽서 무료 인쇄 쿠폰을 사용했어요", now);
       return r.done();
     }
     case "errand": {

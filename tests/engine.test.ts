@@ -112,7 +112,6 @@ t("프로필 입력 정리", () => {
 
 t("3단계 옷장: 레벨·코인·소유 검사", () => {
   const s0 = initialState();
-  assert.equal(run(s0, { type: "buyWear", wearId: "hat-cat" }).ok, false);           // 레벨 4 필요
   const poor = { ...s0, player: { ...s0.player, coins: 10 } };
   assert.equal(run(poor, { type: "buyWear", wearId: "neck-scarf" }).ok, false);      // 코인 부족
   const b = run(s0, { type: "buyWear", wearId: "neck-scarf" });
@@ -241,6 +240,21 @@ t("메인 이야기: 장소 방문 + 미션을 마쳐야 다음 장", () => {
   const c1 = run(s, { type: "chapter", id: "ch1" });
   assert.ok(c1.ok); assert.ok(c1.state.story?.includes("ch1"));
   assert.equal(run(c1.state, { type: "chapter", id: "ch3" }).ok, false);
+});
+
+t("엽서 쿠폰: 현장 도장 5개부터 · 1회용", () => {
+  let s = initialState();
+  for (const id of ["welcome-center", "gwangshin", "daecheong", "memory-lighthouse"]) s = run(s, { type: "visit", locationId: id, method: "qr" }).state;
+  s = run(s, { type: "visit", locationId: "modern-store", method: "online" }).state;
+  assert.equal(run(s, { type: "couponIssue" }).ok, false); // 흐린 도장은 안 셈
+  s = run(s, { type: "visit", locationId: "modern-store", method: "qr" }).state;
+  const c = run(s, { type: "couponIssue" });
+  assert.ok(c.ok); assert.match(c.state.coupon!.code, /^[A-Z0-9]{6}$/);
+  assert.equal(run(c.state, { type: "couponIssue" }).ok, false);
+  assert.equal(run(c.state, { type: "couponUsed", code: "XXXXXX" }).ok, false);
+  const u = run(c.state, { type: "couponUsed", code: c.state.coupon!.code });
+  assert.ok(u.ok); assert.ok(u.state.coupon!.usedAt);
+  assert.equal(run(u.state, { type: "couponUsed", code: c.state.coupon!.code }).ok, false);
 });
 
 console.log(`\n${passed}개 테스트 통과`);

@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Ico } from "@/components/art/Icons";
-import { useGame, expToNext } from "@/lib/game";
+import { useGame, realStamps, FREE_PRINT_STAMPS } from "@/lib/game";
 import { WalkerArt } from "@/components/Characters";
-import { HouseEmblem, HOUSE, rankTitle } from "@/components/art/Houses";
+import { HouseEmblem, HOUSE } from "@/components/art/Houses";
 import { CHAPTERS } from "@/lib/data/story";
 import { useContent } from "@/lib/content";
+import CouponCard from "@/components/CouponCard";
+import ReportSheet from "@/components/ReportSheet";
 
 export default function Me() {
   const { state, rename, reset, mode, user, authConfigured, signOut, loadShowcase } = useGame();
@@ -15,7 +17,9 @@ export default function Me() {
   const p = state.player;
   const [name, setName] = useState(p.name);
   const [editing, setEditing] = useState(false);
-  const need = expToNext(p.level);
+  const [report, setReport] = useState(false);
+  const st = realStamps(state);
+  const faint = Object.keys(state.visits).length - st;
 
   const stats = [
     ["stamp", "방문 도장", `${Object.keys(state.visits).length}/${locations.length}`],
@@ -42,11 +46,12 @@ export default function Me() {
           ) : (
             <button className="font-story text-2xl text-sumi flex items-center gap-1" onClick={() => setEditing(true)} aria-label="이름 바꾸기">{p.name} <Ico name="brush" size={18} /></button>
           )}
-          <p className="flex items-center gap-1 text-sm font-game font-bold text-sumi-light mt-1">{p.house && <HouseEmblem id={p.house} size={20} />}{p.house ? `${HOUSE[p.house]?.name}의 ` : ""}{rankTitle(p.level)}</p>
+          <p className="flex items-center gap-1 text-sm font-game font-bold text-sumi-light mt-1">{p.house && <HouseEmblem id={p.house} size={20} />}{p.house ? `${HOUSE[p.house]?.name}의 타임워커` : "타임워커"}</p>
           <div className="mt-2 flex items-center gap-2 text-sm font-game font-bold text-sumi">
-            <span className="chip-soft !bg-vermilion !text-white">Lv.{p.level}</span>
-            <span className="flex-1 h-2 rounded-full bg-sumi/10 overflow-hidden"><span className="block h-full bg-teal rounded-full" style={{ width: `${(p.exp / need) * 100}%` }} /></span>
+            <span className="chip-soft !bg-vermilion !text-white whitespace-nowrap">현장 도장 {st}</span>
+            <span className="flex-1 h-2 rounded-full bg-sumi/10 overflow-hidden"><span className="block h-full bg-teal rounded-full" style={{ width: `${Math.min(1, st / FREE_PRINT_STAMPS) * 100}%` }} /></span>
           </div>
+          <p className="text-xs text-sumi-light mt-1">{st >= FREE_PRINT_STAMPS ? "실물 엽서 무료 인쇄 가능!" : `실물 엽서까지 현장 도장 ${FREE_PRINT_STAMPS - st}개`}{faint > 0 ? ` · 흐린 도장 ${faint}개` : ""}</p>
           <p className="mt-2 flex items-center gap-1 font-game font-bold text-sumi"><Ico name="coin" size={20} />{p.coins} 엽전</p>
         </div>
       </section>
@@ -62,6 +67,8 @@ export default function Me() {
         <Link href="/share" className="btn-soft"><Ico name="qr" size={22} />친구 초대 QR</Link>
         <Link href="/postcard" className="btn-gold col-span-2"><Ico name="camera" size={22} />캐릭터 엽서 찍기</Link>
       </section>
+
+      <section className="card p-4 mt-3 text-sm"><CouponCard /></section>
 
       <section className="card p-4 mt-3 text-sm">
         <p className="font-game font-bold text-sumi">기록 저장</p>
@@ -79,6 +86,14 @@ export default function Me() {
           )}
         </div>
       </section>
+
+      <section className="mt-3 grid grid-cols-2 gap-2 text-sm">
+        <button className="btn-soft btn-sm col-span-2" onClick={() => setReport(true)}>🛠 오류 신고 · 의견 보내기</button>
+        <Link href="/privacy" className="btn-soft btn-sm">개인정보처리방침</Link>
+        <Link href="/terms" className="btn-soft btn-sm">이용약관</Link>
+      </section>
+      <p className="text-[11px] text-sumi-light text-center mt-3">걸으면서 화면 보지 않기 · 차도에선 멈춰서 · 어린이는 보호자와 함께</p>
+      <ReportSheet open={report} onClose={() => setReport(false)} />
     </main>
   );
 }

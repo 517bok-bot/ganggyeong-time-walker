@@ -37,6 +37,8 @@ export interface GameState {
   postcardsMade: string[];
   /** 메인 이야기 미션을 푼 목록 */
   missions?: string[];
+  /** 실물 엽서 무료 인쇄 쿠폰 (현장 도장 5개부터, 1회용) */
+  coupon?: { code: string; issuedAt: number; usedAt?: number };
   /** 3단계: 보유 의상, 착용 중인 의상, 동행 캐릭터 */
   wardrobe: string[];
   equipped: { hat?: string; neck?: string; face?: string; outfit?: string; prop?: string };

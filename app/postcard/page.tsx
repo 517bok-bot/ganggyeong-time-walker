@@ -10,9 +10,9 @@ import { charImg } from "@/components/Characters";
 import { Ico } from "@/components/art/Icons";
 import { sfx } from "@/lib/sfx";
 import { haptic } from "@/lib/fx";
+import CouponCard from "@/components/CouponCard";
 
 const PW = 1200, PH = 1800; // 10×15cm @ 약 300dpi
-const FREE_PRINT_STAMPS = 5;
 type Sticker = { key: string; src: string[]; x: number; y: number; s: number; flip: boolean };
 
 const playerLayers = (avatar: string, eq: Record<string, string | undefined>) => {
@@ -38,9 +38,6 @@ export default function Postcard() {
   const fileIn = useRef<HTMLInputElement>(null);
 
   const met = Object.keys(state.characters).filter((id) => CHAR[id]);
-  // 실물 엽서는 현장 도장(진한 도장)만 셉니다. 집에서 받은 흐린 도장은 디지털 엽서까지.
-  const stamps = Object.values(state.visits).filter((v) => v.method !== "online").length;
-  const faint = Object.values(state.visits).filter((v) => v.method === "online").length;
   const loc = locId ? LOC[locId] : null;
 
   const inited = useRef(false);
@@ -247,15 +244,7 @@ export default function Postcard() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={result} alt="완성된 엽서" className="w-full max-w-sm mx-auto rounded-xl shadow-card anim-card-up" />
           <div className="card p-4 mt-3 text-sm">
-            {stamps >= FREE_PRINT_STAMPS ? (
-              <>
-                <p className="font-story text-xl text-vermilion">무료 인쇄 쿠폰</p>
-                <p className="text-sumi mt-1">강경모던상회에서 이 화면을 보여 주고, 엽서 사진을 전송하면 실물 엽서로 인쇄해 드려요.</p>
-                <p className="mt-2 inline-block px-3 py-1 rounded-full bg-vermilion text-white font-game font-bold">도장 {stamps}개 · {state.player.name} · {new Date().toLocaleDateString("ko-KR")}</p>
-              </>
-            ) : (
-              <p className="text-sumi">현장 도장을 <b>{FREE_PRINT_STAMPS - stamps}개</b> 더 모으면 강경모던상회에서 <b>실물 엽서로 무료 인쇄</b>할 수 있어요. (지금 {stamps}/{FREE_PRINT_STAMPS}){faint > 0 && <> 집에서 받은 흐린 도장 {faint}개는 강경에 와서 QR을 찍으면 진한 도장이 돼요.</>}</p>
-            )}
+            <CouponCard />
           </div>
           <div className="grid grid-cols-2 gap-2 mt-3">
             <button className="btn-soft" onClick={() => { setResult(null); }}>다시 꾸미기</button>

@@ -61,7 +61,7 @@ export default function Wardrobe() {
             {WEARS.filter((w) => w.slot === slot).map((w) => {
               const owned = state.wardrobe?.includes(w.id);
               const on = eq[w.slot] === w.id;
-              const locked = state.player.level < w.level;
+              const locked = false; // 레벨 제한 없음 (엽전만 있으면 살 수 있어요)
               return (
                 <div key={w.id} className={`rounded-xl border-2 p-2 text-center ${on ? "border-brick bg-gold/30" : "border-wood/30 bg-cream"}`}
                   onMouseEnter={() => !owned && setPreview(w.id)} onMouseLeave={() => setPreview(null)}>

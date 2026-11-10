@@ -52,6 +52,7 @@ export function buildShowcase(): GameState {
 }
 
 export { expToNext, initialState };
+export { realStamps, FREE_PRINT_STAMPS } from "./engine";
 
 const KEY = "gtw-save-v1";
 
@@ -185,7 +186,7 @@ export function GameProvider({ children, authConfigured, demoToolsRemote }: { ch
         if (lv > prevLevel) {
           // 새 인연 장면이 떠 있으면 그 장면을 닫은 뒤에 레벨 업을 보여 줍니다
           if (res.newly?.length) pendingLevel.current = lv;
-          else setTimeout(() => { sfx.levelUp(); fx.levelUp(lv); }, 900);
+          void 0; // 레벨 표시는 쓰지 않아요 (도장·친구·엽서가 보상)
         }
       } else if (!opts?.quiet && res.error) { sfx.error(); haptic([30, 40, 30]); toast(res.error, "ℹ️"); }
       return { ok: res.ok, error: res.error, data: res.data };
@@ -201,7 +202,7 @@ export function GameProvider({ children, authConfigured, demoToolsRemote }: { ch
     toasts, collectQueue, toast, act,
     dismissCollect: () => setCollectQueue((q) => {
       const rest = q.slice(1);
-      if (!rest.length && pendingLevel.current) { const lv = pendingLevel.current; pendingLevel.current = null; setTimeout(() => { sfx.levelUp(); fx.levelUp(lv); }, 400); }
+      if (!rest.length && pendingLevel.current) pendingLevel.current = null;
       return rest;
     }),
     visit: (locationId, method, proof) => act({ type: "visit", locationId, method }, { proof }),

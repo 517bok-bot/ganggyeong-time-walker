@@ -5,6 +5,7 @@ import BottomNav from "@/components/BottomNav";
 import Overlays from "@/components/Overlays";
 import AudioDirector from "@/components/AudioDirector";
 import FxLayer from "@/components/FxLayer";
+import InAppNotice from "@/components/Notices";
 import ArtDefs from "@/components/art/ArtDefs";
 import { ContentProvider } from "@/lib/content";
 import { getOverrides } from "@/lib/content-server";
@@ -40,6 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Overlays />
             <AudioDirector />
             <FxLayer />
+            <InAppNotice />
           </GameProvider>
         </ContentProvider>
       </body>

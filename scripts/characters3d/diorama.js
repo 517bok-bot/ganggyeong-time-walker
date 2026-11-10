@@ -3,7 +3,7 @@
 // 건물은 안내도 장소의 분위기를 옮긴 창작 미니어처이며 실제 외관과 다를 수 있습니다.
 import * as THREE from "three";
 import { flock, gloss, canvasTex, blob, mesh } from "./models.js";
-import { building as building2 } from "./buildings.js";
+import { building as building2, hipRoof } from "./buildings.js";
 import { makeCat } from "./models.js";
 
 export const BOX = { x: 230, y: 40, w: 1120, h: 1100 };
@@ -231,21 +231,83 @@ function clubSquare(scene, night) {
   ["강", "경", "구", "락", "부"].forEach((ch, i) => { const t = canvasTex(`club-${ch}`, 64, 64, (cx, w, h) => { cx.fillStyle = "#4A5054"; cx.fillRect(0, 0, w, h); cx.fillStyle = "#F2F2F2"; cx.font = "bold 40px sans-serif"; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(ch, w / 2, h / 2 + 2); }); const d = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ map: t, side: THREE.DoubleSide })); d.rotation.z = Math.PI / 4; d.position.set(-14 + i * 7, 37 + Math.sin((i / 4) * Math.PI) * 4, 0.6); gt.add(d); });
 }
 
-/** 옛 한일은행 강경지점(강경역사관, 국가등록문화유산): 붉은 벽돌 2층, 석재 기둥머리·돌림띠, 높은 철창 창, 슬레이트 지붕과 지붕창 */
+/** 옛 한일은행 강경지점(강경역사관, 국가등록문화유산) — 현장 사진 기준
+ *  붉은 벽돌 단층(높은 층고) · 모서리 석재 귀돌 · 벽기둥 4개와 석재 기둥머리 · 패널 돌림띠(엔타블레이처)
+ *  · 쇠창살 높은 창 2개 · 석재 문틀 정문과 현판 · 짙은 슬레이트 우진각 지붕과 환기 지붕창 2개 · 돌계단 */
 function oldBank(scene, night) {
   const g = new THREE.Group(); g.position.copy(P(925, 945)); g.rotation.y = 0.45; scene.add(g);
-  const brick = canvasTex("bankbrick", 256, 256, (c, w, h) => { c.fillStyle = "#8A3A2A"; c.fillRect(0, 0, w, h); c.strokeStyle = "rgba(40,10,5,.3)"; c.lineWidth = 2; for (let y = 0; y < h; y += 10) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); } });
-  const W = 70, H = 46, D = 46;
-  mesh(new THREE.BoxGeometry(W, H, D), new THREE.MeshStandardMaterial({ map: brick, roughness: 0.9 }), [0, H / 2, 0], [0, 0, 0], g);
-  const stone = flock("#C9C2B2");
-  mesh(new THREE.BoxGeometry(W + 3, 4, D + 3), stone, [0, 2, 0], [0, 0, 0], g);
-  mesh(new THREE.BoxGeometry(W + 3, 5, D + 3), stone, [0, H - 2.5, 0], [0, 0, 0], g);
-  for (const sx of [-0.42, -0.14, 0.14, 0.42]) mesh(new THREE.BoxGeometry(6, H - 8, 2), new THREE.MeshStandardMaterial({ map: brick }), [sx * W, H / 2, D / 2 + 1], [0, 0, 0], g);
-  for (const sx of [-0.28, 0.28]) mesh(new THREE.BoxGeometry(11, 26, 1), new THREE.MeshStandardMaterial({ color: "#2E3A44", emissive: night ? "#FFC873" : "#000", emissiveIntensity: night ? 0.6 : 0 }), [sx * W, H * 0.48, D / 2 + 0.6], [0, 0, 0], g);
-  mesh(new THREE.BoxGeometry(10, 16, 1.5), flock("#E3B98E"), [0, 12, D / 2 + 0.8], [0, 0, 0], g);
-  mesh(new THREE.BoxGeometry(14, 4, 3), stone, [0, 22, D / 2 + 1], [0, 0, 0], g);
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 4), flock("#4E5660")); roof.rotation.y = Math.PI / 4; roof.scale.set(W * 0.74, 16, D * 0.74); roof.position.y = H + 8; roof.castShadow = true; g.add(roof);
-  for (const sx of [-0.2, 0.2]) mesh(new THREE.ConeGeometry(3.5, 6, 4), flock("#3A3230"), [sx * W, H + 9, D * 0.22], [0, Math.PI / 4, 0], g);
+  const W = 76, H = 40, D = 50, F = D / 2; // F: 정면 z
+  const brick = canvasTex("bankbrick2", 256, 256, (c, w, h) => {
+    c.fillStyle = "#A2493A"; c.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 8) for (let x = (y / 8) % 2 ? -8 : 0; x < w; x += 16) { c.fillStyle = `hsl(${8 + ((x * 7 + y * 3) % 6)}, ${46 + ((x + y) % 9)}%, ${36 + ((x * 3 + y) % 7)}%)`; c.fillRect(x + 1, y + 1, 14, 6); }
+  });
+  brick.wrapS = brick.wrapT = THREE.RepeatWrapping;
+  const brickMat = (rx, ry) => { const t = brick.clone(); t.repeat.set(rx, ry); t.needsUpdate = true; return new THREE.MeshStandardMaterial({ map: t, roughness: 0.92 }); };
+  const stone = flock("#CFC9BC"), stoneDark = flock("#B9B2A4");
+  // 몸체
+  mesh(new THREE.BoxGeometry(W, H, D), brickMat(5, 3), [0, H / 2, 0], [0, 0, 0], g);
+  // 화강석 기단
+  mesh(new THREE.BoxGeometry(W + 2, 4, D + 2), stoneDark, [0, 2, 0], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(W + 2.6, 1, D + 2.6), stone, [0, 4.2, 0], [0, 0, 0], g);
+  // 모서리 귀돌 (긴 돌·짧은 돌 번갈아)
+  for (const sx of [-1, 1]) for (let y = 6, i = 0; y < H - 6; y += 4.2, i++) {
+    const long = i % 2 === 0;
+    mesh(new THREE.BoxGeometry(long ? 6 : 3.6, 2.6, 1.2), stone, [sx * (W / 2 - (long ? 3 : 1.8)), y, F + 0.5], [0, 0, 0], g);
+    mesh(new THREE.BoxGeometry(1.2, 2.6, long ? 3.6 : 6), stone, [sx * (W / 2 + 0.5), y, F - (long ? 1.8 : 3)], [0, 0, 0], g);
+  }
+  // 벽기둥 4개 + 석재 기둥머리
+  for (const x of [-0.37, -0.12, 0.12, 0.37]) {
+    mesh(new THREE.BoxGeometry(5.5, H - 10, 1.6), brickMat(0.4, 2.2), [x * W, (H - 10) / 2 + 4.5, F + 0.8], [0, 0, 0], g);
+    mesh(new THREE.BoxGeometry(7.5, 2.4, 2.8), stone, [x * W, H - 5.2, F + 1.2], [0, 0, 0], g);
+    mesh(new THREE.BoxGeometry(6.5, 1.2, 2.4), stone, [x * W, H - 6.8, F + 1.1], [0, 0, 0], g);
+  }
+  // 엔타블레이처: 아래 띠 · 패널 띠 · 처마돌림
+  mesh(new THREE.BoxGeometry(W + 1.4, 1.4, D + 1.4), stone, [0, H - 3.9, 0], [0, 0, 0], g);
+  const frieze = canvasTex("bankfrieze", 512, 32, (c, w, h) => { c.fillStyle = "#D6D0C3"; c.fillRect(0, 0, w, h); c.strokeStyle = "#A9A193"; c.lineWidth = 2; for (let x = 6; x < w - 20; x += 34) c.strokeRect(x, 6, 28, h - 12); });
+  mesh(new THREE.BoxGeometry(W + 1.6, 3.6, D + 1.6), new THREE.MeshStandardMaterial({ map: frieze, roughness: 0.8 }), [0, H - 1.4, 0], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(W + 3.6, 1.4, D + 3.6), stone, [0, H + 1, 0], [0, 0, 0], g);
+  // 쇠창살 높은 창
+  const grille = canvasTex(`bankgrille-${night ? "n" : "d"}`, 64, 160, (c, w, h) => {
+    c.fillStyle = night ? "#E8B865" : "#2F3B44"; c.fillRect(0, 0, w, h);
+    c.strokeStyle = "#E4E2DC"; c.lineWidth = 1.6;
+    for (let x = 6; x < w; x += 13) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); }
+    for (let y = 10; y < h; y += 30) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); for (let x = 12; x < w; x += 13) { c.beginPath(); c.moveTo(x - 6, y + 8); c.lineTo(x, y + 2); c.lineTo(x + 6, y + 8); c.lineTo(x, y + 14); c.closePath(); c.stroke(); } }
+  });
+  for (const sx of [-1, 1]) {
+    const x = sx * 0.245 * W;
+    mesh(new THREE.BoxGeometry(11, 25, 0.6), new THREE.MeshStandardMaterial({ map: grille, emissive: night ? "#FFB55A" : "#000", emissiveIntensity: night ? 0.45 : 0, roughness: 0.5 }), [x, 19.5, F + 0.35], [0, 0, 0], g);
+    mesh(new THREE.BoxGeometry(12.5, 1.2, 1.8), stone, [x, 6.6, F + 0.7], [0, 0, 0], g); // 창턱
+    // 창 위 벽돌 쐐기 아치(석재 쐐기돌 셋)
+    mesh(new THREE.BoxGeometry(2.4, 3.6, 1.4), stone, [x, 33.6, F + 0.7], [0, 0, 0], g);
+    for (const d of [-1, 1]) mesh(new THREE.BoxGeometry(2.2, 3.2, 1.3), stone, [x + d * 4.2, 33.2, F + 0.65], [0, 0, d * 0.35], g);
+  }
+  // 정문: 석재 문틀(위가 둥근 상인방) + 크림색 나무문 + 위 채광창 + 현판
+  mesh(new THREE.BoxGeometry(14, 2.2, 2.2), stone, [0, 26.5, F + 1.1], [0, 0, 0], g);
+  const lintel = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 6.5, 2, 24, 1, false, -Math.PI / 2, Math.PI), stone); lintel.rotation.x = Math.PI / 2; lintel.rotation.z = 0; lintel.position.set(0, 27.4, F + 1.1); lintel.scale.set(1, 1, 0.5); g.add(lintel);
+  for (const sx of [-1, 1]) mesh(new THREE.BoxGeometry(2.2, 21, 2), stone, [sx * 6, 15, F + 1], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(9.6, 15, 0.8), flock("#E2C9A8"), [0, 12, F + 0.5], [0, 0, 0], g);
+  mesh(new THREE.BoxGeometry(9.6, 4.6, 0.6), new THREE.MeshStandardMaterial({ color: night ? "#F2C77B" : "#3A4650", emissive: night ? "#FFB55A" : "#000", emissiveIntensity: night ? 0.6 : 0 }), [0, 22, F + 0.5], [0, 0, 0], g);
+  const plaque = canvasTex("bankplaque", 256, 96, (c, w, h) => { c.fillStyle = "#EEEBE4"; c.fillRect(0, 0, w, h); c.strokeStyle = "#8C877C"; c.lineWidth = 6; c.strokeRect(6, 6, w - 12, h - 12); c.fillStyle = "#3A3632"; c.textAlign = "center"; c.font = "bold 30px serif"; c.fillText("舊 韓一銀行", w / 2, 46); c.font = "16px sans-serif"; c.fillText("THE HANIL BANK", w / 2, 74); });
+  mesh(new THREE.BoxGeometry(13, 5, 0.6), new THREE.MeshStandardMaterial({ map: plaque }), [0, 31.5, F + 0.4], [0, 0, 0], g);
+  const sign = canvasTex("banksign", 48, 192, (c, w, h) => { c.fillStyle = "#3D3027"; c.fillRect(0, 0, w, h); c.fillStyle = "#EFE6D2"; c.font = "bold 30px sans-serif"; c.textAlign = "center"; "강경역사관".split("").forEach((ch, i) => c.fillText(ch, w / 2, 34 + i * 36)); });
+  mesh(new THREE.BoxGeometry(2.4, 10, 0.4), new THREE.MeshStandardMaterial({ map: sign }), [8.6, 12, F + 1.3], [0, 0, 0], g);
+  // 돌계단 셋
+  for (let i = 0; i < 3; i++) mesh(new THREE.BoxGeometry(16 - i * 2, 1.4, 3), stone, [0, 0.7 + i * 1.4, F + 6.5 - i * 2.4], [0, 0, 0], g);
+  // 태극기 깃대
+  mesh(new THREE.CylinderGeometry(0.25, 0.25, 22, 6), flock("#D9D6CF"), [-15, 22, F + 2.2], [0, 0, 0.35], g);
+  const flag = canvasTex("taegeuk", 96, 64, (c, w, h) => { c.fillStyle = "#FFFFFF"; c.fillRect(0, 0, w, h); c.fillStyle = "#C8102E"; c.beginPath(); c.arc(w / 2, h / 2, 14, Math.PI, 0); c.fill(); c.fillStyle = "#0047A0"; c.beginPath(); c.arc(w / 2, h / 2, 14, 0, Math.PI); c.fill(); c.fillStyle = "#111"; for (const [x, y] of [[14, 12], [w - 14, 12], [14, h - 12], [w - 14, h - 12]]) c.fillRect(x - 6, y - 4, 12, 8); });
+  mesh(new THREE.PlaneGeometry(7, 4.6), new THREE.MeshStandardMaterial({ map: flag, side: THREE.DoubleSide }), [-20.5, 30.5, F + 2.4], [0, 0.2, 0.05], g);
+  // 옆면 창 (작게)
+  for (const sx of [-1, 1]) for (const z of [-0.2, 0.2]) mesh(new THREE.BoxGeometry(0.6, 18, 8), new THREE.MeshStandardMaterial({ map: grille, emissive: night ? "#FFB55A" : "#000", emissiveIntensity: night ? 0.35 : 0 }), [sx * (W / 2 + 0.3), 18, z * D], [0, 0, 0], g);
+  // 짙은 슬레이트 우진각 지붕 + 환기 지붕창 둘
+  const roof = hipRoof(W + 1, D + 1, 20, "#4A4E55"); roof.position.y = H + 1.7; g.add(roof);
+  for (const sx of [-1, 1]) {
+    const dg = new THREE.Group(); dg.position.set(sx * 0.26 * W, H + 7.5, F * 0.66); g.add(dg);
+    mesh(new THREE.BoxGeometry(7.5, 6.5, 7), flock("#565A61"), [0, 0, 0], [0, 0, 0], dg);
+    const gab = new THREE.Mesh(new THREE.ConeGeometry(6, 4.5, 4, 1), flock("#3E4248")); gab.rotation.y = Math.PI / 4; gab.scale.set(1, 1, 0.85); gab.position.y = 5.4; dg.add(gab);
+    mesh(new THREE.BoxGeometry(5.6, 4.6, 0.4), flock("#2A2C30"), [0, -0.2, 3.55], [0, 0, 0], dg);
+    for (let i = 0; i < 4; i++) mesh(new THREE.BoxGeometry(5.4, 0.45, 0.7), flock("#6A6E75"), [0, -2 + i * 1.25, 3.8], [-0.4, 0, 0], dg);
+  }
 }
 /** 나무 전봇대 (애자가 달린 가로대 셋) */
 function pole(scene, x, y) {

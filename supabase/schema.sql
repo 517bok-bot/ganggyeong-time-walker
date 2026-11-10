@@ -353,3 +353,19 @@ end $$;
 -- ── 첫 관리자 지정 (가입 후 한 번 실행) ───────────────
 -- update public.profiles set role = 'admin' where id = (select id from auth.users where email = 'you@example.com');
 -- 또는 환경변수 ADMIN_EMAILS 에 이메일을 넣으면 관리자 페이지 접근이 허용됩니다.
+
+-- ── 운영: 오류 신고 · 엽서 쿠폰 사용 기록 (서비스 키로만 씀) ──
+create table if not exists public.reports (
+  id bigserial primary key,
+  kind text not null default 'bug',
+  page text,
+  message text not null,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+alter table public.reports enable row level security;
+create table if not exists public.coupon_redemptions (
+  code text primary key,                      -- 1회용 쿠폰 번호: 같은 번호는 한 번만
+  redeemed_at timestamptz not null default now()
+);
+alter table public.coupon_redemptions enable row level security;
